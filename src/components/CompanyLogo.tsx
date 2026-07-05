@@ -1,0 +1,141 @@
+import React, { useState, useEffect } from 'react';
+
+interface CompanyLogoProps {
+  className?: string;
+}
+
+export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
+  const [logo, setLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Read logo from localStorage
+    const savedLogo = localStorage.getItem('company_logo');
+    if (savedLogo) {
+      setLogo(savedLogo);
+    }
+
+    const handleStorageChange = () => {
+      const updatedLogo = localStorage.getItem('company_logo');
+      setLogo(updatedLogo);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('company_logo_updated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('company_logo_updated', handleStorageChange);
+    };
+  }, []);
+
+  if (logo) {
+    return <img src={logo} alt="Company Logo" className={`${className} object-contain`} referrerPolicy="no-referrer" />;
+  }
+
+  return (
+    <svg 
+      viewBox="0 0 530 200" 
+      className={className} 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      id="company-logo-svg"
+    >
+      {/* Blue border rounded container matching the JPF logo */}
+      <rect 
+        x="10" 
+        y="10" 
+        width="510" 
+        height="180" 
+        rx="40" 
+        stroke="#1e3a8a" 
+        strokeWidth="12" 
+        fill="#ffffff" 
+      />
+      
+      {/* Group with skew for speed-italics style of JPF logo */}
+      <g transform="skewX(-12) translate(40, -5)">
+        {/* "J" letter in blue */}
+        <path 
+          d="M 65 50 
+             L 155 50 
+             L 155 105 
+             L 120 105 
+             L 120 80 
+             L 95 80 
+             L 95 115 
+             C 95 142 75 155 35 155 
+             C 10 155 0 142 0 142 
+             L 25 122 
+             C 25 122 30 126 38 126 
+             C 46 126 55 121 55 112 
+             L 55 50 Z" 
+          fill="#1e3a8a" 
+        />
+        
+        {/* "P" letter in blue */}
+        <path 
+          d="M 140 50 
+             L 235 50 
+             C 275 50 285 75 285 95 
+             C 285 118 265 140 215 140 
+             L 185 140 
+             L 185 112 
+             L 215 112 
+             C 236 112 245 104 245 95 
+             C 245 86 236 78 215 78 
+             L 175 78 
+             L 175 155 
+             L 140 155 Z" 
+          fill="#1e3a8a" 
+        />
+        
+        {/* "F" letter with horizontal red stripes and a blue outline */}
+        <mask id="f-mask">
+          <path 
+            d="M 285 50 
+               L 415 50 
+               L 405 80 
+               L 345 80 
+               L 340 102 
+               L 390 102 
+               L 380 130 
+               L 330 130 
+               L 322 155 
+               L 285 155 Z" 
+            fill="#ffffff" 
+          />
+        </mask>
+        
+        {/* Red/white horizontal stripes on F */}
+        <g mask="url(#f-mask)">
+          {/* Base Red background */}
+          <rect x="250" y="40" width="200" height="130" fill="#dc2626" />
+          {/* White stripes */}
+          <rect x="250" y="50" width="200" height="12" fill="#ffffff" />
+          <rect x="250" y="75" width="200" height="12" fill="#ffffff" />
+          <rect x="250" y="100" width="200" height="12" fill="#ffffff" />
+          <rect x="250" y="125" width="200" height="12" fill="#ffffff" />
+          <rect x="250" y="150" width="200" height="12" fill="#ffffff" />
+        </g>
+        
+        {/* Outline for F to keep it sharp */}
+        <path 
+          d="M 285 50 
+             L 415 50 
+             L 405 80 
+             L 345 80 
+             L 340 102 
+             L 390 102 
+             L 380 130 
+             L 330 130 
+             L 322 155 
+             L 285 155 Z" 
+          stroke="#1e3a8a" 
+          strokeWidth="6" 
+          strokeLinejoin="round" 
+          fill="none" 
+        />
+      </g>
+    </svg>
+  );
+}
