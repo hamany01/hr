@@ -162,9 +162,13 @@ async function syncDatabase() {
         cachedApplicants = localApplicants;
       }
 
-      // Write back to local files as a fallback cache
-      fs.writeFileSync(ADMINS_FILE, JSON.stringify(cachedAdmins, null, 2), "utf8");
-      fs.writeFileSync(DB_FILE, JSON.stringify(cachedApplicants, null, 2), "utf8");
+      // Write back to local files as a fallback cache, catching any filesystem errors (e.g. read-only filesystem on Vercel)
+      try {
+        fs.writeFileSync(ADMINS_FILE, JSON.stringify(cachedAdmins, null, 2), "utf8");
+        fs.writeFileSync(DB_FILE, JSON.stringify(cachedApplicants, null, 2), "utf8");
+      } catch (fsErr) {
+        console.warn("Could not write fallback cache files (expected in read-only environments like Vercel):", fsErr);
+      }
       
       console.log("Database synchronization with Firestore complete!");
     } catch (err) {
@@ -227,25 +231,25 @@ function readAdmins(): any[] {
   return cachedAdmins;
 }
 
-function writeAdmins(admins: any[]) {
+async function writeAdmins(admins: any[]) {
   cachedAdmins = admins;
   try {
     fs.writeFileSync(ADMINS_FILE, JSON.stringify(admins, null, 2), "utf8");
   } catch (err) {
-    console.error("Error writing admins:", err);
+    console.error("Error writing admins (this is fine in read-only environments like Vercel):", err);
   }
 
   if (useFirebase && db) {
-    (async () => {
-      try {
-        for (const admin of admins) {
+    try {
+      await Promise.all(
+        admins.map(async (admin) => {
           const { id, ...adminData } = admin;
           await setDoc(doc(db, "admins", id || "admin-default"), adminData);
-        }
-      } catch (err) {
-        console.error("Failed to async sync writeAdmins to Firestore:", err);
-      }
-    })();
+        })
+      );
+    } catch (err) {
+      console.error("Failed to sync writeAdmins to Firestore:", err);
+    }
   }
 }
 
@@ -558,25 +562,25 @@ function readDB(): Applicant[] {
   return cachedApplicants;
 }
 
-function writeDB(applicants: Applicant[]) {
+async function writeDB(applicants: Applicant[]) {
   cachedApplicants = applicants;
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(applicants, null, 2), "utf8");
   } catch (err) {
-    console.error("Error writing database:", err);
+    console.error("Error writing database (this is fine in read-only environments like Vercel):", err);
   }
 
   if (useFirebase && db) {
-    (async () => {
-      try {
-        for (const applicant of applicants) {
+    try {
+      await Promise.all(
+        applicants.map(async (applicant) => {
           const { id, ...applicantData } = applicant;
           await setDoc(doc(db, "applicants", applicant.id), applicantData);
-        }
-      } catch (err) {
-        console.error("Failed to async sync writeDB to Firestore:", err);
-      }
-    })();
+        })
+      );
+    } catch (err) {
+      console.error("Failed to sync writeDB to Firestore:", err);
+    }
   }
 }
 
@@ -846,7 +850,7 @@ app.post("/api/submit", async (req, res) => {
     // Save to file database
     const applicants = readDB();
     applicants.push(newApplicant);
-    writeDB(applicants);
+    await writeDB(applicants);
 
     res.status(201).json({
       success: true,
@@ -930,7 +934,7 @@ app.get("/api/admin/list", requireAdmin, (req, res) => {
 });
 
 // 2.3 Add new admin
-app.post("/api/admin/add-admin", requireAdmin, (req, res) => {
+app.post("/api/admin/add-admin", requireAdmin, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: "يرجى تحديد البريد الإلكتروني وكلمة المرور للمسؤول الجديد." });
@@ -953,13 +957,13 @@ app.post("/api/admin/add-admin", requireAdmin, (req, res) => {
   };
 
   admins.push(newAdmin);
-  writeAdmins(admins);
+  await writeAdmins(admins);
 
   res.json({ success: true, message: "تمت إضافة المسؤول الجديد بنجاح." });
 });
 
 // 2.4 Change Password
-app.post("/api/admin/change-password", requireAdmin, (req, res) => {
+app.post("/api/admin/change-password", requireAdmin, async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword) {
     return res.status(400).json({ error: "يرجى إدخال كلمة المرور الحالية والجديدة." });
@@ -981,13 +985,13 @@ app.post("/api/admin/change-password", requireAdmin, (req, res) => {
   }
 
   admins[index].passwordHash = hashPassword(newPassword);
-  writeAdmins(admins);
+  await writeAdmins(admins);
 
   res.json({ success: true, message: "تم تغيير كلمة المرور بنجاح." });
 });
 
 // 2.5 Delete Admin
-app.delete("/api/admin/delete-admin/:id", requireAdmin, (req, res) => {
+app.delete("/api/admin/delete-admin/:id", requireAdmin, async (req, res) => {
   const { id } = req.params;
   const currentEmail = (req as any).adminEmail;
   const admins = readAdmins();
@@ -1006,12 +1010,14 @@ app.delete("/api/admin/delete-admin/:id", requireAdmin, (req, res) => {
   }
 
   admins.splice(index, 1);
-  writeAdmins(admins);
+  await writeAdmins(admins);
 
   if (useFirebase && db) {
-    deleteDoc(doc(db, "admins", id)).catch(err => {
+    try {
+      await deleteDoc(doc(db, "admins", id));
+    } catch (err) {
       console.error("Error deleting admin from Firestore:", err);
-    });
+    }
   }
 
   res.json({ success: true, message: "تم حذف حساب المسؤول بنجاح." });
@@ -1117,7 +1123,7 @@ app.get("/api/admin/applicants/:id", requireAdmin, (req, res) => {
 });
 
 // 6. Update Applicant Status or Human Resource Review
-app.patch("/api/admin/applicants/:id/review", requireAdmin, (req, res) => {
+app.patch("/api/admin/applicants/:id/review", requireAdmin, async (req, res) => {
   const { status, hrEvaluation } = req.body;
   const applicants = readDB();
   const index = applicants.findIndex(a => a.id === req.params.id);
@@ -1152,12 +1158,12 @@ app.patch("/api/admin/applicants/:id/review", requireAdmin, (req, res) => {
     };
   }
   
-  writeDB(applicants);
+  await writeDB(applicants);
   res.json({ success: true, applicant: applicants[index] });
 });
 
 // 7. Delete Applicant
-app.delete("/api/admin/applicants/:id", requireAdmin, (req, res) => {
+app.delete("/api/admin/applicants/:id", requireAdmin, async (req, res) => {
   const applicants = readDB();
   const index = applicants.findIndex(a => a.id === req.params.id);
   
@@ -1166,21 +1172,32 @@ app.delete("/api/admin/applicants/:id", requireAdmin, (req, res) => {
   }
   
   applicants.splice(index, 1);
-  writeDB(applicants);
+  await writeDB(applicants);
 
   if (useFirebase && db) {
-    deleteDoc(doc(db, "applicants", req.params.id)).catch(err => {
+    try {
+      await deleteDoc(doc(db, "applicants", req.params.id));
+    } catch (err) {
       console.error("Error deleting document from Firestore:", err);
-    });
+    }
   }
 
   res.json({ success: true, message: "تم حذف طلب المتقدم بنجاح." });
 });
 
+// Export the app for serverless environments (like Vercel)
+export default app;
+
 // Handle serving the React SPA correctly
 async function startServer() {
   // Synchronize database with Firestore on start
   await syncDatabase();
+
+  if (process.env.VERCEL) {
+    // On Vercel, request routing for /api/* is handled by serverless functions,
+    // and static assets are served directly by the Vercel CDN. We don't need app.listen() or Vite.
+    return;
+  }
 
   // Vite integration
   if (process.env.NODE_ENV !== "production") {
