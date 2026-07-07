@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Since the server is the sole actor utilizing client SDKs in our sandbox environment,
+    // we authorize read and write access for both collection paths.
+    match /admins/{adminId} {
+      allow read, write: if true;
+    }
+
+    match /applicants/{applicantId} {
+      allow read, write: if true;
+    }
+  }
+}

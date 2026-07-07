@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "Admin": {
+      "title": "Admin",
+      "description": "An administrator account in the system",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email address of the administrator"
+        },
+        "passwordHash": {
+          "type": "string",
+          "description": "SHA-256 hashed password"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the admin was created"
+        }
+      },
+      "required": [
+        "email",
+        "passwordHash",
+        "createdAt"
+      ]
+    },
+    "Applicant": {
+      "title": "Applicant",
+      "description": "An applicant registration form and evaluation details",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "reviewing", "accepted", "rejected", "interview", "waitlist"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "personalInfo": {
+          "type": "object"
+        },
+        "industryExperience": {
+          "type": "object"
+        },
+        "certificates": {
+          "type": "object"
+        },
+        "examAnswers": {
+          "type": "object"
+        },
+        "aiEvaluation": {
+          "type": "object"
+        },
+        "hrEvaluation": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "status",
+        "createdAt",
+        "personalInfo",
+        "industryExperience",
+        "certificates",
+        "examAnswers"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Administrator profiles"
+    },
+    "/applicants/{applicantId}": {
+      "schema": "Applicant",
+      "description": "Applicant submissions and evaluations"
+    }
+  }
+}
