@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Lock, Shield, Users, FileText, CheckCircle, XCircle, Clock, Calendar, 
-  Search, Filter, Eye, Edit3, Download, Printer, Trash2, ArrowLeft,
+  Search, Filter, Eye, EyeOff, Edit3, Download, Printer, Trash2, ArrowLeft,
   ChevronDown, AlertCircle, Award, Star, ThumbsUp, Save, BarChart2,
   ListFilter, FileSpreadsheet, FileDown, Loader2, Briefcase, FileQuestion,
   Upload
@@ -17,6 +17,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -551,14 +552,24 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-2 text-right">كلمة المرور *</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/10 outline-none transition-all text-center font-mono placeholder:font-sans text-sm"
-                placeholder="أدخل كلمة المرور الخاصة بك"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-slate-200 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/10 outline-none transition-all text-center font-mono placeholder:font-sans text-sm"
+                  placeholder="أدخل كلمة المرور الخاصة بك"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  title={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <div className="flex gap-3">
