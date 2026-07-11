@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
-import { Applicant, AiEvaluation, HrEvaluation } from "./src/types.js";
+import { Applicant, AiEvaluation, HrEvaluation } from "../src/types.js";
 import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
