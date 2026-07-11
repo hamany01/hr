@@ -14,6 +14,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // --- Step 1: Personal Info ---
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
@@ -182,14 +183,117 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
 
   // --- Form Validation Helpers ---
   const validateStep1 = () => {
+    const newErrors: Record<string, string> = {};
+    if (!personalInfo.fullName.trim()) {
+      newErrors.fullName = 'الاسم الكامل مطلوب';
+    } else if (personalInfo.fullName.trim().split(/\s+/).filter(Boolean).length < 2) {
+      newErrors.fullName = 'يرجى كتابة الاسم الثنائي على الأقل (الاسم واسم العائلة)';
+    }
+
+    if (!personalInfo.nationalId.trim()) {
+      newErrors.nationalId = 'رقم الهوية الوطنية أو الإقامة مطلوب';
+    } else if (!/^\d{10}$/.test(personalInfo.nationalId.trim())) {
+      newErrors.nationalId = 'رقم الهوية/الإقامة يجب أن يتكون من 10 أرقام دقيقة';
+    }
+
+    if (!personalInfo.nationality.trim()) {
+      newErrors.nationality = 'الجنسية مطلوبة';
+    }
+
+    if (!personalInfo.phone.trim()) {
+      newErrors.phone = 'رقم الجوال مطلوب';
+    } else if (!/^(05|5)\d{8}$/.test(personalInfo.phone.trim())) {
+      newErrors.phone = 'يجب إدخال رقم جوال سعودي صحيح يبدأ بـ 05 ويتكون من 10 أرقام';
+    }
+
+    if (!personalInfo.email.trim()) {
+      newErrors.email = 'البريد الإلكتروني مطلوب';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email.trim())) {
+      newErrors.email = 'البريد الإلكتروني المدخل غير صحيح';
+    }
+
+    if (!personalInfo.city.trim()) {
+      newErrors.city = 'المدينة مطلوبة';
+    }
+
+    if (!personalInfo.residenceAddress.trim()) {
+      newErrors.residenceAddress = 'العنوان السكني التفصيلي مطلوب';
+    }
+
+    if (!personalInfo.major.trim()) {
+      newErrors.major = 'التخصص العلمي مطلوب';
+    }
+
+    if (!personalInfo.birthDate) {
+      newErrors.birthDate = 'تاريخ الميلاد مطلوب';
+    }
+
+    if (!personalInfo.expectedSalary.trim()) {
+      newErrors.expectedSalary = 'الراتب المتوقع مطلوب';
+    }
+
+    if (!personalInfo.cvBase64) {
+      newErrors.cv = 'ملف السيرة الذاتية (CV) بصيغة PDF مطلوب للتقديم';
+    }
+
+    setErrors(newErrors);
+    
+    if (Object.keys(newErrors).length > 0) {
+      alert("يرجى ملء كافة الحقول الإلزامية وتصحيح الأخطاء الموضحة باللون الأحمر للمتابعة.");
+      return false;
+    }
     return true;
   };
 
   const validateStep2 = () => {
+    const newErrors: Record<string, string> = {};
+    if (industryExperience.workedInPaint) {
+      if (!industryExperience.paintCompany.trim()) newErrors.paintCompany = 'اسم شركة الدهانات مطلوب';
+      if (Number(industryExperience.paintYears) <= 0) newErrors.paintYears = 'عدد سنوات الخبرة مطلوب';
+      if (!industryExperience.paintRole.trim()) newErrors.paintRole = 'المسمى الوظيفي مطلوب';
+      if (!industryExperience.paintTasks.trim()) newErrors.paintTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+    }
+    if (industryExperience.workedInChemical) {
+      if (!industryExperience.chemicalCompany.trim()) newErrors.chemicalCompany = 'اسم شركة الصناعات الكيماوية مطلوب';
+      if (Number(industryExperience.chemicalYears) <= 0) newErrors.chemicalYears = 'عدد سنوات الخبرة مطلوب';
+      if (!industryExperience.chemicalRole.trim()) newErrors.chemicalRole = 'المسمى الوظيفي مطلوب';
+      if (!industryExperience.chemicalTasks.trim()) newErrors.chemicalTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+    }
+    if (industryExperience.workedInIndustrial) {
+      if (!industryExperience.industrialCompany.trim()) newErrors.industrialCompany = 'اسم المنشأة الصناعية مطلوب';
+      if (Number(industryExperience.industrialYears) <= 0) newErrors.industrialYears = 'عدد سنوات الخبرة مطلوب';
+      if (!industryExperience.industrialRole.trim()) newErrors.industrialRole = 'المسمى الوظيفي مطلوب';
+      if (!industryExperience.industrialTasks.trim()) newErrors.industrialTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      alert("يرجى إكمال تفاصيل الخبرات المهنية التي قمت بتفعيلها أولاً.");
+      return false;
+    }
     return true;
   };
 
   const validateStep3 = () => {
+    const newErrors: Record<string, string> = {};
+    const questions = [
+      'q1_paint_risks', 'q2_hazard_vs_risk', 'q3_incident_investigation',
+      'q4_risk_assessment', 'q5_ppe_chemical', 'q6_sds_msds',
+      'q7_flammable_spill', 'q8_ppe_refusal', 'q9_daily_inspection',
+      'q10_safety_project'
+    ];
+    
+    questions.forEach((q) => {
+      const ans = examAnswers[q as keyof ExamAnswers] || '';
+      if (ans.trim().length < 15) {
+        newErrors[q] = `الإجابة مطلوبة ويجب ألا تقل عن 15 حرفاً لضمان دقة التقييم الذكي`;
+      }
+    });
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      alert("يرجى الإجابة على جميع أسئلة الاختبار الفني بوضوح وبما لا يقل عن 15 حرفاً لكل سؤال لتفعيل التقييم الذكي التلقائي.");
+      return false;
+    }
     return true;
   };
 
@@ -339,10 +443,37 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="text"
                   required
                   value={personalInfo.fullName}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, fullName: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, fullName: e.target.value }));
+                    if (errors.fullName) setErrors(prev => { const n = { ...prev }; delete n.fullName; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.fullName ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                   placeholder="أدخل اسمك الكامل كما في الهوية"
                 />
+                {errors.fullName && <p className="text-red-500 text-xs font-bold mt-1">{errors.fullName}</p>}
+              </div>
+
+              {/* National ID / Iqama */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">رقم الهوية الوطنية أو الإقامة *</label>
+                <input
+                  type="text"
+                  maxLength={10}
+                  required
+                  value={personalInfo.nationalId}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setPersonalInfo(prev => ({ ...prev, nationalId: val }));
+                    if (errors.nationalId) setErrors(prev => { const n = { ...prev }; delete n.nationalId; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.nationalId ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
+                  placeholder="مثال: 1XXXXXXXXX"
+                />
+                {errors.nationalId && <p className="text-red-500 text-xs font-bold mt-1">{errors.nationalId}</p>}
               </div>
 
               {/* Nationality */}
@@ -352,10 +483,16 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="text"
                   required
                   value={personalInfo.nationality}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, nationality: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, nationality: e.target.value }));
+                    if (errors.nationality) setErrors(prev => { const n = { ...prev }; delete n.nationality; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.nationality ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                   placeholder="مثال: سعودي"
                 />
+                {errors.nationality && <p className="text-red-500 text-xs font-bold mt-1">{errors.nationality}</p>}
               </div>
 
               {/* Gender */}
@@ -367,7 +504,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all bg-white"
                 >
                   <option value="male">ذكر</option>
-                  <option value="female font-sans">أنثى</option>
+                  <option value="female">أنثى</option>
                 </select>
               </div>
 
@@ -378,9 +515,15 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="date"
                   required
                   value={personalInfo.birthDate}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, birthDate: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, birthDate: e.target.value }));
+                    if (errors.birthDate) setErrors(prev => { const n = { ...prev }; delete n.birthDate; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.birthDate ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                 />
+                {errors.birthDate && <p className="text-red-500 text-xs font-bold mt-1">{errors.birthDate}</p>}
               </div>
 
               {/* City */}
@@ -390,10 +533,16 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="text"
                   required
                   value={personalInfo.city}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, city: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, city: e.target.value }));
+                    if (errors.city) setErrors(prev => { const n = { ...prev }; delete n.city; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.city ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                   placeholder="مثال: الجبيل، الرياض، جدة"
                 />
+                {errors.city && <p className="text-red-500 text-xs font-bold mt-1">{errors.city}</p>}
               </div>
 
               {/* Residence Address */}
@@ -403,10 +552,16 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="text"
                   required
                   value={personalInfo.residenceAddress}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, residenceAddress: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, residenceAddress: e.target.value }));
+                    if (errors.residenceAddress) setErrors(prev => { const n = { ...prev }; delete n.residenceAddress; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.residenceAddress ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                   placeholder="مثال: جدة، حي الصفا، شارع الأربعين"
                 />
+                {errors.residenceAddress && <p className="text-red-500 text-xs font-bold mt-1">{errors.residenceAddress}</p>}
               </div>
 
               {/* Phone */}
@@ -416,10 +571,16 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="tel"
                   required
                   value={personalInfo.phone}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, phone: e.target.value }));
+                    if (errors.phone) setErrors(prev => { const n = { ...prev }; delete n.phone; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.phone ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                   placeholder="مثال: 05XXXXXXXX"
                 />
+                {errors.phone && <p className="text-red-500 text-xs font-bold mt-1">{errors.phone}</p>}
               </div>
 
               {/* Email */}
@@ -429,10 +590,16 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="email"
                   required
                   value={personalInfo.email}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, email: e.target.value }));
+                    if (errors.email) setErrors(prev => { const n = { ...prev }; delete n.email; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.email ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                   placeholder="example@domain.com"
                 />
+                {errors.email && <p className="text-red-500 text-xs font-bold mt-1">{errors.email}</p>}
               </div>
 
               {/* Qualification */}
@@ -457,10 +624,16 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="text"
                   required
                   value={personalInfo.major}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, major: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, major: e.target.value }));
+                    if (errors.major) setErrors(prev => { const n = { ...prev }; delete n.major; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.major ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                   placeholder="مثال: الهندسة الكيميائية / سلامة مهنية"
                 />
+                {errors.major && <p className="text-red-500 text-xs font-bold mt-1">{errors.major}</p>}
               </div>
 
               {/* Experience Years */}
@@ -520,10 +693,16 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   type="text"
                   required
                   value={personalInfo.expectedSalary}
-                  onChange={(e) => setPersonalInfo(prev => ({ ...prev, expectedSalary: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, expectedSalary: e.target.value }));
+                    if (errors.expectedSalary) setErrors(prev => { const n = { ...prev }; delete n.expectedSalary; return n; });
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
+                    errors.expectedSalary ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  }`}
                   placeholder="مثال: 12,000 ريال"
                 />
+                {errors.expectedSalary && <p className="text-red-500 text-xs font-bold mt-1">{errors.expectedSalary}</p>}
               </div>
 
               {/* Notice Period */}
@@ -688,11 +867,16 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                 <div className="space-y-3">
                   <label className="block text-sm font-bold text-slate-700">السيرة الذاتية (ملف PDF حديث) *</label>
                   {!personalInfo.cvFileName ? (
-                    <div className="border-2 border-dashed border-slate-200 hover:border-orange-500 rounded-2xl p-6 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group">
+                    <div className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group ${
+                      errors.cv ? 'border-red-500 bg-red-50/10 animate-pulse' : 'border-slate-200 hover:border-orange-500'
+                    }`}>
                       <input
                         type="file"
                         accept=".pdf"
-                        onChange={(e) => handleFileUpload(e, 'cv')}
+                        onChange={(e) => {
+                          handleFileUpload(e, 'cv');
+                          if (errors.cv) setErrors(prev => { const n = { ...prev }; delete n.cv; return n; });
+                        }}
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         id="upload-cv-file"
                       />
@@ -720,6 +904,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                       </button>
                     </div>
                   )}
+                  {errors.cv && <p className="text-red-500 text-xs font-bold mt-1">{errors.cv}</p>}
                 </div>
 
                 {/* Certificates Upload */}

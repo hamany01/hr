@@ -107,6 +107,30 @@ async function syncDatabase() {
     try {
       fs.writeFileSync(ADMINS_FILE, JSON.stringify(localAdmins, null, 2), "utf8");
     } catch (e) {}
+  } else {
+    // Ensure the default admin "hamany01@gmail.com" has the correct password hash requested by the user: "A123@a456@"
+    const targetEmail = "hamany01@gmail.com";
+    const requiredHash = hashPassword("A123@a456@");
+    const defaultAdminObj = localAdmins.find(a => a.email.toLowerCase() === targetEmail.toLowerCase());
+    if (defaultAdminObj) {
+      if (defaultAdminObj.passwordHash !== requiredHash) {
+        console.log(`Enforcing admin password hash for ${targetEmail} in local database.`);
+        defaultAdminObj.passwordHash = requiredHash;
+        try {
+          fs.writeFileSync(ADMINS_FILE, JSON.stringify(localAdmins, null, 2), "utf8");
+        } catch (e) {}
+      }
+    } else {
+      localAdmins.push({
+        id: "admin-default",
+        email: targetEmail,
+        passwordHash: requiredHash,
+        createdAt: new Date().toISOString()
+      });
+      try {
+        fs.writeFileSync(ADMINS_FILE, JSON.stringify(localAdmins, null, 2), "utf8");
+      } catch (e) {}
+    }
   }
 
   // 2. Load Applicants
@@ -139,6 +163,25 @@ async function syncDatabase() {
           passwordHash: row.password_hash,
           createdAt: row.created_at
         }));
+        
+        // Enforce default admin password hash in Supabase cache and cloud database
+        const targetEmail = "hamany01@gmail.com";
+        const requiredHash = hashPassword("A123@a456@");
+        const cachedAdminObj = cachedAdmins.find(a => a.email.toLowerCase() === targetEmail.toLowerCase());
+        if (cachedAdminObj && cachedAdminObj.passwordHash !== requiredHash) {
+          console.log(`Enforcing admin password hash for ${targetEmail} in Supabase cache.`);
+          cachedAdminObj.passwordHash = requiredHash;
+          try {
+            await supabase
+              .from("admins")
+              .update({ password_hash: requiredHash })
+              .eq("email", targetEmail);
+            console.log(`Successfully updated admin password in Supabase for ${targetEmail}`);
+          } catch (err) {
+            console.error("Failed to update admin password in Supabase:", err);
+          }
+        }
+        
         console.log(`Loaded ${cachedAdmins.length} admins from Supabase.`);
       } else {
         // Migrate local admins to Supabase
@@ -235,6 +278,21 @@ async function syncDatabase() {
 let syncPromise: Promise<void> | null = null;
 
 async function ensureDbSynced(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const isFreshRequired = req.path.startsWith("/api/admin") || req.path === "/api/submit";
+  
+  if (useSupabase && supabase && isFreshRequired) {
+    try {
+      const { data: supabaseApplicants, error: applicantsErr } = await supabase
+        .from("applicants")
+        .select("*");
+      if (!applicantsErr && supabaseApplicants) {
+        cachedApplicants = supabaseApplicants.map(mapSupabaseToApplicant);
+      }
+    } catch (err) {
+      console.error("Failed to refresh applicants from Supabase during request:", err);
+    }
+  }
+
   if (!syncPromise) {
     syncPromise = syncDatabase();
   }
@@ -665,14 +723,37 @@ async function writeDB(applicants: Applicant[]) {
   }
 }
 
-// Generate application ID (HSE-YYYY-NNNN)
-function generateApplicationId(): string {
+// Generate application ID (HSE-YYYY-NNNN) - asynchronous & robust to prevent duplications across multiple servers
+async function generateApplicationId(): Promise<string> {
   const year = new Date().getFullYear();
-  const applicants = readDB();
-  // Find max sequential number for current year
   const prefix = `HSE-${year}-`;
-  const yearApplicants = applicants.filter(a => a.id.startsWith(prefix));
   let maxSeq = 0;
+
+  // 1. Fetch live from Supabase first if available
+  if (useSupabase && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("applicants")
+        .select("id")
+        .like("id", `${prefix}%`);
+      
+      if (!error && data) {
+        data.forEach((row: any) => {
+          const part = row.id.replace(prefix, "");
+          const num = parseInt(part, 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching max application ID from Supabase:", err);
+    }
+  }
+
+  // 2. Cross-reference with our in-memory/local cache to catch concurrent submissions
+  const cached = cachedApplicants || [];
+  const yearApplicants = cached.filter(a => a.id && a.id.startsWith(prefix));
   yearApplicants.forEach(a => {
     const part = a.id.replace(prefix, "");
     const num = parseInt(part, 10);
@@ -680,8 +761,69 @@ function generateApplicationId(): string {
       maxSeq = num;
     }
   });
+
   const nextSeq = String(maxSeq + 1).padStart(4, "0");
   return `${prefix}${nextSeq}`;
+}
+
+// Save and get custom settings (e.g. company logo) from Supabase and local fallback
+async function saveSetting(key: string, value: string) {
+  // 1. Save locally to settings.json
+  const settingsFile = path.join(DB_DIR, "settings.json");
+  let localSettings: any = {};
+  try {
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
+    if (fs.existsSync(settingsFile)) {
+      localSettings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
+    }
+  } catch (err) {}
+  
+  localSettings[key] = value;
+  
+  try {
+    fs.writeFileSync(settingsFile, JSON.stringify(localSettings, null, 2), "utf8");
+  } catch (err) {}
+
+  // 2. Save to Supabase (try settings table)
+  if (useSupabase && supabase) {
+    try {
+      const { error } = await supabase
+        .from("settings")
+        .upsert({ key, value });
+      if (error) {
+        console.warn("Could not upsert setting to Supabase 'settings' table:", error.message);
+      }
+    } catch (err) {}
+  }
+}
+
+async function getSetting(key: string): Promise<string | null> {
+  // 1. Try to fetch from Supabase
+  if (useSupabase && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", key)
+        .maybeSingle();
+      if (!error && data) {
+        return data.value;
+      }
+    } catch (err) {}
+  }
+
+  // 2. Fallback to local settings.json
+  const settingsFile = path.join(DB_DIR, "settings.json");
+  try {
+    if (fs.existsSync(settingsFile)) {
+      const localSettings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
+      return localSettings[key] || null;
+    }
+  } catch (err) {}
+
+  return null;
 }
 
 // Initialize Gemini Client
@@ -911,7 +1053,7 @@ app.post("/api/submit", async (req, res) => {
       ...personalInfo
     };
 
-    const newId = generateApplicationId();
+    const newId = await generateApplicationId();
     
     const newApplicant: Applicant = {
       id: newId,
@@ -942,6 +1084,29 @@ app.post("/api/submit", async (req, res) => {
   } catch (error: any) {
     console.error("Error submitting application:", error);
     res.status(500).json({ error: "حدث خطأ غير متوقع أثناء معالجة طلبك: " + error.message });
+  }
+});
+
+// GET Company Logo
+app.get("/api/logo", async (req, res) => {
+  try {
+    const logo = await getSetting("company_logo");
+    res.json({ logo });
+  } catch (error: any) {
+    console.error("Error retrieving company logo Setting:", error);
+    res.status(500).json({ error: "Failed to retrieve company logo." });
+  }
+});
+
+// POST Company Logo (Admin only)
+app.post("/api/logo", requireAdmin, async (req, res) => {
+  try {
+    const { logo } = req.body;
+    await saveSetting("company_logo", logo || "");
+    res.json({ success: true, message: "تم حفظ الشعار في قاعدة البيانات بنجاح." });
+  } catch (error: any) {
+    console.error("Error saving company logo Setting:", error);
+    res.status(500).json({ error: "فشل حفظ الشعار في قاعدة البيانات: " + error.message });
   }
 });
 
