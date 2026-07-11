@@ -650,7 +650,21 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
             <Shield className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-bold text-base text-blue-900">بوابة إدارة التقييم والتوظيف</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-bold text-base text-blue-900">بوابة إدارة التقييم والتوظيف</h1>
+              {stats && (
+                stats.databaseType === "Supabase" ? (
+                  <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    متصل بـ Supabase ({stats.supabaseUrl})
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-amber-200" title="يرجى إضافة متغيرات البيئة في منصة الاستضافة">
+                    ⚠️ تخزين محلي مؤقت
+                  </span>
+                )
+              )}
+            </div>
             <p className="text-slate-450 text-[10px] font-medium">نظام الفحص الفني والمراجعة المدعوم بالذكاء الاصطناعي</p>
           </div>
         </div>
@@ -1177,6 +1191,24 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
         /* --- ADMIN DASHBOARD LIST & TABLE VIEW --- */
         <main className="max-w-7xl mx-auto py-8 px-4 md:px-6 space-y-8 print:hidden" id="admin-main-list-view">
           
+          {/* Supabase Disconnected Banner Warning */}
+          {stats && stats.databaseType !== "Supabase" && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-right flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-amber-900 flex items-center gap-2 text-sm">
+                  <span>⚠️</span>
+                  <span>تنبيه هام: خادم المنصة يعمل بوضع التخزين المؤقت (Supabase غير متصل)</span>
+                </h4>
+                <p className="text-amber-700 text-xs leading-relaxed">
+                  لم يتم العثور على متغيرات البيئة لـ Supabase في بيئة التشغيل الحالية لـ Vercel. أي طلبات تقديم جديدة سيتم حفظها مؤقتاً في ذاكرة الخادم فقط ولن تظهر في لوحة تحكم Supabase، وقد تختفي في أي وقت عند إعادة تشغيل الحاوية.
+                </p>
+              </div>
+              <div className="shrink-0 bg-white px-3 py-1.5 rounded-xl border border-amber-200 text-amber-800 text-xs font-bold font-mono">
+                مطلوب: إضافة SUPABASE_URL و SUPABASE_SECRET_KEY في Vercel
+              </div>
+            </div>
+          )}
+
           {/* Dashboard Stats Panel Cards */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">

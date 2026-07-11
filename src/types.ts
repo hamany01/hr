@@ -123,6 +123,9 @@ export interface DashboardStats {
   interview: number;
   waitlist: number;
   averageAiScore: number;
+  databaseType?: "Supabase" | "Local";
+  isSupabaseConnected?: boolean;
+  supabaseUrl?: string;
 }
 
 export interface Admin {

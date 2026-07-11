@@ -1355,7 +1355,10 @@ app.get("/api/admin/stats", requireAdmin, (req, res) => {
     rejected,
     interview,
     waitlist,
-    averageAiScore
+    averageAiScore,
+    databaseType: useSupabase ? "Supabase" : "Local",
+    isSupabaseConnected: useSupabase,
+    supabaseUrl: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.replace(/^https:\/\/|\.supabase\.co/g, "") : ""
   });
 });
 
