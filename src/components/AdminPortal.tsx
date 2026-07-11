@@ -74,7 +74,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [isSavingReview, setIsSavingReview] = useState(false);
   const [logoStateTrigger, setLogoStateTrigger] = useState(0);
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -84,26 +84,61 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const base64 = event.target?.result as string;
       if (base64) {
-        localStorage.setItem('company_logo', base64);
-        setLogoStateTrigger(prev => prev + 1);
-        window.dispatchEvent(new Event('company_logo_updated'));
-        alert("تم رفع وتحديث شعار المصنع بنجاح!");
+        try {
+          const res = await fetch('/api/logo', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ logo: base64 })
+          });
+
+          if (res.ok) {
+            localStorage.setItem('company_logo', base64);
+            setLogoStateTrigger(prev => prev + 1);
+            window.dispatchEvent(new Event('company_logo_updated'));
+            alert("تم رفع وتحديث شعار المصنع وحفظه في قاعدة البيانات بنجاح!");
+          } else {
+            const err = await res.json();
+            alert("فشل رفع الشعار إلى قاعدة البيانات: " + (err.error || "خطأ مجهول"));
+          }
+        } catch (err) {
+          alert("تعذر الاتصال بالخادم لرفع الشعار.");
+        }
       }
     };
     reader.readAsDataURL(file);
   };
 
-  const handleLogoReset = () => {
+  const handleLogoReset = async () => {
     const confirmReset = window.confirm("هل أنت متأكد من رغبتك في إعادة تعيين الشعار واستعادة الشعار الافتراضي؟");
     if (!confirmReset) return;
 
-    localStorage.removeItem('company_logo');
-    setLogoStateTrigger(prev => prev + 1);
-    window.dispatchEvent(new Event('company_logo_updated'));
-    alert("تمت استعادة الشعار الافتراضي بنجاح.");
+    try {
+      const res = await fetch('/api/logo', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ logo: "" })
+      });
+
+      if (res.ok) {
+        localStorage.removeItem('company_logo');
+        setLogoStateTrigger(prev => prev + 1);
+        window.dispatchEvent(new Event('company_logo_updated'));
+        alert("تمت استعادة الشعار الافتراضي وحذفه من قاعدة البيانات بنجاح.");
+      } else {
+        alert("فشل حذف الشعار من قاعدة البيانات.");
+      }
+    } catch (err) {
+      alert("تعذر الاتصال بالخادم لإعادة تعيين الشعار.");
+    }
   };
 
   const adminToken = localStorage.getItem('hse_admin_token');
