@@ -35,6 +35,35 @@ function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+// Helper functions to map between Applicant models and Supabase schema
+function mapApplicantToSupabase(applicant: Applicant) {
+  return {
+    id: applicant.id,
+    status: applicant.status,
+    created_at: applicant.createdAt,
+    personal_info: applicant.personalInfo,
+    industry_experience: applicant.industryExperience,
+    certificates: applicant.certificates,
+    exam_answers: applicant.examAnswers,
+    ai_evaluation: applicant.aiEvaluation || null,
+    hr_evaluation: applicant.hrEvaluation || null
+  };
+}
+
+function mapSupabaseToApplicant(row: any): Applicant {
+  return {
+    id: row.id,
+    status: row.status,
+    createdAt: row.created_at,
+    personalInfo: row.personal_info,
+    industryExperience: row.industry_experience,
+    certificates: row.certificates,
+    examAnswers: row.exam_answers,
+    aiEvaluation: row.ai_evaluation || undefined,
+    hrEvaluation: row.hr_evaluation || undefined
+  };
+}
+
 try {
   // Support fallback to environment variables
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -104,7 +133,12 @@ async function syncDatabase() {
       }
 
       if (supabaseAdmins && supabaseAdmins.length > 0) {
-        cachedAdmins = supabaseAdmins;
+        cachedAdmins = supabaseAdmins.map((row: any) => ({
+          id: row.id,
+          email: row.email,
+          passwordHash: row.password_hash,
+          createdAt: row.created_at
+        }));
         console.log(`Loaded ${cachedAdmins.length} admins from Supabase.`);
       } else {
         // Migrate local admins to Supabase
@@ -115,8 +149,8 @@ async function syncDatabase() {
             .upsert({
               id: admin.id,
               email: admin.email,
-              passwordHash: admin.passwordHash,
-              createdAt: admin.createdAt
+              password_hash: admin.passwordHash,
+              created_at: admin.createdAt
             });
           if (insertErr) {
             console.error(`Failed to migrate admin ${admin.email}:`, insertErr);
@@ -137,7 +171,7 @@ async function syncDatabase() {
       const loadedApplicants: Applicant[] = [];
       if (supabaseApplicants && supabaseApplicants.length > 0) {
         supabaseApplicants.forEach((row: any) => {
-          loadedApplicants.push({ id: row.id, ...row.data } as Applicant);
+          loadedApplicants.push(mapSupabaseToApplicant(row));
         });
         cachedApplicants = loadedApplicants;
         console.log(`Loaded ${cachedApplicants.length} applicants from Supabase.`);
@@ -146,10 +180,10 @@ async function syncDatabase() {
         let migratedCount = 0;
         for (const applicant of localApplicants) {
           if (!supabaseIds.has(applicant.id)) {
-            const { id, ...applicantData } = applicant;
+            const rowData = mapApplicantToSupabase(applicant);
             const { error: upsertErr } = await supabase
               .from("applicants")
-              .upsert({ id: applicant.id, data: applicantData });
+              .upsert(rowData);
             
             if (!upsertErr) {
               cachedApplicants.push(applicant);
@@ -166,10 +200,10 @@ async function syncDatabase() {
         // Migrate all local applicants to Supabase
         console.log(`No applicants in Supabase. Migrating ${localApplicants.length} local applicants...`);
         for (const applicant of localApplicants) {
-          const { id, ...applicantData } = applicant;
+          const rowData = mapApplicantToSupabase(applicant);
           const { error: upsertErr } = await supabase
             .from("applicants")
-            .upsert({ id: applicant.id, data: applicantData });
+            .upsert(rowData);
           if (upsertErr) {
             console.error(`Failed to migrate applicant ${applicant.id}:`, upsertErr);
           }
@@ -281,8 +315,8 @@ async function writeAdmins(admins: any[]) {
             .upsert({
               id: admin.id,
               email: admin.email,
-              passwordHash: admin.passwordHash,
-              createdAt: admin.createdAt
+              password_hash: admin.passwordHash,
+              created_at: admin.createdAt
             });
           if (upsertErr) {
             console.error(`Failed to sync writeAdmins to Supabase:`, upsertErr);
@@ -616,10 +650,10 @@ async function writeDB(applicants: Applicant[]) {
     try {
       await Promise.all(
         applicants.map(async (applicant) => {
-          const { id, ...applicantData } = applicant;
+          const rowData = mapApplicantToSupabase(applicant);
           const { error: upsertErr } = await supabase
             .from("applicants")
-            .upsert({ id: applicant.id, data: applicantData });
+            .upsert(rowData);
           if (upsertErr) {
             console.error(`Failed to sync writeDB to Supabase:`, upsertErr);
           }
