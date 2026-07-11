@@ -723,6 +723,38 @@ async function writeDB(applicants: Applicant[]) {
   }
 }
 
+async function syncApplicantToSupabase(applicant: Applicant) {
+  if (useSupabase && supabase) {
+    try {
+      const rowData = mapApplicantToSupabase(applicant);
+      const { error: upsertErr } = await supabase
+        .from("applicants")
+        .upsert(rowData);
+      if (upsertErr) {
+        console.error(`Failed to sync applicant ${applicant.id} to Supabase:`, upsertErr);
+      }
+    } catch (err) {
+      console.error(`Failed to sync applicant ${applicant.id} to Supabase:`, err);
+    }
+  }
+}
+
+async function deleteApplicantFromSupabase(id: string) {
+  if (useSupabase && supabase) {
+    try {
+      const { error: deleteErr } = await supabase
+        .from("applicants")
+        .delete()
+        .eq("id", id);
+      if (deleteErr) {
+        console.error(`Failed to delete applicant ${id} from Supabase:`, deleteErr);
+      }
+    } catch (err) {
+      console.error(`Failed to delete applicant ${id} from Supabase:`, err);
+    }
+  }
+}
+
 // Generate application ID (HSE-YYYY-NNNN) - asynchronous & robust to prevent duplications across multiple servers
 async function generateApplicationId(): Promise<string> {
   const year = new Date().getFullYear();
@@ -1073,7 +1105,13 @@ app.post("/api/submit", async (req, res) => {
     // Save to file database
     const applicants = readDB();
     applicants.push(newApplicant);
-    await writeDB(applicants);
+    cachedApplicants = applicants;
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(applicants, null, 2), "utf8");
+    } catch (err) {
+      console.error("Error writing fallback local database:", err);
+    }
+    await syncApplicantToSupabase(newApplicant);
 
     res.status(201).json({
       success: true,
@@ -1429,7 +1467,13 @@ app.patch("/api/admin/applicants/:id/review", requireAdmin, async (req, res) => 
     };
   }
   
-  await writeDB(applicants);
+  cachedApplicants = applicants;
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(applicants, null, 2), "utf8");
+  } catch (err) {
+    console.error("Error writing fallback local database:", err);
+  }
+  await syncApplicantToSupabase(applicants[index]);
   res.json({ success: true, applicant: applicants[index] });
 });
 
@@ -1443,21 +1487,13 @@ app.delete("/api/admin/applicants/:id", requireAdmin, async (req, res) => {
   }
   
   applicants.splice(index, 1);
-  await writeDB(applicants);
-
-  if (useSupabase && supabase) {
-    try {
-      const { error: deleteErr } = await supabase
-        .from("applicants")
-        .delete()
-        .eq("id", req.params.id);
-      if (deleteErr) {
-        console.error("Error deleting document from Supabase:", deleteErr);
-      }
-    } catch (err) {
-      console.error("Error deleting document from Supabase:", err);
-    }
+  cachedApplicants = applicants;
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(applicants, null, 2), "utf8");
+  } catch (err) {
+    console.error("Error writing fallback local database:", err);
   }
+  await deleteApplicantFromSupabase(req.params.id);
 
   res.json({ success: true, message: "تم حذف طلب المتقدم بنجاح." });
 });
