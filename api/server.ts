@@ -64,24 +64,30 @@ function mapSupabaseToApplicant(row: any): Applicant {
   };
 }
 
-try {
-  // Support fallback to environment variables
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+function initSupabase(): boolean {
+  if (supabase) return true;
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
-  if (supabaseUrl && supabaseKey) {
-    supabase = createClient(supabaseUrl, supabaseKey);
-    useSupabase = true;
-    console.log(`Supabase client initialized successfully with URL: ${supabaseUrl}`);
-  } else {
-    console.warn("No valid Supabase credentials found in environment variables. Falling back to local files.");
+    if (supabaseUrl && supabaseKey) {
+      supabase = createClient(supabaseUrl, supabaseKey);
+      useSupabase = true;
+      console.log(`Supabase client initialized dynamically with URL: ${supabaseUrl}`);
+      return true;
+    }
+  } catch (err) {
+    console.error("Supabase dynamic initialization failed:", err);
   }
-} catch (err) {
-  console.error("Supabase initialization failed, falling back to local JSON files:", err);
+  return false;
 }
+
+// Initial run
+initSupabase();
 
 // Synchronize and initialize cached data
 async function syncDatabase() {
+  initSupabase();
   if (!fs.existsSync(DB_DIR)) {
     fs.mkdirSync(DB_DIR, { recursive: true });
   }
@@ -278,6 +284,7 @@ async function syncDatabase() {
 let syncPromise: Promise<void> | null = null;
 
 async function ensureDbSynced(req: express.Request, res: express.Response, next: express.NextFunction) {
+  initSupabase();
   const isFreshRequired = req.path.startsWith("/api/admin") || req.path === "/api/submit";
   
   if (useSupabase && supabase && isFreshRequired) {
@@ -1150,6 +1157,7 @@ app.post("/api/logo", requireAdmin, async (req, res) => {
 
 // Debug Status Endpoint for troubleshooting Supabase & local persistence on Vercel
 app.get("/api/debug-status", (req, res) => {
+  initSupabase();
   res.json({
     success: true,
     vercel: !!process.env.VERCEL,
