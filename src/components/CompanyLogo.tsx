@@ -47,7 +47,7 @@ export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
         width="510" 
         height="180" 
         rx="40" 
-        stroke="#1e3a8a" 
+        stroke="#1b43b2" 
         strokeWidth="12" 
         fill="#ffffff" 
       />
@@ -69,7 +69,7 @@ export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
              C 25 122 30 126 38 126 
              C 46 126 55 121 55 112 
              L 55 50 Z" 
-          fill="#1e3a8a" 
+          fill="#1b43b2" 
         />
         
         {/* "P" letter in blue */}
@@ -86,7 +86,7 @@ export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
              L 175 78 
              L 175 155 
              L 140 155 Z" 
-          fill="#1e3a8a" 
+          fill="#1b43b2" 
         />
         
         {/* "F" letter with horizontal red stripes and a blue outline */}
@@ -109,7 +109,7 @@ export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
         {/* Red/white horizontal stripes on F */}
         <g mask="url(#f-mask)">
           {/* Base Red background */}
-          <rect x="250" y="40" width="200" height="130" fill="#dc2626" />
+          <rect x="250" y="40" width="200" height="130" fill="#d8232a" />
           {/* White stripes */}
           <rect x="250" y="50" width="200" height="12" fill="#ffffff" />
           <rect x="250" y="75" width="200" height="12" fill="#ffffff" />
@@ -130,7 +130,7 @@ export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
              L 330 130 
              L 322 155 
              L 285 155 Z" 
-          stroke="#1e3a8a" 
+          stroke="#1b43b2" 
           strokeWidth="6" 
           strokeLinejoin="round" 
           fill="none" 
