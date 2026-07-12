@@ -2,7 +2,6 @@ export type ApplicationStatus = 'pending' | 'reviewing' | 'accepted' | 'rejected
 
 export interface PersonalInfo {
   fullName: string;
-  nationalId?: string;
   nationality: string;
   birthDate: string;
   gender: string; // 'male' | 'female'

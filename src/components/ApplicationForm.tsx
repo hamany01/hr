@@ -19,7 +19,6 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
   // --- Step 1: Personal Info ---
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     fullName: '',
-    nationalId: '',
     nationality: 'سعودي',
     birthDate: '',
     gender: 'male',
@@ -188,12 +187,6 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
       newErrors.fullName = 'الاسم الكامل مطلوب';
     } else if (personalInfo.fullName.trim().split(/\s+/).filter(Boolean).length < 2) {
       newErrors.fullName = 'يرجى كتابة الاسم الثنائي على الأقل (الاسم واسم العائلة)';
-    }
-
-    if (!personalInfo.nationalId.trim()) {
-      newErrors.nationalId = 'رقم الهوية الوطنية أو الإقامة مطلوب';
-    } else if (!/^\d{10}$/.test(personalInfo.nationalId.trim())) {
-      newErrors.nationalId = 'رقم الهوية/الإقامة يجب أن يتكون من 10 أرقام دقيقة';
     }
 
     if (!personalInfo.nationality.trim()) {
@@ -453,27 +446,6 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   placeholder="أدخل اسمك الكامل كما في الهوية"
                 />
                 {errors.fullName && <p className="text-red-500 text-xs font-bold mt-1">{errors.fullName}</p>}
-              </div>
-
-              {/* National ID / Iqama */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">رقم الهوية الوطنية أو الإقامة *</label>
-                <input
-                  type="text"
-                  maxLength={10}
-                  required
-                  value={personalInfo.nationalId}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '');
-                    setPersonalInfo(prev => ({ ...prev, nationalId: val }));
-                    if (errors.nationalId) setErrors(prev => { const n = { ...prev }; delete n.nationalId; return n; });
-                  }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.nationalId ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
-                  }`}
-                  placeholder="مثال: 1XXXXXXXXX"
-                />
-                {errors.nationalId && <p className="text-red-500 text-xs font-bold mt-1">{errors.nationalId}</p>}
               </div>
 
               {/* Nationality */}

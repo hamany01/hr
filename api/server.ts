@@ -424,7 +424,6 @@ function _unused_initDatabase() {
         createdAt: "2026-07-01T10:30:00Z",
         personalInfo: {
           fullName: "أحمد بن عبد الله الزهراني",
-          nationalId: "1083748291",
           nationality: "سعودي",
           birthDate: "1992-05-14",
           gender: "male",
@@ -531,7 +530,6 @@ function _unused_initDatabase() {
         createdAt: "2026-07-03T14:15:00Z",
         personalInfo: {
           fullName: "سارة بنت خالد المطيري",
-          nationalId: "1092837462",
           nationality: "سعودية",
           birthDate: "1996-09-22",
           gender: "female",
@@ -621,7 +619,6 @@ function _unused_initDatabase() {
         createdAt: "2026-07-04T12:00:00Z",
         personalInfo: {
           fullName: "خالد بن محمد الدوسري",
-          nationalId: "1074829103",
           nationality: "سعودي",
           birthDate: "1999-01-10",
           gender: "male",
@@ -1422,7 +1419,6 @@ app.get("/api/admin/applicants", requireAdmin, (req, res) => {
     const q = String(search).toLowerCase();
     applicants = applicants.filter(a => 
       a.personalInfo.fullName.toLowerCase().includes(q) ||
-      (a.personalInfo.nationalId || "").includes(q) ||
       a.personalInfo.phone.includes(q) ||
       a.id.toLowerCase().includes(q)
     );
