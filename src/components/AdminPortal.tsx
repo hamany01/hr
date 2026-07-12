@@ -4,7 +4,7 @@ import {
   Search, Filter, Eye, EyeOff, Edit3, Download, Printer, Trash2, ArrowLeft,
   ChevronDown, AlertCircle, Award, Star, ThumbsUp, Save, BarChart2,
   ListFilter, FileSpreadsheet, FileDown, Loader2, Briefcase, FileQuestion,
-  Upload
+  Upload, ShieldCheck, Copy, Check, Share2, MessageSquare
 } from 'lucide-react';
 import { Applicant, DashboardStats, HrEvaluation, ApplicationStatus } from '../types';
 import CompanyLogo from './CompanyLogo';
@@ -58,12 +58,22 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [manualEvalFilter, setManualEvalFilter] = useState<string>('all');
 
   // Hybrid WhatsApp Interview Scheduling states
-  const [activeSubTab, setActiveSubTab] = useState<'applicants' | 'schedules'>('applicants');
+  const [activeSubTab, setActiveSubTab] = useState<'applicants' | 'schedules' | 'announcements'>('applicants');
   const [schedulingApplicant, setSchedulingApplicant] = useState<Applicant | null>(null);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
   const [scheduleName, setScheduleName] = useState('');
   const [scheduleType, setScheduleType] = useState('remote');
+
+  // WhatsApp announcement customization states
+  const [announcementAppUrl, setAnnouncementAppUrl] = useState(() => {
+    try {
+      return window.location.origin;
+    } catch {
+      return 'https://jeddahpaints-careers.com';
+    }
+  });
+  const [announcementCopied, setAnnouncementCopied] = useState(false);
 
   // Manual HR Evaluation form state
   const [hrEvalForm, setHrEvalForm] = useState<HrEvaluation>({
@@ -1099,6 +1109,12 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
                       {selectedApplicant.personalInfo.hasLocationIssue === 'yes' ? 'نعم (لديه مشكلة)' : 'لا (لا توجد أي مشكلة)'}
                     </span>
                   </div>
+                  <div>
+                    <span className="text-slate-400 block">هل لديه ترخيص من منصة كوادر؟</span>
+                    <span className="font-bold text-slate-800">
+                      {selectedApplicant.personalInfo.hasKawaderLicense === 'yes' ? 'نعم (لديه ترخيص)' : 'لا'}
+                    </span>
+                  </div>
                   {selectedApplicant.personalInfo.linkedinUrl && (
                     <div>
                       <span className="text-slate-400 block">حساب LinkedIn:</span>
@@ -1169,6 +1185,63 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
                       </div>
                     ) : (
                       <div className="text-xs text-slate-400 italic text-center p-2 border border-dashed rounded-lg">لم يتم توفير شهادات ورقية من المرشح</div>
+                    )}
+
+                    {/* Kawader License Preview */}
+                    {selectedApplicant.personalInfo.hasKawaderLicense === 'yes' && (
+                      selectedApplicant.personalInfo.kawaderLicenseBase64 ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handlePreviewAttachment(selectedApplicant.personalInfo.kawaderLicenseBase64, selectedApplicant.personalInfo.kawaderLicenseFileName)}
+                            className="flex-1 bg-orange-50 hover:bg-orange-100/80 text-orange-700 border border-orange-200/50 p-3 rounded-xl flex items-center justify-between text-right text-xs font-bold transition-all group"
+                            title="انقر لاستعراض ترخيص منصة كوادر مباشرة"
+                          >
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck className="w-4 h-4 text-orange-600" />
+                              <span>استعراض ترخيص منصة كوادر 👁️</span>
+                            </div>
+                            <Eye className="w-4 h-4 text-orange-500 group-hover:scale-110 transition-transform" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadAttachment(selectedApplicant.personalInfo.kawaderLicenseBase64, selectedApplicant.personalInfo.kawaderLicenseFileName)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-600 p-3 rounded-xl flex items-center justify-center transition-all border border-slate-200/40"
+                            title="تحميل الترخيص كنسخة احتياطية"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-slate-400 italic text-center p-2 border border-dashed rounded-lg">المرشح لديه ترخيص كوادر ولكن لم يتم رفع ملف الترخيص</div>
+                      )
+                    )}
+
+                    {/* Additional Documents from Candidate */}
+                    {selectedApplicant.personalInfo.additionalDocuments && selectedApplicant.personalInfo.additionalDocuments.length > 0 && (
+                      <div className="border-t border-slate-100 pt-3 mt-3 space-y-2">
+                        <p className="text-[11px] font-extrabold text-slate-700 mb-2">المستندات والملفات الإضافية المرفوعة من المرشح:</p>
+                        {selectedApplicant.personalInfo.additionalDocuments.map((doc) => (
+                          <div key={doc.id} className="flex gap-2">
+                            <button
+                              onClick={() => handlePreviewAttachment(doc.base64, doc.fileName)}
+                              className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/50 p-2.5 rounded-xl flex items-center justify-between text-right text-xs font-semibold transition-all group"
+                              title="انقر لاستعراض هذا المستند مباشرة"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="w-4 h-4 text-orange-500 shrink-0" />
+                                <span className="truncate max-w-[200px] text-right" title={doc.fileName}>{doc.fileName}</span>
+                              </div>
+                              <Eye className="w-4 h-4 text-orange-500 group-hover:scale-110 transition-transform shrink-0" />
+                            </button>
+                            <button
+                              onClick={() => handleDownloadAttachment(doc.base64, doc.fileName)}
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2.5 rounded-xl flex items-center justify-center transition-all border border-slate-200/40 shrink-0"
+                              title="تحميل الملف"
+                            >
+                              <Download className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1721,6 +1794,17 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
               <Calendar className="w-4 h-4" />
               <span>ترتيب مواعيد المقابلات عن بعد ({applicants.filter(a => a.interviewSchedule).length})</span>
             </button>
+            <button
+              onClick={() => setActiveSubTab('announcements')}
+              className={`pb-4 text-xs sm:text-sm font-extrabold transition-all border-b-2 flex items-center gap-2 ${
+                activeSubTab === 'announcements'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>إعلان الوظيفة للواتساب 📣</span>
+            </button>
           </div>
 
           {activeSubTab === 'applicants' && (
@@ -2208,6 +2292,265 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
                     </table>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeSubTab === 'announcements' && (
+            <div className="space-y-8 animate-fade-in text-right" id="announcements-view-tab">
+              {/* Top Banner */}
+              <div className="bg-gradient-to-l from-slate-900 via-slate-850 to-slate-900 text-white p-6 md:p-8 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -z-10"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -z-10"></div>
+                
+                <div className="max-w-3xl space-y-3">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    نشر عام لجميع المجموعات والمنصات
+                  </span>
+                  <h3 className="text-xl md:text-2xl font-black text-white">إطلاق ونشر الإعلان الوظيفي لعامة الناس 📣</h3>
+                  <p className="text-slate-300 text-xs md:text-sm leading-relaxed font-light">
+                    هنا يمكنك صياغة الإعلان الموجه لعامة الناس للتقديم على وظيفة <strong className="text-orange-400">أخصائي صحة وسلامة وبيئة (HSE)</strong>. قمنا بتنسيق الإعلان بشكل احترافي للغاية ليتناسب مع النشر المباشر عبر مجموعات الواتساب، القنوات المهنية، منصات التوظيف ومواقع التواصل الاجتماعي، متضمناً كافة الشروط كشغلك لمتطلبات "منصة كوادر"، السيرة الذاتية ورقم الإعلان المعتمد.
+                  </p>
+                </div>
+              </div>
+
+              {/* Layout Content */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left Side: Customization & Actions (5 cols) */}
+                <div className="lg:col-span-5 space-y-6">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+                    <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2 pb-3 border-b border-slate-100">
+                      <Edit3 className="text-orange-500 w-4.5 h-4.5" />
+                      <span>تخصيص روابط ومحتوى الإعلان</span>
+                    </h4>
+
+                    {/* App URL Input */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700 block">رابط بوابة التقديم المباشر (سيتم تضمينه بالإعلان):</label>
+                      <input
+                        type="url"
+                        value={announcementAppUrl}
+                        onChange={(e) => setAnnouncementAppUrl(e.target.value)}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none text-xs font-semibold font-mono text-left bg-slate-50 focus:bg-white focus:border-orange-500 transition-all"
+                        placeholder="https://..."
+                      />
+                      <span className="text-[10px] text-slate-400 block mt-1 font-medium leading-relaxed">
+                        * قمنا بربط البوابة بشكل تلقائي ليتجه المتقدم فوراً إلى نموذج التعبئة الذكي ورفع رخصة كوادر وسيرته الذاتية.
+                      </span>
+                    </div>
+
+                    {/* Quick Stats Summary */}
+                    <div className="bg-orange-50/50 rounded-2xl p-4 border border-orange-100/40 text-xs space-y-2 text-slate-700">
+                      <p className="font-bold text-orange-950 flex items-center gap-1.5 mb-1">
+                        <Award className="w-4 h-4 text-orange-600" />
+                        <span>بيانات الإعلان الوظيفي المضمنة:</span>
+                      </p>
+                      <div className="grid grid-cols-2 gap-y-1.5 gap-x-4 pr-1 font-semibold text-[11px]">
+                        <div>• المسمى: <span className="text-slate-900 font-bold">أخصائي صحة وسلامة HSE</span></div>
+                        <div>• رقم الإعلان: <span className="text-slate-900 font-mono">20260706023116938</span></div>
+                        <div>• التاريخ: <span className="text-slate-900 font-mono">21/01/1448 هـ</span></div>
+                        <div>• الراتب: <span className="text-slate-900">4,500 - 6,000 ريال</span></div>
+                        <div>• ساعات العمل: <span className="text-slate-900">9 ساعات (6 أيام)</span></div>
+                        <div>• الموقع: <span className="text-slate-900">حي الرحاب، جدة</span></div>
+                      </div>
+                    </div>
+
+                    {/* Actions Buttons */}
+                    <div className="space-y-2.5 pt-2">
+                      <button
+                        onClick={() => {
+                          const text = `📣 *إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين* 🇸🇦
+
+يسر إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين الإعلان عن توفر فرصة وظيفية شاغرة ومتاحة للتقديم المباشر لجميع المواطنين المؤهلين:
+
+💼 *المسمى الوظيفي:* أخصائي صحة وسلامة وبيئة (HSE)
+🔢 *رقم الإعلان الوظيفي:* 20260706023116938
+📅 *تاريخ الإعلان:* 21/01/1448 هـ
+
+📍 *مقر العمل:* جدة - حي الرحاب
+
+🎯 *الهدف الوظيفي:*
+الإشراف الشامل على صالات الإنتاج والمستودعات والتحكم في المخاطر الكيميائية وتطبيق نظام صارم للوقاية من الحريق وتأمين ممارسات العمل لضمان صفر حوادث وإصابات.
+
+🛠️ *المؤهلات والشروط المطلوبة:*
+1️⃣ درجة البكالوريوس في الهندسة الكيميائية، هندسة السلامة، علوم البيئة، أو تخصص مماثل.
+2️⃣ خبرة عملية لا تقل عن سنتين (2) في المصانع الكيميائية أو مصانع الطلاء والدهانات.
+3️⃣ شهادة مهنية دولية معتمدة (مثل NEBOSH IGC أو OSHA 30-Hour المتقدمة).
+4️⃣ معرفة قوية بمتطلبات السلامة العامة والحرائق الكيميائية وإدارة معايير ISO 45001.
+5️⃣ مهارات تواصل ممتازة وكتابة التقارير باللغتين العربية والإنجليزية.
+6️⃣ *يفضل تقديم السيرة الذاتية باللغة العربية.* 📄
+7️⃣ *يفضل وجود ترخيص معتمد من منصة كوادر (سيطلب رفعه في نموذج التقديم إن وُجد).* 🛡️
+
+💰 *المزايا وبيئة العمل الموفرة:*
+• الراتب شهرياً: 4,500 ريال إلى 6,000 ريال (حسب المؤهل والخبرة).
+• أيام العمل: 6 أيام أسبوعياً (الجمعة يوم الراحة الأسبوعية).
+• ساعات العمل: 9 ساعات يومياً (تتضمن ساعة راحة وبريك).
+• إجازة سنوية مدفوعة الأجر طبقاً لنظام العمل السعودي (21 يوماً).
+
+🔗 *رابط التقديم المباشر وتعبئة الطلب:*
+${announcementAppUrl}
+
+📞 *للاستفسارات والتواصل المباشر عبر الواتساب:*
+https://wa.me/966537375580
+
+✨ *نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!*`;
+                          navigator.clipboard.writeText(text);
+                          setAnnouncementCopied(true);
+                          setTimeout(() => setAnnouncementCopied(false), 3000);
+                        }}
+                        className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] ${
+                          announcementCopied
+                            ? 'bg-emerald-600 text-white shadow-emerald-600/10'
+                            : 'bg-slate-900 hover:bg-slate-850 text-white shadow-slate-900/10'
+                        }`}
+                      >
+                        {announcementCopied ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 text-emerald-300 animate-bounce" />
+                            <span>تم نسخ الإعلان بنجاح! جاهز للصق الآن ✓</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4 text-slate-300" />
+                            <span>نسخ نص الإعلان المنسق للواتساب 📋</span>
+                          </>
+                        )}
+                      </button>
+
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`📣 *إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين* 🇸🇦
+
+يسر إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين الإعلان عن توفر فرصة وظيفية شاغرة ومتاحة للتقديم المباشر لجميع المواطنين المؤهلين:
+
+💼 *المسمى الوظيفي:* أخصائي صحة وسلامة وبيئة (HSE)
+🔢 *رقم الإعلان الوظيفي:* 20260706023116938
+📅 *تاريخ الإعلان:* 21/01/1448 هـ
+
+📍 *مقر العمل:* جدة - حي الرحاب
+
+🎯 *الهدف الوظيفي:*
+الإشراف الشامل على صالات الإنتاج والمستودعات والتحكم في المخاطر الكيميائية وتطبيق نظام صارم للوقاية من الحريق وتأمين ممارسات العمل لضمان صفر حوادث وإصابات.
+
+🛠️ *المؤهلات والشروط المطلوبة:*
+1️⃣ درجة البكالوريوس في الهندسة الكيميائية، هندسة السلامة، علوم البيئة، أو تخصص مماثل.
+2️⃣ خبرة عملية لا تقل عن سنتين (2) في المصانع الكيميائية أو مصانع الطلاء والدهانات.
+3️⃣ شهادة مهنية دولية معتمدة (مثل NEBOSH IGC أو OSHA 30-Hour المتقدمة).
+4️⃣ معرفة قوية بمتطلبات السلامة العامة والحرائق الكيميائية وإدارة معايير ISO 45001.
+5️⃣ مهارات تواصل ممتازة وكتابة التقارير باللغتين العربية والإنجليزية.
+6️⃣ *يفضل تقديم السيرة الذاتية باللغة العربية.* 📄
+7️⃣ *يفضل وجود ترخيص معتمد من منصة كوادر (سيطلب رفعه في نموذج التقديم إن وُجد).* 🛡️
+
+💰 *المزايا وبيئة العمل الموفرة:*
+• الراتب شهرياً: 4,500 ريال إلى 6,000 ريال (حسب المؤهل والخبرة).
+• أيام العمل: 6 أيام أسبوعياً (الجمعة يوم الراحة الأسبوعية).
+• ساعات العمل: 9 ساعات يومياً (تتضمن ساعة راحة وبريك).
+• إجازة سنوية مدفوعة الأجر طبقاً لنظام العمل السعودي (21 يوماً).
+
+🔗 *رابط التقديم المباشر وتعبئة الطلب:*
+${announcementAppUrl}
+
+📞 *للاستفسارات والتواصل المباشر عبر الواتساب:*
+https://wa.me/966537375580
+
+✨ *نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!*`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-600/10 active:scale-[0.98]"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        <span>مشاركة الإعلان مباشرة عبر الواتساب 💬</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Pro Tips Box */}
+                  <div className="bg-amber-50 border-r-4 border-amber-500 p-4 rounded-2xl text-xs space-y-1.5 text-amber-950">
+                    <p className="font-bold flex items-center gap-1">
+                      <span>💡 نصائح ذهبية لنشر فعال:</span>
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 pr-1 font-semibold text-right">
+                      <li>انشر الرابط في مجموعات واتساب المخصصة لمهندسي السلامة والـ HSE في السعودية.</li>
+                      <li>يمكنك نسخ النص ونشره عبر منصة LinkedIn المهنية للوصول إلى كوادر ذات خبرة سنتين أو أكثر.</li>
+                      <li>تأكد من بقاء رقم الإعلان (20260706023116938) ثابتاً ليتم مطابقته لاحقاً بنظام جدارات ومنصات الموارد البشرية.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Right Side: Mockup WhatsApp Preview (7 cols) */}
+                <div className="lg:col-span-7">
+                  <div className="bg-[#efeae2] rounded-3xl border border-slate-250 shadow-lg overflow-hidden flex flex-col h-[580px]">
+                    {/* WhatsApp Mockup Header */}
+                    <div className="bg-[#075e54] text-white p-3 px-4 flex items-center justify-between shrink-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center text-[#075e54] font-bold text-xs shadow-sm">
+                          HSE
+                        </div>
+                        <div className="text-right">
+                          <h5 className="text-xs font-bold text-white">مصنع جدة للدهانات - التوظيف</h5>
+                          <span className="text-[10px] text-emerald-100 block">نشط الآن</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 text-slate-100">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded-full">معاينة البث</span>
+                      </div>
+                    </div>
+
+                    {/* WhatsApp Messages Content */}
+                    <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat bg-center">
+                      
+                      {/* WhatsApp Speech Bubble */}
+                      <div className="max-w-[85%] bg-[#dcf8c6] rounded-2xl rounded-tr-none p-3.5 shadow-sm text-slate-800 space-y-2 text-[11px] leading-relaxed mr-auto relative text-right">
+                        <div className="font-extrabold text-[#128c7e] text-xs pb-1 border-b border-emerald-100 mb-1">
+                          📣 شركة مصنع جدة للدهانات والمعاجين 🇸🇦
+                        </div>
+                        
+                        <p>يسر إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين الإعلان عن توفر فرصة وظيفية شاغرة ومتاحة للتقديم المباشر لجميع المواطنين المؤهلين:</p>
+                        
+                        <p>💼 <strong>المسمى الوظيفي:</strong> أخصائي صحة وسلامة وبيئة (HSE)<br />
+                        🔢 <strong>رقم الإعلان الوظيفي:</strong> 20260706023116938<br />
+                        📅 <strong>تاريخ الإعلان:</strong> 21/01/1448 هـ</p>
+
+                        <p>📍 <strong>مقر العمل:</strong> جدة - حي الرحاب</p>
+
+                        <p>🎯 <strong>الهدف الوظيفي:</strong><br />
+                        الإشراف الشامل على صالات الإنتاج والمستودعات والتحكم في المخاطر الكيميائية وتطبيق نظام صارم للوقاية من الحريق وتأمين ممارسات العمل لضمان صفر حوادث وإصابات.</p>
+
+                        <p>🛠️ <strong>المؤهلات والشروط المطلوبة:</strong><br />
+                        1️⃣ درجة البكالوريوس في الهندسة الكيميائية، هندسة السلامة، علوم البيئة، أو تخصص مماثل.<br />
+                        2️⃣ خبرة عملية لا تقل عن سنتين (2) في المصانع الكيميائية أو مصانع الطلاء والدهانات.<br />
+                        3️⃣ شهادة مهنية دولية معتمدة (مثل NEBOSH IGC أو OSHA 30-Hour المتقدمة).<br />
+                        4️⃣ معرفة قوية بمتطلبات السلامة العامة والحرائق الكيميائية وإدارة معايير ISO 45001.<br />
+                        5️⃣ مهارات تواصل ممتازة وكتابة التقارير باللغتين العربية والإنجليزية.<br />
+                        6️⃣ <em>يفضل تقديم السيرة الذاتية باللغة العربية.</em> 📄<br />
+                        7️⃣ <em>يفضل وجود ترخيص معتمد من منصة كوادر (سيطلب رفعه في نموذج التقديم إن وُجد).</em> 🛡️</p>
+
+                        <p>💰 <strong>المزايا وبيئة العمل الموفرة:</strong><br />
+                        • الراتب شهرياً: 4,500 ريال إلى 6,000 ريال (حسب المؤهل والخبرة).<br />
+                        • أيام العمل: 6 أيام أسبوعياً (الجمعة يوم الراحة الأسبوعية).<br />
+                        • ساعات العمل: 9 ساعات يومياً (تتضمن ساعة راحة وبريك).<br />
+                        • إجازة سنوية مدفوعة الأجر طبقاً لنظام العمل السعودي (21 يوماً).</p>
+
+                        <p>🔗 <strong>رابط التقديم المباشر وتعبئة الطلب:</strong><br />
+                        <span className="text-blue-600 hover:underline break-all font-bold">
+                          {announcementAppUrl}
+                        </span></p>
+
+                        <p>📞 <strong>للاستفسارات والتواصل المباشر عبر الواتساب:</strong><br />
+                        <span className="text-blue-600 hover:underline font-bold">
+                          https://wa.me/966537375580
+                        </span></p>
+
+                        <p className="font-bold text-[#128c7e] text-center pt-2">✨ نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!</p>
+
+                        <div className="text-[9px] text-slate-400 text-left font-mono mt-1">
+                          {new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })} ✓✓
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

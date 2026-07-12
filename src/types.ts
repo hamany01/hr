@@ -22,11 +22,15 @@ export interface PersonalInfo {
   hasHealthIssues: string; // 'yes' | 'no'
   healthIssuesDetails?: string;
   hasLocationIssue: string; // 'yes' | 'no'
+  hasKawaderLicense?: string; // 'yes' | 'no'
+  kawaderLicenseBase64?: string;
+  kawaderLicenseFileName?: string;
   cvBase64?: string;
   cvFileName?: string;
   certsBase64?: string;
   certsFileName?: string;
   adminDocuments?: AdminDocument[];
+  additionalDocuments?: AdminDocument[];
 }
 
 export interface AdminDocument {

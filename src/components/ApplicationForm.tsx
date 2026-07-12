@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, Briefcase, FileQuestion, Eye, ArrowLeft, ArrowRight, ShieldCheck, 
-  Upload, Trash2, CheckCircle, AlertTriangle, HelpCircle, Loader2, Link as LinkIcon 
+  Upload, Trash2, CheckCircle, AlertTriangle, HelpCircle, Loader2, Link as LinkIcon, FileText 
 } from 'lucide-react';
 import { PersonalInfo, IndustryExperience, ProfessionalCertificates, ExamAnswers, Applicant } from '../types';
 
@@ -39,10 +39,14 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
     hasHealthIssues: 'no',
     healthIssuesDetails: '',
     hasLocationIssue: 'no',
+    hasKawaderLicense: 'no',
+    kawaderLicenseFileName: '',
+    kawaderLicenseBase64: '',
     cvFileName: '',
     cvBase64: '',
     certsFileName: '',
-    certsBase64: ''
+    certsBase64: '',
+    additionalDocuments: []
   });
 
   // --- Step 2: Experience & Certifications ---
@@ -135,7 +139,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
   }, [examAnswers]);
 
   // --- Helper to convert files to Base64 ---
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'cv' | 'certs') => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'cv' | 'certs' | 'kawader') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -153,31 +157,88 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
           cvFileName: file.name,
           cvBase64: base64String
         }));
-      } else {
+      } else if (type === 'certs') {
         setPersonalInfo(prev => ({
           ...prev,
           certsFileName: file.name,
           certsBase64: base64String
+        }));
+      } else if (type === 'kawader') {
+        setPersonalInfo(prev => ({
+          ...prev,
+          kawaderLicenseFileName: file.name,
+          kawaderLicenseBase64: base64String
         }));
       }
     };
     reader.readAsDataURL(file);
   };
 
-  const removeUploadedFile = (type: 'cv' | 'certs') => {
+  const removeUploadedFile = (type: 'cv' | 'certs' | 'kawader') => {
     if (type === 'cv') {
       setPersonalInfo(prev => ({
         ...prev,
         cvFileName: '',
         cvBase64: ''
       }));
-    } else {
+    } else if (type === 'certs') {
       setPersonalInfo(prev => ({
         ...prev,
         certsFileName: '',
         certsBase64: ''
       }));
+    } else if (type === 'kawader') {
+      setPersonalInfo(prev => ({
+        ...prev,
+        kawaderLicenseFileName: '',
+        kawaderLicenseBase64: ''
+      }));
     }
+  };
+
+  const handleMultipleFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files as FileList).forEach((file: File) => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`الملف "${file.name}" حجمه كبير جداً! الحد الأقصى المسموح به هو 10 ميغابايت.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        const newDoc = {
+          id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
+          name: file.name.split('.').slice(0, -1).join('.') || 'مستند إضافي',
+          fileName: file.name,
+          base64: base64String,
+          uploadedAt: new Date().toISOString()
+        };
+
+        setPersonalInfo(prev => {
+          const currentDocs = prev.additionalDocuments || [];
+          if (currentDocs.some(d => d.fileName === file.name)) {
+            return prev;
+          }
+          return {
+            ...prev,
+            additionalDocuments: [...currentDocs, newDoc]
+          };
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    e.target.value = '';
+  };
+
+  const removeAdditionalFile = (id: string) => {
+    setPersonalInfo(prev => ({
+      ...prev,
+      additionalDocuments: (prev.additionalDocuments || []).filter(doc => doc.id !== id)
+    }));
   };
 
   // --- Form Validation Helpers ---
@@ -227,6 +288,10 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
 
     if (!personalInfo.cvBase64) {
       newErrors.cv = 'ملف السيرة الذاتية (CV) بصيغة PDF مطلوب للتقديم';
+    }
+
+    if (personalInfo.hasKawaderLicense === 'yes' && !personalInfo.kawaderLicenseBase64) {
+      newErrors.kawaderLicense = 'يرجى تحميل ترخيص منصة كوادر لتأكيد إجابتك';
     }
 
     setErrors(newErrors);
@@ -826,6 +891,87 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                     )}
                   </div>
 
+                  {/* Kawader Platform License Question */}
+                  <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 md:col-span-2 space-y-3">
+                    <label className="block text-sm font-bold text-slate-700">هل لديك ترخيص من منصة كوادر؟ *</label>
+                    <div className="flex gap-6 mt-1">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="hasKawaderLicense"
+                          value="yes"
+                          checked={personalInfo.hasKawaderLicense === 'yes'}
+                          onChange={() => {
+                            setPersonalInfo(prev => ({ ...prev, hasKawaderLicense: 'yes' }));
+                            if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
+                          }}
+                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                        />
+                        <span className="text-xs font-semibold text-slate-800">نعم (لدي ترخيص)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="hasKawaderLicense"
+                          value="no"
+                          checked={personalInfo.hasKawaderLicense === 'no'}
+                          onChange={() => {
+                            setPersonalInfo(prev => ({ ...prev, hasKawaderLicense: 'no', kawaderLicenseFileName: '', kawaderLicenseBase64: '' }));
+                            if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
+                          }}
+                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                        />
+                        <span className="text-xs font-semibold text-slate-800">لا (لا يوجد ترخيص)</span>
+                      </label>
+                    </div>
+
+                    {personalInfo.hasKawaderLicense === 'yes' && (
+                      <div className="mt-3 bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+                        <label className="block text-xs font-bold text-slate-600">يرجى تحميل ترخيص منصة كوادر المعتمد: *</label>
+                        {!personalInfo.kawaderLicenseFileName ? (
+                          <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group ${
+                            errors.kawaderLicense ? 'border-red-500 bg-red-50/10 animate-pulse' : 'border-slate-200 hover:border-orange-500'
+                          }`}>
+                            <input
+                              type="file"
+                              accept=".pdf,image/*"
+                              onChange={(e) => {
+                                handleFileUpload(e, 'kawader');
+                                if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
+                              }}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              id="upload-kawader-license"
+                            />
+                            <Upload className="w-6 h-6 text-slate-400 group-hover:text-orange-500 mx-auto mb-2 transition-colors" />
+                            <p className="text-xs font-bold text-slate-700 group-hover:text-orange-600 transition-colors">اسحب وأفلت ترخيص كوادر أو انقر هنا للرفع</p>
+                            <p className="text-[10px] text-slate-400 mt-1">المدعوم: PDF أو صور (بحد أقصى 10 ميجابايت)</p>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between p-3 border border-emerald-200 bg-emerald-50 rounded-xl">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="bg-emerald-500 p-1.5 rounded-lg text-white shrink-0">
+                                <CheckCircle className="w-4 h-4" />
+                              </div>
+                              <div className="text-right min-w-0">
+                                <p className="text-xs font-bold text-slate-800 truncate max-w-[200px] sm:max-w-xs">{personalInfo.kawaderLicenseFileName}</p>
+                                <p className="text-[10px] text-emerald-600 font-medium">تم التحميل بنجاح</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeUploadedFile('kawader')}
+                              className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all shrink-0"
+                              title="حذف الملف"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                        {errors.kawaderLicense && <p className="text-red-500 text-xs font-bold mt-1">{errors.kawaderLicense}</p>}
+                      </div>
+                    )}
+
+                  </div>
                 </div>
               </div>
             </div>
@@ -837,7 +983,10 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                 
                 {/* CV File Input */}
                 <div className="space-y-3">
-                  <label className="block text-sm font-bold text-slate-700">السيرة الذاتية (ملف PDF حديث) *</label>
+                  <div className="flex justify-between items-baseline flex-wrap gap-1">
+                    <label className="block text-sm font-bold text-slate-700">السيرة الذاتية (ملف PDF حديث) *</label>
+                    <span className="text-[11px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md">يفضل السيرة الذاتية باللغة العربية 🇸🇦</span>
+                  </div>
                   {!personalInfo.cvFileName ? (
                     <div className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group ${
                       errors.cv ? 'border-red-500 bg-red-50/10 animate-pulse' : 'border-slate-200 hover:border-orange-500'
@@ -913,6 +1062,62 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Multiple Files Upload */}
+                <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-6 mt-2 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h5 className="text-sm font-bold text-slate-800">مستندات ومرفقات إضافية</h5>
+                      <p className="text-xs text-slate-400 mt-0.5">يمكنك رفع عدة ملفات إضافية مثل الهوية، كرت العائلة، شهادات خبرة سابقة، إلخ.</p>
+                    </div>
+                    <span className="text-xs font-semibold bg-orange-50 text-orange-600 px-3 py-1 rounded-full self-start">
+                      مرفوع: {personalInfo.additionalDocuments?.length || 0} ملفات
+                    </span>
+                  </div>
+
+                  <div className="border-2 border-dashed border-slate-200 hover:border-orange-500 rounded-2xl p-6 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group">
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf,image/*"
+                      onChange={handleMultipleFilesUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      id="upload-additional-files"
+                    />
+                    <Upload className="w-10 h-10 text-slate-400 group-hover:text-orange-500 mx-auto mb-3 transition-colors" />
+                    <p className="text-sm font-bold text-slate-700 group-hover:text-orange-600 transition-colors">اسحب وأفلت الملفات الإضافية معاً أو انقر لتحديد عدة ملفات 📂</p>
+                    <p className="text-xs text-slate-400 mt-1">يمكنك اختيار ملفات متعددة (PDF أو صور، بحد أقصى 10 ميجابايت للملف الواحد)</p>
+                  </div>
+
+                  {personalInfo.additionalDocuments && personalInfo.additionalDocuments.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                      {personalInfo.additionalDocuments.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-3.5 border border-slate-200/60 bg-white hover:bg-slate-50/50 rounded-xl transition-all shadow-xs">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="bg-orange-500/10 text-orange-600 p-2 rounded-lg shrink-0">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <div className="text-right min-w-0 flex-1">
+                              <p className="text-xs font-bold text-slate-800 truncate" title={doc.fileName}>
+                                {doc.fileName}
+                              </p>
+                              <p className="text-[10px] text-slate-400">مرفق إضافي جاهز للإرسال</p>
+                            </div>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={() => removeAdditionalFile(doc.id)}
+                            className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all shrink-0"
+                            title="حذف الملف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1480,8 +1685,32 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   <span className="font-bold text-slate-800">{personalInfo.hasLocationIssue === 'yes' ? 'نعم (لديه مشكلة)' : 'لا (لا توجد مشكلة)'}</span>
                 </div>
                 <div>
+                  <span className="text-slate-400 text-xs block mb-1">ترخيص منصة كوادر</span>
+                  <span className="font-bold text-slate-800">
+                    {personalInfo.hasKawaderLicense === 'yes' ? `نعم (الملف: ${personalInfo.kawaderLicenseFileName || 'لم يرفع بعد'})` : 'لا'}
+                  </span>
+                </div>
+                <div>
                   <span className="text-slate-400 text-xs block mb-1">السيرة الذاتية المرفقة</span>
                   <span className="font-bold text-emerald-600">{personalInfo.cvFileName || "لم يتم الرفع"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-xs block mb-1">الشهادات المهنية المرفقة</span>
+                  <span className="font-bold text-emerald-600">{personalInfo.certsFileName || "لا يوجد"}</span>
+                </div>
+                <div className="col-span-2 md:col-span-4">
+                  <span className="text-slate-400 text-xs block mb-1">المستندات الإضافية المرفقة</span>
+                  {personalInfo.additionalDocuments && personalInfo.additionalDocuments.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {personalInfo.additionalDocuments.map((doc, idx) => (
+                        <span key={doc.id || idx} className="text-xs bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-medium">
+                          📎 {doc.fileName}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="font-bold text-slate-500 text-xs italic">لا توجد مستندات إضافية</span>
+                  )}
                 </div>
               </div>
             </div>
