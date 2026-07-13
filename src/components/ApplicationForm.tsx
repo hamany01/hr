@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { safeStorage } from '../lib/safeStorage';
 // GitHub Sync: Minor update to trigger re-push
 import { 
   User, Briefcase, FileQuestion, Eye, ArrowLeft, ArrowRight, ShieldCheck, 
-  Upload, Trash2, CheckCircle, AlertTriangle, HelpCircle, Loader2, Link as LinkIcon, FileText 
+  Upload, Trash2, CheckCircle, AlertTriangle, HelpCircle, Loader2, Link as LinkIcon, FileText, Check
 } from 'lucide-react';
 import { PersonalInfo, IndustryExperience, ProfessionalCertificates, ExamAnswers, Applicant } from '../types';
 
 interface ApplicationFormProps {
   onCancel: () => void;
   onSubmitSuccess: (applicationId: string, status: string, aiEvaluation: any, applicantName: string) => void;
+  jobRole?: 'hse' | 'marketing';
 }
 
-export default function ApplicationForm({ onCancel, onSubmitSuccess }: ApplicationFormProps) {
+export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = 'hse' }: ApplicationFormProps) {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -47,7 +49,10 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
     cvBase64: '',
     certsFileName: '',
     certsBase64: '',
-    additionalDocuments: []
+    portfolioFileName: '',
+    portfolioBase64: '',
+    additionalDocuments: [],
+    jobRole: jobRole
   });
 
   // --- Step 2: Experience & Certifications ---
@@ -100,44 +105,102 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
 
   // --- Autosave & State Restoring for Step 3 ---
   useEffect(() => {
-    // Check if there is cached data
-    const cachedInfo = localStorage.getItem('hse_personal_autosave');
+    const roleKey = jobRole;
+    
+    const cachedInfo = safeStorage.getItem(`personal_autosave_${roleKey}`);
     if (cachedInfo) {
-      try { setPersonalInfo(JSON.parse(cachedInfo)); } catch (e) {}
+      try {
+        const parsed = JSON.parse(cachedInfo);
+        setPersonalInfo({ ...parsed, jobRole: roleKey });
+      } catch (e) {}
+    } else {
+      setPersonalInfo(prev => ({
+        ...prev,
+        fullName: '',
+        phone: '',
+        email: '',
+        major: '',
+        experienceYears: 0,
+        currentCompany: '',
+        currentRole: '',
+        cvFileName: '',
+        cvBase64: '',
+        certsFileName: '',
+        certsBase64: '',
+        portfolioFileName: '',
+        portfolioBase64: '',
+        kawaderLicenseFileName: '',
+        kawaderLicenseBase64: '',
+        jobRole: roleKey
+      }));
     }
     
-    const cachedExp = localStorage.getItem('hse_experience_autosave');
+    const cachedExp = safeStorage.getItem(`experience_autosave_${roleKey}`);
     if (cachedExp) {
       try { setIndustryExperience(JSON.parse(cachedExp)); } catch (e) {}
+    } else {
+      setIndustryExperience({
+        workedInPaint: false,
+        paintCompany: '',
+        paintYears: 0,
+        paintRole: '',
+        paintTasks: '',
+        workedInChemical: false,
+        chemicalCompany: '',
+        chemicalYears: 0,
+        chemicalRole: '',
+        chemicalTasks: '',
+        workedInIndustrial: false,
+        industrialCompany: '',
+        industrialYears: 0,
+        industrialRole: '',
+        industrialTasks: ''
+      });
     }
 
-    const cachedCerts = localStorage.getItem('hse_certs_autosave');
+    const cachedCerts = safeStorage.getItem(`certs_autosave_${roleKey}`);
     if (cachedCerts) {
       try { setCertificates(JSON.parse(cachedCerts)); } catch (e) {}
+    } else {
+      setCertificates({
+        nebosh: false, osha: false, iosh: false, iso45001: false,
+        fireSafety: false, firstAid: false, hazop: false, hazmat: false,
+        permitToWork: false, workingAtHeights: false, confinedSpace: false, forkliftSafety: false
+      });
     }
 
-    const cachedExam = localStorage.getItem('hse_exam_autosave');
+    const cachedExam = safeStorage.getItem(`exam_autosave_${roleKey}`);
     if (cachedExam) {
       try { setExamAnswers(JSON.parse(cachedExam)); } catch (e) {}
+    } else {
+      setExamAnswers({
+        q1_paint_risks: '', q2_hazard_vs_risk: '', q3_incident_investigation: '', q4_risk_assessment: '',
+        q5_ppe_chemical: '', q6_sds_msds: '', q7_flammable_spill: '', q8_ppe_refusal: '',
+        q9_daily_inspection: '', q10_safety_project: ''
+      });
     }
-  }, []);
+  }, [jobRole]);
 
   // Autosave triggers
   useEffect(() => {
-    localStorage.setItem('hse_personal_autosave', JSON.stringify(personalInfo));
-  }, [personalInfo]);
+    const roleKey = jobRole;
+    safeStorage.setItem(`personal_autosave_${roleKey}`, JSON.stringify(personalInfo));
+  }, [personalInfo, jobRole]);
 
   useEffect(() => {
-    localStorage.setItem('hse_experience_autosave', JSON.stringify(industryExperience));
-  }, [industryExperience]);
+    const roleKey = jobRole;
+    safeStorage.setItem(`experience_autosave_${roleKey}`, JSON.stringify(industryExperience));
+  }, [industryExperience, jobRole]);
 
   useEffect(() => {
-    localStorage.setItem('hse_certs_autosave', JSON.stringify(certificates));
-  }, [certificates]);
+    const roleKey = jobRole;
+    safeStorage.setItem(`certs_autosave_${roleKey}`, JSON.stringify(certificates));
+  }, [certificates, jobRole]);
 
   useEffect(() => {
-    localStorage.setItem('hse_exam_autosave', JSON.stringify(examAnswers));
-  }, [examAnswers]);
+    const roleKey = jobRole;
+    safeStorage.setItem(`exam_autosave_${roleKey}`, JSON.stringify(examAnswers));
+  }, [examAnswers, jobRole]);
 
   // --- Helper to convert files to Base64 ---
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'cv' | 'certs' | 'kawader') => {
@@ -173,6 +236,43 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handlePortfolioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("حجم الملف كبير جداً! الحد الأقصى المسموح به هو 10 ميغابايت.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      setPersonalInfo(prev => ({
+        ...prev,
+        portfolioFileName: file.name,
+        portfolioBase64: base64String
+      }));
+      // Clear validation error if any
+      if (errors.portfolioFile) {
+        setErrors(prev => {
+          const updated = { ...prev };
+          delete updated.portfolioFile;
+          return updated;
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removePortfolioFile = () => {
+    setPersonalInfo(prev => ({
+      ...prev,
+      portfolioFileName: '',
+      portfolioBase64: ''
+    }));
   };
 
   const removeUploadedFile = (type: 'cv' | 'certs' | 'kawader') => {
@@ -306,23 +406,42 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
 
   const validateStep2 = () => {
     const newErrors: Record<string, string> = {};
+    const isMkt = jobRole === 'marketing';
     if (industryExperience.workedInPaint) {
-      if (!industryExperience.paintCompany.trim()) newErrors.paintCompany = 'اسم شركة الدهانات مطلوب';
+      if (!industryExperience.paintCompany.trim()) {
+        newErrors.paintCompany = isMkt ? 'اسم شركة الدهانات / المنشأة الصناعية مطلوب' : 'اسم شركة الدهانات مطلوب';
+      }
       if (Number(industryExperience.paintYears) <= 0) newErrors.paintYears = 'عدد سنوات الخبرة مطلوب';
-      if (!industryExperience.paintRole.trim()) newErrors.paintRole = 'المسمى الوظيفي مطلوب';
-      if (!industryExperience.paintTasks.trim()) newErrors.paintTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+      if (!industryExperience.paintRole.trim()) {
+        newErrors.paintRole = isMkt ? 'المسمى الوظيفي التسويقي مطلوب' : 'المسمى الوظيفي مطلوب';
+      }
+      if (!industryExperience.paintTasks.trim()) {
+        newErrors.paintTasks = isMkt ? 'المهام والمسؤوليات التسويقية مطلوبة' : 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+      }
     }
     if (industryExperience.workedInChemical) {
-      if (!industryExperience.chemicalCompany.trim()) newErrors.chemicalCompany = 'اسم شركة الصناعات الكيماوية مطلوب';
+      if (!industryExperience.chemicalCompany.trim()) {
+        newErrors.chemicalCompany = isMkt ? 'اسم الوكالة التسويقية / المنشأة مطلوب' : 'اسم شركة الصناعات الكيماوية مطلوب';
+      }
       if (Number(industryExperience.chemicalYears) <= 0) newErrors.chemicalYears = 'عدد سنوات الخبرة مطلوب';
-      if (!industryExperience.chemicalRole.trim()) newErrors.chemicalRole = 'المسمى الوظيفي مطلوب';
-      if (!industryExperience.chemicalTasks.trim()) newErrors.chemicalTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+      if (!industryExperience.chemicalRole.trim()) {
+        newErrors.chemicalRole = isMkt ? 'المسمى الوظيفي الرقمي مطلوب' : 'المسمى الوظيفي مطلوب';
+      }
+      if (!industryExperience.chemicalTasks.trim()) {
+        newErrors.chemicalTasks = isMkt ? 'أبرز الحملات وقنوات التواصل مطلوبة' : 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+      }
     }
     if (industryExperience.workedInIndustrial) {
-      if (!industryExperience.industrialCompany.trim()) newErrors.industrialCompany = 'اسم المنشأة الصناعية مطلوب';
+      if (!industryExperience.industrialCompany.trim()) {
+        newErrors.industrialCompany = isMkt ? 'اسم الجهة / الشركة مطلوب' : 'اسم المنشأة الصناعية مطلوب';
+      }
       if (Number(industryExperience.industrialYears) <= 0) newErrors.industrialYears = 'عدد سنوات الخبرة مطلوب';
-      if (!industryExperience.industrialRole.trim()) newErrors.industrialRole = 'المسمى الوظيفي مطلوب';
-      if (!industryExperience.industrialTasks.trim()) newErrors.industrialTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+      if (!industryExperience.industrialRole.trim()) {
+        newErrors.industrialRole = isMkt ? 'مسمى دورك التنظيمي مطلوب' : 'المسمى الوظيفي مطلوب';
+      }
+      if (!industryExperience.industrialTasks.trim()) {
+        newErrors.industrialTasks = isMkt ? 'أبرز المنصات والاعتمادات مطلوبة' : 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+      }
     }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -348,9 +467,20 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
       }
     });
 
+    if (jobRole === 'marketing' && !personalInfo.portfolioBase64) {
+      newErrors.portfolioFile = 'يرجى تحميل ملف عينة من أعمالك السابقة لتأكيد تقديمك على الوظيفة';
+    }
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-      alert("يرجى الإجابة على جميع أسئلة الاختبار الفني بوضوح وبما لا يقل عن 15 حرفاً لكل سؤال لتفعيل التقييم الذكي التلقائي.");
+      if (newErrors.portfolioFile && Object.keys(newErrors).length === 1) {
+        alert("يرجى تحميل ملف عينة من أعمالك السابقة (بورتفوليو) للمتابعة.");
+      } else {
+        alert(jobRole === 'marketing' 
+          ? "يرجى الإجابة على جميع أسئلة اختبار الجدارة بوضوح وبما لا يقل عن 15 حرفاً لكل سؤال، وتحميل ملف عينة أعمالك لتفعيل التقييم الذكي."
+          : "يرجى الإجابة على جميع أسئلة الاختبار الفني بوضوح وبما لا يقل عن 15 حرفاً لكل سؤال لتفعيل التقييم الذكي التلقائي."
+        );
+      }
       return false;
     }
     return true;
@@ -399,10 +529,11 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
       }
 
       // Success! Clear local autosave data
-      localStorage.removeItem('hse_personal_autosave');
-      localStorage.removeItem('hse_experience_autosave');
-      localStorage.removeItem('hse_certs_autosave');
-      localStorage.removeItem('hse_exam_autosave');
+      const roleKey = jobRole;
+      safeStorage.removeItem(`personal_autosave_${roleKey}`);
+      safeStorage.removeItem(`experience_autosave_${roleKey}`);
+      safeStorage.removeItem(`certs_autosave_${roleKey}`);
+      safeStorage.removeItem(`exam_autosave_${roleKey}`);
 
       onSubmitSuccess(data.id, data.status, data.aiEvaluation, personalInfo.fullName);
     } catch (err: any) {
@@ -1137,7 +1268,11 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
             </button>
             <button
               onClick={handleNext}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-orange-500/10 flex items-center gap-2 transition-all hover:gap-3 active:scale-95"
+              className={`text-white font-bold px-8 py-3 rounded-xl shadow-lg flex items-center gap-2 transition-all hover:gap-3 active:scale-95 ${
+                jobRole === 'marketing' 
+                  ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10' 
+                  : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/10'
+              }`}
               id="step1-next-btn"
             >
               المتابعة للخطوة التالية
@@ -1151,14 +1286,22 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
       {currentStep === 2 && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" id="step-2-experience">
           <div className="bg-white text-slate-800 p-6 md:p-8 border-b border-slate-200">
-            <h3 className="text-lg md:text-xl font-bold text-blue-900 mb-1">الخطوة الثانية: الخبرات المهنية التخصصية والشهادات</h3>
-            <p className="text-xs text-slate-400 font-medium">نبحث بشكل مركز عن الخبرات داخل بيئات التصنيع والمصانع الكيميائية. يرجى تحديد خبراتك وإثبات شهاداتك المهنية.</p>
+            <h3 className="text-lg md:text-xl font-bold text-blue-900 mb-1 font-sans">الخطوة الثانية: الخبرات المهنية المهنية التخصصية والشهادات</h3>
+            <p className="text-xs text-slate-400 font-medium">
+              {jobRole === 'marketing' 
+                ? 'نبحث بشكل مركز عن الخبرات التسويقية والمهارات الرقمية والاعتمادات الرسمية. يرجى تحديد خبراتك وإثبات مهاراتك.'
+                : 'نبحث بشكل مركز عن الخبرات داخل بيئات التصنيع والمصانع الكيميائية. يرجى تحديد خبراتك وإثبات شهاداتك المهنية.'}
+            </p>
           </div>
 
           <div className="p-6 md:p-8 space-y-8">
             {/* Experience Checks */}
             <div>
-              <h4 className="text-lg font-bold text-slate-900 mb-6 border-b border-slate-100 pb-2">هل تملك خبرات عمل في القطاعات الصناعية التالية؟</h4>
+              <h4 className="text-lg font-bold text-slate-900 mb-6 border-b border-slate-100 pb-2">
+                {jobRole === 'marketing' 
+                  ? 'هل تملك خبرات عمل في المجالات التسويقية والتنظيمية التالية؟'
+                  : 'هل تملك خبرات عمل في القطاعات الصناعية التالية؟'}
+              </h4>
               <div className="space-y-6">
                 
                 {/* Paint Factory */}
@@ -1171,27 +1314,35 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                       className="sr-only"
                     />
                     <div className={`w-6 h-6 rounded-lg border-2 mt-0.5 transition-all flex items-center justify-center ${
-                      industryExperience.workedInPaint ? 'bg-orange-500 border-orange-500 text-white' : 'border-slate-300 bg-white group-hover:border-slate-400'
+                      industryExperience.workedInPaint 
+                        ? jobRole === 'marketing' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-orange-500 border-orange-500 text-white' 
+                        : 'border-slate-300 bg-white group-hover:border-slate-400'
                     }`}>
                       {industryExperience.workedInPaint && <CheckCircle className="w-4 h-4 text-white" />}
                     </div>
                     <div>
-                      <h5 className="font-bold text-slate-800 group-hover:text-slate-950">لقد سبق لي العمل في مصانع للدهانات والطلاء</h5>
-                      <p className="text-xs text-slate-500">حدد هذا الخيار إذا كنت قد أشرفت على السلامة داخل خطوط إنتاج أو تعبئة أو تخزين الطلاء والدهانات سابقاً.</p>
+                      <h5 className="font-bold text-slate-800 group-hover:text-slate-950">
+                        {jobRole === 'marketing' ? 'لقد سبق لي العمل التسويقي أو المبيعات في قطاع الدهانات والصناعة' : 'لقد سبق لي العمل في مصانع للدهانات والطلاء'}
+                      </h5>
+                      <p className="text-xs text-slate-500">
+                        {jobRole === 'marketing' ? 'حدد هذا الخيار إذا كنت قد عملت في تسويق أو مبيعات الدهانات والطلاء أو في القطاع الصناعي عموماً.' : 'حدد هذا الخيار إذا كنت قد أشرفت على السلامة داخل خطوط إنتاج أو تعبئة أو تخزين الطلاء والدهانات سابقاً.'}
+                      </p>
                     </div>
                   </label>
 
                   {industryExperience.workedInPaint && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-200/60 pt-4 mt-2">
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">اسم شركة الدهانات *</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'اسم شركة الدهانات / المنشأة الصناعية *' : 'اسم شركة الدهانات *'}
+                        </label>
                         <input
                           type="text"
                           required
                           value={industryExperience.paintCompany || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, paintCompany: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
-                          placeholder="مثال: مصنع دهانات الجزيرة"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'مثال: شركة دهانات وطنية' : 'مثال: مصنع دهانات وطني'}
                         />
                       </div>
                       <div>
@@ -1201,28 +1352,32 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                           min={0}
                           value={industryExperience.paintYears || 0}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, paintYears: parseInt(e.target.value, 10) || 0 }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">المسمى الوظيفي لديك *</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'المسمى الوظيفي التسويقي لديك *' : 'المسمى الوظيفي لديك *'}
+                        </label>
                         <input
                           type="text"
                           required
                           value={industryExperience.paintRole || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, paintRole: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
-                          placeholder="أخصائي سلامة"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'أخصائي تسويق رقمي / ممثل مبيعات' : 'أخصائي سلامة'}
                         />
                       </div>
                       <div className="md:col-span-3">
-                        <label className="block text-xs font-bold text-slate-600 mb-1">أبرز مسؤولياتك وإنجازاتك في المصنع</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'أبرز مسؤولياتك وإنجازاتك التسويقية هناك' : 'أبرز مسؤولياتك وإنجازاتك في المصنع'}
+                        </label>
                         <textarea
                           rows={2}
                           value={industryExperience.paintTasks || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, paintTasks: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none resize-none"
-                          placeholder="اكتب باختصار المهام مثل الإشراف على التأريض والكهرباء الساكنة وفحص التخزين..."
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none resize-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'توضيح المهام مثل بناء العلاقات، ترويج المنتجات، تنظيم عينات الألوان والكتالوجات...' : 'اكتب باختصار المهام مثل الإشراف على التأريض والكهرباء الساكنة وفحص التخزين...'}
                         />
                       </div>
                     </div>
@@ -1239,58 +1394,70 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                       className="sr-only"
                     />
                     <div className={`w-6 h-6 rounded-lg border-2 mt-0.5 transition-all flex items-center justify-center ${
-                      industryExperience.workedInChemical ? 'bg-orange-500 border-orange-500 text-white' : 'border-slate-300 bg-white group-hover:border-slate-400'
+                      industryExperience.workedInChemical 
+                        ? jobRole === 'marketing' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-orange-500 border-orange-500 text-white' 
+                        : 'border-slate-300 bg-white group-hover:border-slate-400'
                     }`}>
                       {industryExperience.workedInChemical && <CheckCircle className="w-4 h-4 text-white" />}
                     </div>
                     <div>
-                      <h5 className="font-bold text-slate-800 group-hover:text-slate-950">لقد سبق لي العمل في مصانع للمواد الكيميائية أو البتروكيماويات</h5>
-                      <p className="text-xs text-slate-500">حدد هذا الخيار إذا كان لديك خبرة مباشرة مع المواد الكيميائية السائلة، الغازية، التخزين المعقد، وإجراءات السلامة للمواد الخطرة.</p>
+                      <h5 className="font-bold text-slate-800 group-hover:text-slate-950">
+                        {jobRole === 'marketing' ? 'خبرة في التسويق الرقمي وإدارة قنوات التواصل وصناعة المحتوى' : 'لقد سبق لي العمل في مصانع للمواد الكيميائية أو البتروكيماويات'}
+                      </h5>
+                      <p className="text-xs text-slate-500">
+                        {jobRole === 'marketing' ? 'حدد هذا الخيار إذا كان لديك خبرة عملية في كتابة المحتوى، إطلاق الحملات الممولة، إدارة السوشيال ميديا وتوليد العملاء.' : 'حدد هذا الخيار إذا كان لديك خبرة مباشرة مع المواد الكيميائية السائلة، الغازية، التخزين المعقد، وإجراءات السلامة للمواد الخطرة.'}
+                      </p>
                     </div>
                   </label>
 
                   {industryExperience.workedInChemical && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-200/60 pt-4 mt-2">
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">اسم المصنع الكيميائي *</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'اسم الوكالة التسويقية / المنشأة *' : 'اسم المصنع الكيميائي *'}
+                        </label>
                         <input
                           type="text"
                           required
                           value={industryExperience.chemicalCompany || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, chemicalCompany: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
-                          placeholder="اسم الشركة"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'اسم الوكالة أو الشركة' : 'اسم الشركة'}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">عدد سنوات الخبرة به *</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">عدد سنوات الخبرة بها *</label>
                         <input
                           type="number"
                           min={0}
                           value={industryExperience.chemicalYears || 0}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, chemicalYears: parseInt(e.target.value, 10) || 0 }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">المسمى الوظيفي لديك *</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'المسمى الوظيفي الرقمي لديك *' : 'المسمى الوظيفي لديك *'}
+                        </label>
                         <input
                           type="text"
                           required
                           value={industryExperience.chemicalRole || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, chemicalRole: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
-                          placeholder="مهندس سلامة بيئية"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'صانع محتوى / مدير حملات ممولة' : 'مهندس سلامة بيئية'}
                         />
                       </div>
                       <div className="md:col-span-3">
-                        <label className="block text-xs font-bold text-slate-600 mb-1">أبرز مسؤولياتك وإنجازاتك في المصنع</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'أبرز الحملات وقنوات التواصل التي أدرتها ومؤشراتها' : 'أبرز مسؤولياتك وإنجازاتك في المصنع'}
+                        </label>
                         <textarea
                           rows={2}
                           value={industryExperience.chemicalTasks || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, chemicalTasks: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none resize-none"
-                          placeholder="مراقبة انبعاثات الغازات الخطرة، تصاريح العمل الساخن، تطبيق معايير الـ SDS ومكافحة الانسكاب الكيماوي..."
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none resize-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'كتابة محتوى، إطلاق إعلانات ممولة على قنوات التواصل، متابعة مؤشرات الأداء والـ KPIs...' : 'مراقبة انبعاثات الغازات الخطرة، تصاريح العمل الساخن، تطبيق معايير الـ SDS ومكافحة الانسكاب الكيماوي...'}
                         />
                       </div>
                     </div>
@@ -1307,27 +1474,35 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                       className="sr-only"
                     />
                     <div className={`w-6 h-6 rounded-lg border-2 mt-0.5 transition-all flex items-center justify-center ${
-                      industryExperience.workedInIndustrial ? 'bg-orange-500 border-orange-500 text-white' : 'border-slate-300 bg-white group-hover:border-slate-400'
+                      industryExperience.workedInIndustrial 
+                        ? jobRole === 'marketing' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-orange-500 border-orange-500 text-white' 
+                        : 'border-slate-300 bg-white group-hover:border-slate-400'
                     }`}>
                       {industryExperience.workedInIndustrial && <CheckCircle className="w-4 h-4 text-white" />}
                     </div>
                     <div>
-                      <h5 className="font-bold text-slate-800 group-hover:text-slate-950">لقد سبق لي العمل في مصانع صناعية عامة (أخرى)</h5>
-                      <p className="text-xs text-slate-500">حدد هذا الخيار إذا كنت قد عملت في مصانع لإنتاج الأغذية، الحديد، التعبئة، السيارات أو أي بيئة تصنيع عامة غير كيماوية.</p>
+                      <h5 className="font-bold text-slate-800 group-hover:text-slate-950">
+                        {jobRole === 'marketing' ? 'خبرة في تسجيل واعتماد الشركات في منصات الموردين والجهات الرسمية' : 'لقد سبق لي العمل في مصانع صناعية عامة (أخرى)'}
+                      </h5>
+                      <p className="text-xs text-slate-500">
+                        {jobRole === 'marketing' ? 'حدد هذا الخيار إذا كان لديك خبرة عملية في التعامل مع منصة اعتماد، بلدي، سابر، الهيئة العامة للغذاء والدواء، أو أي جهات حكومية وخاصة لتسجيل وتحديث وثائق الموردين والاعتمادات.' : 'حدد هذا الخيار إذا كنت قد عملت في مصانع لإنتاج الأغذية، الحديد، التعبئة، السيارات أو أي بيئة تصنيع عامة غير كيماوية.'}
+                      </p>
                     </div>
                   </label>
 
                   {industryExperience.workedInIndustrial && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-200/60 pt-4 mt-2">
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">اسم المنشأة الصناعية *</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'اسم الجهة / الشركة التي عملت لصالحها *' : 'اسم المنشأة الصناعية *'}
+                        </label>
                         <input
                           type="text"
                           required
                           value={industryExperience.industrialCompany || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, industrialCompany: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
-                          placeholder="اسم المصنع"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'مثال: مصنع جدة للدهانات' : 'اسم المصنع'}
                         />
                       </div>
                       <div>
@@ -1337,28 +1512,32 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                           min={0}
                           value={industryExperience.industrialYears || 0}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, industrialYears: parseInt(e.target.value, 10) || 0 }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">المسمى الوظيفي لديك *</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'مسمى دورك التنظيمي / الإداري *' : 'المسمى الوظيفي لديك *'}
+                        </label>
                         <input
                           type="text"
                           required
                           value={industryExperience.industrialRole || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, industrialRole: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none"
-                          placeholder="مراقب / مشرف سلامة وصحة مهنية"
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'مسؤول تسجيل واعتمادات / منسق علاقات عامة' : 'مراقب / مشرف سلامة وصحة مهنية'}
                         />
                       </div>
                       <div className="md:col-span-3">
-                        <label className="block text-xs font-bold text-slate-600 mb-1">أبرز مسؤولياتك وإنجازاتك هناك</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          {jobRole === 'marketing' ? 'أبرز المنصات والاعتمادات التي قمت بالتسجيل فيها وإدارتها بنجاح' : 'أبرز مسؤولياتك وإنجازاتك هناك'}
+                        </label>
                         <textarea
                           rows={2}
                           value={industryExperience.industrialTasks || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, industrialTasks: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-orange-500 outline-none resize-none"
-                          placeholder="الإشراف على سلامة الآلات، مخاطر الكهرباء، الرافعات الشوكية، وتدريب العمال على الإخلاء..."
+                          className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none resize-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
+                          placeholder={jobRole === 'marketing' ? 'تسجيل في منصة اعتماد، إصدار شهادات سابر، تحديث ملف بلدي، تنسيق المستندات الرسمية...' : 'الإشراف على سلامة الآلات، مخاطر الكهرباء، الرافعات الشوكية، وتدريب العمال على الإخلاء...'}
                         />
                       </div>
                     </div>
@@ -1370,51 +1549,51 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
 
             {/* Certificates Checklist */}
             <div className="border-t border-slate-100 pt-8">
-              <h4 className="text-lg font-bold text-slate-900 mb-2">الشهادات والدورات المهنية المعتمدة</h4>
-              <p className="text-xs text-slate-500 mb-6">يرجى تحديد كافة الشهادات التي تمتلك إثباتاً ورقياً أو إلكترونياً لها فعلياً (يمكنك تحديد خيارات متعددة):</p>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <h4 className="text-lg font-bold text-slate-900 mb-2">
+                {jobRole === 'marketing' ? 'المهارات والقدرات والاعتمادات التسويقية' : 'الشهادات والدورات المهنية المعتمدة'}
+              </h4>
+              <p className="text-xs text-slate-500 mb-6">
+                {jobRole === 'marketing' 
+                  ? 'يرجى تحديد المهارات والمنصات التي تتقن العمل عليها وتملك بها سابق معرفة أو إثبات (يمكنك تحديد أكثر من خيار):' 
+                  : 'يرجى تحديد الشهادات المهنية المعتمدة والبرامج التدريبية المعتمدة التي حصلت عليها بالفعل وتملك إثباتاً لها:'}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { key: 'nebosh', label: 'NEBOSH IGC', desc: 'الشهادة الدولية العامة' },
-                  { key: 'osha', label: 'OSHA 30-Hour', desc: 'إدارة السلامة والصحة' },
-                  { key: 'iosh', label: 'IOSH Managing Safely', desc: 'إدارة العمل بأمان' },
-                  { key: 'iso45001', label: 'ISO 45001 Auditor', desc: 'كبير مدققي الأيزو للسلامة' },
-                  { key: 'fireSafety', label: 'Industrial Fire Safety', desc: 'مكافحة الحرائق الصناعية' },
-                  { key: 'firstAid', label: 'First Aid Certified', desc: 'شهادة الإسعافات الأولية' },
-                  { key: 'hazop', label: 'HAZOP Study', desc: 'دراسة مخاطر العمليات الفنية' },
-                  { key: 'hazmat', label: 'HAZMAT Response', desc: 'التعامل مع المواد الخطرة' },
-                  { key: 'permitToWork', label: 'Permit To Work (PTW)', desc: 'إصدار تصاريح العمل' },
-                  { key: 'workingAtHeights', label: 'Working at Heights', desc: 'السلامة في المرتفعات' },
-                  { key: 'confinedSpace', label: 'Confined Space Entry', desc: 'العمل بالأماكن المغلقة' },
-                  { key: 'forkliftSafety', label: 'Forklift Safety', desc: 'سلامة الرافعات والتحميل' }
-                ].map((cert) => {
-                  const isChecked = (certificates as any)[cert.key];
+                  { key: 'nebosh', hse: 'NEBOSH IGC', mkt: 'كتابة المحتوى التسويقي والإبداعي (Copywriting)' },
+                  { key: 'osha', hse: 'OSHA 30-Hour', mkt: 'إدارة الحملات الإعلانية الممولة (Google, Meta, Snapchat)' },
+                  { key: 'iosh', hse: 'IOSH Managing Safely', mkt: 'تهيئة محركات البحث وتحسين الظهور (SEO/SEM)' },
+                  { key: 'iso45001', hse: 'ISO 45001 Lead Auditor', mkt: 'إعداد خطط التسويق الرقمي واستراتيجيات النمو' },
+                  { key: 'fireSafety', hse: 'Industrial Fire Safety (سلامة الحرائق)', mkt: 'إدارة منصات التواصل الاجتماعي والردود (Social Media)' },
+                  { key: 'firstAid', hse: 'First Aid (الإسعافات الأولية المعتمدة)', mkt: 'صناعة المحتوى المرئي وتصميم منشورات السوشيال ميديا' },
+                  { key: 'hazop', hse: 'HAZOP (دراسات المخاطر التشغيلية)', mkt: 'التسجيل في منصة اعتماد وإدارة المناقصات الحكومية' },
+                  { key: 'hazmat', hse: 'HAZMAT (التعامل مع المواد الخطرة)', mkt: 'التعامل مع منصة بلدي والاعتمادات البلدية' },
+                  { key: 'permitToWork', hse: 'Permit To Work (نظام تصاريح العمل)', mkt: 'التسجيل في منصة سابر وإصدار شهادات المطابقة والجمارك' },
+                  { key: 'workingAtHeights', hse: 'Working At Heights (العمل على المرتفعات)', mkt: 'التنسيق وإدارة العلاقات العامة والتنظيمية للشركات' },
+                  { key: 'confinedSpace', hse: 'Confined Space Entry (العمل في الأماكن المغلقة)', mkt: 'تحليل البيانات والتسويق الرقمي وإدارة مؤشرات الأداء (KPIs)' },
+                  { key: 'forkliftSafety', hse: 'Forklift Safety (سلامة الرافعات الشوكية)', mkt: 'إصدار التراخيص وعقود التشغيل والبلديات والأمانات' }
+                ].map((item) => {
+                  const isChecked = (certificates as any)[item.key];
                   return (
-                    <label 
-                      key={cert.key}
-                      className={`border-2 rounded-2xl p-4 cursor-pointer transition-all flex flex-col justify-between text-right h-28 select-none ${
-                        isChecked 
-                          ? 'border-orange-500 bg-orange-50/30' 
-                          : 'border-slate-100 hover:border-slate-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className={`text-sm font-extrabold ${isChecked ? 'text-orange-600' : 'text-slate-800'}`}>
-                          {cert.label}
-                        </span>
+                    <label key={item.key} className="flex items-start gap-3 cursor-pointer group p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/20 hover:bg-slate-50/50 transition-all">
+                      <div className="relative flex items-center justify-center mt-0.5">
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          onChange={(e) => setCertificates(prev => ({ ...prev, [cert.key]: e.target.checked }))}
+                          onChange={(e) => setCertificates(prev => ({ ...prev, [item.key]: e.target.checked }))}
                           className="sr-only"
                         />
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                          isChecked ? 'bg-orange-500 border-orange-500 text-white' : 'border-slate-300 bg-white'
+                        <div className={`w-5 h-5 rounded-lg border transition-all flex items-center justify-center ${
+                          isChecked 
+                            ? jobRole === 'marketing' ? 'bg-blue-600 border-blue-600 shadow-sm' : 'bg-orange-500 border-orange-500 shadow-sm' 
+                            : 'border-slate-300 group-hover:border-slate-400 bg-white'
                         }`}>
-                          {isChecked && <CheckCircle className="w-3.5 h-3.5" />}
+                          {isChecked && <Check className="w-3.5 h-3.5 text-white stroke-[3px]" />}
                         </div>
                       </div>
-                      <span className="text-[10px] text-slate-500 font-medium block leading-tight">{cert.desc}</span>
+                      <span className="text-xs font-bold text-slate-700 select-none group-hover:text-slate-900 leading-relaxed">
+                        {jobRole === 'marketing' ? item.mkt : item.hse}
+                      </span>
                     </label>
                   );
                 })}
@@ -1434,34 +1613,46 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
             </button>
             <button
               onClick={handleNext}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-orange-500/10 flex items-center gap-2 transition-all hover:gap-3 active:scale-95"
-              id="step2-next-btn"
+              className={`text-white font-bold px-8 py-3 rounded-xl shadow-lg flex items-center gap-2 transition-all hover:gap-3 active:scale-95 ${
+                jobRole === 'marketing'
+                  ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10'
+                  : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/10'
+              }`}
             >
-              المتابعة للاختبار الفني
+              الانتقال للخطوة التالية
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>
+
         </div>
       )}
 
-      {/* --- STEP 3: TECHNICAL HSE EXAM --- */}
+      {/* --- STEP 3: TECHNICAL EXAM / PORTFOLIO --- */}
       {currentStep === 3 && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" id="step-3-exam">
           <div className="bg-white text-slate-800 p-6 md:p-8 border-b border-slate-200">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
               <div>
-                <h3 className="text-lg md:text-xl font-bold text-blue-900 mb-1">الخطوة الثالثة: اختبار الجدارة والكفاءة الفنية (HSE)</h3>
-                <p className="text-xs text-slate-400 font-medium">يتكون هذا الاختبار من 10 أسئلة مقالية تخصصية لقياس مدى وعيك وإدراكك الميداني لبيئة مصانع الطلاء.</p>
+                <h3 className={`text-lg md:text-xl font-bold mb-1 ${jobRole === 'marketing' ? 'text-blue-900' : 'text-orange-600'}`}>
+                  {jobRole === 'marketing' ? 'الخطوة الثالثة: اختبار الجدارة والكفاءة التسويقية والمهنية' : 'الخطوة الثالثة: اختبار الجدارة والكفاءة الفنية (HSE)'}
+                </h3>
+                <p className="text-xs text-slate-400 font-medium">
+                  {jobRole === 'marketing' 
+                    ? 'يتكون هذا الاختبار من 10 أسئلة تخصصية وتفصيلية لقياس مدى وعيك وإدراكك لأساسيات التسويق وإدارة الهوية والمنصات الحكومية.' 
+                    : 'يتكون هذا الاختبار من 10 أسئلة مقالية تخصصية لقياس مدى وعيك وإدراكك الميداني لبيئة مصانع الطلاء.'}
+                </p>
               </div>
-              <div className="text-left bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 self-start md:self-auto shrink-0">
-                <span className="text-[10px] text-blue-900 block uppercase font-bold">نسبة إنجاز الأجوبة</span>
-                <span className="text-xs font-bold text-blue-900 font-mono">{answeredCount} / 10 أسئلة ({progressPercent}%)</span>
+              <div className={`text-left px-4 py-2 rounded-xl border self-start md:self-auto shrink-0 ${
+                jobRole === 'marketing' ? 'bg-blue-50 border-blue-100 text-blue-900' : 'bg-orange-50 border-orange-100 text-orange-950'
+              }`}>
+                <span className="text-[10px] block uppercase font-bold">نسبة إنجاز الأجوبة</span>
+                <span className="text-xs font-bold font-mono">{answeredCount} / 10 أسئلة ({progressPercent}%)</span>
               </div>
             </div>
 
             {/* Dynamic Progress Indicator */}
             <div className="w-full bg-slate-100 h-1.5 rounded-full mt-6 overflow-hidden">
-              <div className="bg-blue-900 h-full transition-all duration-300" style={{ width: `${progressPercent}%` }}></div>
+              <div className={`h-full transition-all duration-300 ${jobRole === 'marketing' ? 'bg-blue-600' : 'bg-orange-500'}`} style={{ width: `${progressPercent}%` }}></div>
             </div>
           </div>
 
@@ -1478,7 +1669,58 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
 
             {/* Questions list */}
             <div className="space-y-8">
-              {[
+              {(jobRole === 'marketing' ? [
+                { 
+                  id: 'q1_paint_risks', 
+                  q: '1- ما هي أبرز الحملات التسويقية التي قمت بتخطيطها وإدارتها سابقاً؟', 
+                  placeholder: 'يرجى ذكر اسم الحملة، القنوات التسويقية المستخدمة (مثل منصات التواصل الإعلانية)، الميزانية الإجمالية التقريبية، وأبرز النتائج والمبيعات والأرقام المحققة بالتفصيل...' 
+                },
+                { 
+                  id: 'q2_hazard_vs_risk', 
+                  q: '2- كيف تدير الهوية الرقمية للعلامة التجارية وتصنع المحتوى الإبداعي؟', 
+                  placeholder: 'تحدث عن منهجيتك في بناء الهوية البصرية والمكتوبة، كتابة النصوص الإعلانية (Copywriting)، وتفاعل الجماهير المستهدفة في السوشيال ميديا...' 
+                },
+                { 
+                  id: 'q3_incident_investigation', 
+                  q: '3- ما هي خبرتك بالتفصيل في تسجيل واعتماد الشركات لدى منصات الموردين الرسمية والجهات التنظيمية؟', 
+                  placeholder: 'تحدث بالتفصيل عن خبرتك في منصات مثل (منصة اعتماد، بلدي، سابر، الهيئة العامة للغذاء والدواء أو غيرها) والوثائق والإجراءات المطلوبة...' 
+                },
+                { 
+                  id: 'q4_risk_assessment', 
+                  q: '4- كيف توظف أدوات تحليل البيانات ومؤشرات الأداء (KPIs) لتطوير خطتك التسويقية؟', 
+                  placeholder: 'اشرح كيف تقيس العائد على الإنفاق الإعلاني (ROAS)، تكلفة اكتساب العميل (CAC)، ومعدل التحويل الرقمي لتعديل استراتيجية الحملة الإعلانية...' 
+                },
+                { 
+                  id: 'q5_ppe_chemical', 
+                  q: '5- اذكر بالتفصيل "أعمالاً ومشاريع تسويقية تم تنفيذها" ودورك الدقيق والإبداعي فيها.', 
+                  placeholder: 'تحدث عن مشاريع ترويجية قمت بتنفيذها بنفسك، مثل إعداد وتصميم منشورات، إطلاق حملات مبيعات، تنظيم معارض تسويقية، أو إدارة فرق عمل فرعية...' 
+                },
+                { 
+                  id: 'q6_sds_msds', 
+                  q: '6- يرجى تزويدنا بروابط أعمالك السابقة أو معرض أعمالك الرقمي (Portfolio) - [أعمال تم تنفيذها].', 
+                  placeholder: 'ضع هنا روابط (URLs) لمواقع ويب صممتها أو أدرتها، حسابات تواصل اجتماعي أطلقتها، ملفات بورتفوليو على Behance أو Google Drive، إلخ...' 
+                },
+                { 
+                  id: 'q7_flammable_spill', 
+                  q: '7- ما هي الأدوات والمنصات الإعلانية وتطبيقات التصميم ومونتاج الفيديو التي تتقن العمل عليها باحترافية؟', 
+                  placeholder: 'يرجى تحديد مستواك في أدوات مثل (Canva, Photoshop, Premiere, Meta Ads, TikTok Ads Manager, Google Ads or Snapchat Ads)...' 
+                },
+                { 
+                  id: 'q8_ppe_refusal', 
+                  q: '8- كيف تتعامل مع ميزانيات التسويق المحدودة لتحقيق أقصى فاعلية وأعلى معدل تحويل للعملاء؟', 
+                  placeholder: 'تحدث عن استراتيجيتك المتبعة في تحسين الاستهداف الجغرافي والديمغرافي وترشيد الميزانيات بما يضمن زيادة العوائد بأقل النفقات...' 
+                },
+                { 
+                  id: 'q9_daily_inspection', 
+                  q: '9- كيف تصمم وتنفذ استراتيجية تسويق لمنتجات مصانع الدهانات والمعاجين (قطاع صناعي B2B و B2C)؟', 
+                  placeholder: 'ما هي رؤيتك في تسويق منتجات الطلاء الإنشائية والصناعية للمقاولين وأصحاب المنازل؟ ما القنوات الإعلانية الأنسب والأقوى تأثيراً؟...' 
+                },
+                { 
+                  id: 'q10_safety_project', 
+                  q: '10- يرجى تزويدنا بوصف وملخص لملف "عينة من أعمالك السابقة" التي ستقوم برفعها كملف مرفق أدناه.', 
+                  placeholder: 'اكتب وصفاً أو ملخصاً مختصراً للملف الذي ستقوم بتحميله بالأسفل (البورتفوليو، حملات، تصميم، عرض تقديمي، إلخ) وما يحتويه من نماذج...' 
+                }
+              ] : [
                 { 
                   id: 'q1_paint_risks', 
                   q: '1- ما أهم المخاطر داخل مصانع الدهانات؟', 
@@ -1529,7 +1771,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                   q: '10- اذكر مشروعًا أو تحسينًا في السلامة سبق أن شاركت فيه.', 
                   placeholder: 'تحدث عن مشروع، مبادرة، تدريب، أو تعديل قمت به أو شاركت فيه لزيادة الأمان والصحة في منشأتك السابقة أو الحالية.' 
                 }
-              ].map((item, index) => {
+              ]).map((item, index) => {
                 const currentVal = (examAnswers as any)[item.id] || '';
                 const wordCount = currentVal.trim().split(/\s+/).filter(Boolean).length;
                 return (
@@ -1538,7 +1780,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                       <h5 className="font-bold text-slate-900 text-base">{item.q}</h5>
                       <span className={`text-[10px] font-bold px-2 py-1 rounded-md shrink-0 self-start ${
                         wordCount > 30 ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
-                        wordCount > 10 ? 'bg-orange-50 text-orange-600 border border-orange-200' :
+                        wordCount > 10 ? 'bg-amber-50 text-amber-600 border border-amber-200' :
                         'bg-slate-100 text-slate-400 border border-slate-200'
                       }`}>
                         {wordCount} كلمة {wordCount > 30 ? '• إجابة كافية' : wordCount > 0 ? '• إجابة مختصرة' : '• لم تتم الإجابة'}
@@ -1548,9 +1790,45 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                       rows={5}
                       value={currentVal}
                       onChange={(e) => setExamAnswers(prev => ({ ...prev, [item.id]: e.target.value }))}
-                      className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all text-sm leading-relaxed"
+                      className={`w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all text-sm leading-relaxed`}
                       placeholder={item.placeholder}
                     />
+                    
+                    {/* Portfolio file upload uploader for Marketing under Q10 */}
+                    {item.id === 'q10_safety_project' && jobRole === 'marketing' && (
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <label className="block text-xs font-bold text-slate-600 mb-2">
+                          رفع ملف عينة الأعمال أو الملف التعريفي (PDF أو صور - بحد أقصى 10 ميغابايت) *
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <label className="cursor-pointer flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all">
+                            <Upload className="w-4 h-4" />
+                            اختر الملف لتحميله
+                            <input
+                              type="file"
+                              accept=".pdf,image/*"
+                              onChange={handlePortfolioUpload}
+                              className="hidden"
+                            />
+                          </label>
+                          {personalInfo.portfolioFileName && (
+                            <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700">
+                              <span className="truncate max-w-[200px]">{personalInfo.portfolioFileName}</span>
+                              <button
+                                type="button"
+                                onClick={removePortfolioFile}
+                                className="text-red-500 hover:text-red-700 font-bold ml-1 text-sm focus:outline-none"
+                              >
+                                &times;
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        {errors.portfolioFile && (
+                          <p className="text-red-500 text-xs mt-1.5 font-bold">{errors.portfolioFile}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1558,9 +1836,9 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
 
             {/* Help Prompt Card */}
             <div className="bg-slate-900 text-slate-300 p-6 rounded-2xl border border-slate-800 flex gap-4">
-              <HelpCircle className="w-8 h-8 text-orange-400 shrink-0 mt-1" />
+              <HelpCircle className={`w-8 h-8 shrink-0 mt-1 ${jobRole === 'marketing' ? 'text-blue-400' : 'text-orange-400'}`} />
               <div>
-                <h5 className="font-bold text-white text-base mb-1">هل أكملت الإجابة الفنية؟</h5>
+                <h5 className="font-bold text-white text-base mb-1">هل أكملت جميع الإجابات المطلوبة؟</h5>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   الرجاء مراجعة إجاباتك الفنية والتحقق من عدم ترك أي سؤال فارغاً. الإجابات التخصصية المفصلة تُعد دليلاً ممتازاً على كفاءتك وتدعم قرار محرك التقييم الذكي التلقائي بشكل مباشر قبل المراجعة البشرية.
                 </p>
@@ -1579,7 +1857,11 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
             </button>
             <button
               onClick={handleNext}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-orange-500/10 flex items-center gap-2 transition-all hover:gap-3 active:scale-95"
+              className={`text-white font-bold px-8 py-3 rounded-xl shadow-lg flex items-center gap-2 transition-all hover:gap-3 active:scale-95 ${
+                jobRole === 'marketing'
+                  ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10'
+                  : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/10'
+              }`}
               id="step3-next-btn"
             >
               الانتقال لصفحة المراجعة والملخص
@@ -1637,7 +1919,10 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess }: Applicati
                 </div>
                 <div>
                   <span className="text-slate-400 text-xs block mb-1">تاريخ الميلاد</span>
-                  <span className="font-bold text-slate-800">{personalInfo.birthDate}</span>
+                  <span className="font-bold text-slate-800">
+                    {personalInfo.birthDate}
+                    {personalInfo.birthDate && ` (العمر: ${Math.abs(new Date(Date.now() - new Date(personalInfo.birthDate).getTime()).getUTCFullYear() - 1970)} سنة)`}
+                  </span>
                 </div>
                 <div>
                   <span className="text-slate-400 text-xs block mb-1">المدينة</span>

@@ -458,336 +458,34 @@ function initDatabase() {
   }
 }
 
-function _unused_initDatabase() {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
-  }
-
-  if (!fs.existsSync(DB_FILE)) {
-    // Premium seed data
-    const seedApplicants: Applicant[] = [
-      {
-        id: "HSE-2026-0001",
-        status: "accepted",
-        createdAt: "2026-07-01T10:30:00Z",
-        personalInfo: {
-          fullName: "أحمد بن عبد الله الزهراني",
-          nationality: "سعودي",
-          birthDate: "1992-05-14",
-          gender: "male",
-          city: "الجبيل",
-          residenceAddress: "المنطقة الشرقية، الجبيل، حي الروضة",
-          phone: "0501234567",
-          email: "ahmed.zahrani@example.com",
-          qualification: "بكالوريوس",
-          major: "الهندسة الكيميائية والسلامة الصناعية",
-          experienceYears: 8,
-          currentCompany: "الشركة الوطنية للكيماويات والدهانات",
-          currentRole: "رئيس قسم السلامة والصحة المهنية",
-          currentSalary: "14,500 ريال",
-          expectedSalary: "17,000 ريال",
-          noticePeriod: "شهر واحد",
-          linkedinUrl: "https://linkedin.com/in/ahmed-zahrani-hse",
-          ownsCar: "yes",
-          hasHealthIssues: "no",
-          healthIssuesDetails: "",
-          hasLocationIssue: "no",
-          cvFileName: "Ahmed_AlZahrani_CV.pdf"
-        },
-        industryExperience: {
-          workedInPaint: true,
-          paintCompany: "مصنع دهانات الجزيرة المتطور",
-          paintYears: 3,
-          paintRole: "أخصائي سلامة كيميائية",
-          paintTasks: "إعداد تقييم المخاطر لخطوط إنتاج المذيبات والدهانات العضوية، ومراقبة أنظمة مكافحة الانفجار والتفتيش الدوري على معدات الوقاية الشخصية الخاصة بالتعامل مع الكيماويات الخطرة.",
-          workedInChemical: true,
-          chemicalCompany: "الشركة الوطنية للكيماويات",
-          chemicalYears: 5,
-          chemicalRole: "مهندس صحة وبيئة وسلامة (HSE)",
-          chemicalTasks: "تطبيق معايير ISO 45001 ومتابعة حوادث الانسكاب، وتدريب العمال على استخدام الـ SDS وإدارة تصاريح العمل للمناطق الحرجة والخطرة.",
-          workedInIndustrial: true,
-          industrialCompany: "مجموعة المصانع الكبرى",
-          industrialYears: 8,
-          industrialRole: "أخصائي HSE",
-          industrialTasks: "إدارة السلامة العامة في المنشآت الصناعية"
-        },
-        certificates: {
-          nebosh: true,
-          osha: true,
-          iosh: true,
-          iso45001: true,
-          fireSafety: true,
-          firstAid: true,
-          hazop: true,
-          hazmat: true,
-          permitToWork: true,
-          workingAtHeights: true,
-          confinedSpace: true,
-          forkliftSafety: true
-        },
-        examAnswers: {
-          q1_paint_risks: "المخاطر الرئيسية في مصانع الدهانات تشمل: 1. مخاطر الحريق والانفجار بسبب تصاعد أبخرة المذيبات العضوية القابلة للاشتعال (Solvents). 2. مخاطر التسمم والاستنشاق للمواد الكيميائية والأصباغ السامة ومساحيق الألوان. 3. المخاطر الفيزيائية مثل الضوضاء العالية الناتجة عن خلاطات ومطاحن الدهان. 4. مخاطر الكهرباء الساكنة (Static Electricity) التي قد تسبب شرارة تؤدي لانفجار الأبخرة المتطايرة. 5. مخاطر ميكانيكية أثناء صيانة خطوط التعبئة والمكابس.",
-          q2_hazard_vs_risk: "الخطر (Hazard): هو أي مصدر أو حالة أو نشاط لديه القدرة الكامنة على التسبب في ضرر أو إصابة أو تلف للممتلكات أو البيئة (مثل: مادة كيميائية قابلة للاشتعال مخزنة في المصنع).\nأما المخاطرة (Risk): فهي احتمالية حدوث هذا الضرر مضافاً إليها شدة أو حجم الإصابة أو التلف الناتج عنه في حال حدوثه (مثال: احتمالية حدوث حريق بسبب التعامل الخاطئ مع هذه المادة الكيميائية أثناء الإنتاج). فالمخاطرة = الاحتمالية × الشدة.",
-          q3_incident_investigation: "خطوات التحقيق في الحادث هي: 1. تقديم الإسعافات الأولية وتأمين موقع الحادث فوراً لمنع حدوث أضرار إضافية. 2. جمع المعلومات والأدلة المادية، والتقاط الصور، وحفظ عينات المواد إن وجدت. 3. مقابلة الشهود والمصابين وتوثيق شهاداتهم بشكل موضوعي وبأسرع وقت. 4. تشكيل فريق التحقيق لتحديد الأسباب المباشرة والأسباب الجذرية (Root Causes) باستخدام أدوات مثل 5 Whys أو مخطط عظمة السمكة. 5. وضع الإجراءات التصحيحية والوقائية لعدم تكرار الحادث. 6. كتابة تقرير رسمي مفصل ومشاركته مع الإدارة والعمال للاستفادة والتعلم.",
-          q4_risk_assessment: "لإعداد تقييم المخاطر (Risk Assessment)، أتبع الخطوات الخمس التالية: 1. تحديد الأخطار المتواجدة في بيئة العمل (Hazard Identification). 2. تحديد الفئات المعرضة للخطر وكيف يمكن أن يتضرروا (عمال، زوار، مقاولون). 3. تقييم المخاطر الحالية ووضع ضوابط تحكم إضافية بناءً على هرم التحكم (الاستبدال، العزل، التحكم الهندسي، الإداري، ومعدات الوقاية). 4. تسجيل وتوثيق النتائج بالتفصيل وتطبيق الإجراءات الجديدة. 5. مراجعة وتحديث التقييم بانتظام أو عند حدوث أي تغيير في العمليات.",
-          q5_ppe_chemical: "معدات الوقاية الشخصية (PPE) الضرورية للتعامل مع المواد الكيميائية تشمل: 1. أقنعة حماية التنفس المزودة بفلاتر مناسبة للغازات والأبخرة العضوية (أقنعة نصف وجه أو وجه كامل). 2. نظارات الحماية الكيميائية المحكمة (Goggles) لحماية العين من الرذاذ المتطاير. 3. القفازات المقاومة للمواد الكيميائية (مثل قفازات النيتريل أو النيوبرين الطويلة). 4. بدلة العمل الواقية المقاومة للمواد الكيميائية (Chemical Resistant Overall/Tyvek). 5. أحذية السلامة المقاومة للمواد الكيميائية والانزلاق ومزودة بمقدمة فولاذية لحماية القدم من سقوط العبوات.",
-          q6_sds_msds: "صحيفة بيانات السلامة للمادة (SDS - Safety Data Sheet) والمعروفة سابقاً بـ (MSDS) هي وثيقة تفصيلية تتكون من 16 قسماً معتمداً دولياً، وتكمن أهميتها في توفير معلومات دقيقة وشاملة حول: الخصائص الفيزيائية والكيميائية للمادة، المخاطر الصحية والبيئية، الإسعافات الأولية المطلوبة في حال التعرض لها، طرق التخزين والتعامل الآمن، إجراءات مكافحة الحريق، وطرق التخلص الآمن منها والتعامل مع حالات الانسكاب الطارئة. وهي مرجع أساسي لكل عامل بالمصنع ومسؤول السلامة.",
-          q7_flammable_spill: "سأتصرف فوراً وفق خطة الطوارئ التالية: 1. إخلاء المنطقة المتضررة فوراً وإيقاف كافة مصادر الاشتعال والحرارة والشرر في المحيط وإغلاق محابس ومفاتيح التشغيل. 2. إطلاق جرس الإنذار وتنبيه فريق الاستجابة للطوارئ بالمصنع. 3. ارتداء معدات الوقاية الشخصية المناسبة (قناع الأبخرة الكيميائية، القفازات والنظارات). 4. احتواء الانسكاب باستخدام حواجز رملية أو مواد ماصة كيميائية غير قابلة للاشتعال (مثل الإسفنج الكيميائي المخصص). 5. تهوية المكان بشكل جيد وتجنب استخدام أدوات معدنية تسبب شراراً أثناء التنظيف (استخدام أدوات بلاستيكية أو نحاسية). 6. وضع الفضلات في حاويات مخصصة مغلقة للمواد الخطرة والتخلص منها وفق اللوائح البيئية.",
-          q8_ppe_refusal: "التعامل مع هذا الموظف يتطلب حكمة وحزم: 1. التحدث معه بشكل شخصي وودي لفهم سبب الرفض (هل المعدات غير مريحة؟ هل تعيق حركته؟). 2. توضيح الخطر الحقيقي المباشر عليه وعلى زملائه في حال عدم ارتدائها، وأنها خط الدفاع الأخير لحمايته. 3. التأكد من توفير معدات وقاية مريحة ومناسبة لمقاسه. 4. شرح أن ارتداء المعدات هو إلزام قانوني وتنظيمي حسب سياسة المصنع وقانون العمل. 5. في حال إصراره على الرفض بعد التوجيه والتعليم، يتم تطبيق التدرج في الإجراءات التأديبية المنصوص عليها في لائحة تنظيم العمل بالمصنع (تنبيه شفوي، ثم إنذار كتابي، ثم إيقاف عن العمل لحمايته وحماية زملائه).",
-          q9_daily_inspection: "أهم النقاط التي يجب فحصها في الجولة التفتيشية اليومية بمصنع الدهانات: 1. خلو ممرات الطوارئ ومخارج الحريق من أي عوائق، وسلامة إشارات الهروب. 2. سلامة طفايات الحريق، وصناديق الخراطيم، وجاهزية أنظمة الرش الآلي وضغط المياه. 3. فحص أنظمة التهوية وسحب الأبخرة في صالات الخلط والتعبئة. 4. التأكد من سلامة توصيلات التأريض الكهربائي (Earth Grounding) لجميع الآلات والخزانات لمنع تجمع الشحنات الساكنة. 5. مراقبة التزام العمال بارتداء معدات الوقاية الشخصية المناسبة. 6. التأكد من التخزين السليم للعبوات الكيماوية والدهانات وعدم تكدسها، ومراقبة أي علامات تسرب أو انسكاب.",
-          q10_safety_project: "خلال عملي في مصنع الدهانات السابق، شاركت في قيادة مشروع 'تأريض وحماية أنظمة التعبئة من الكهرباء الساكنة'. حيث لاحظت وجود تجمع شحنات ساكنة أثناء تفريغ مذيب التولوين (Toluene) في خلاطات الدهان، وكان هذا يمثل خطراً جسيماً لحدوث انفجار. قمت بتصميم وتطبيق نظام تأريض موثق لجميع الخلاطات والعبوات وتثبيت أجهزة استشعار للتأريض التلقائي تمنع عمل الخلاطات إذا لم تكن التوصيلات الأرضية سليمة بنسبة 100%. أدى هذا المشروع بفضل الله إلى خفض احتمالية حدوث شرر في صالة الخلط إلى صفر، وحصل المشروع على جائزة أفضل تحسين سلامة لعام 2024 في المصنع."
-        },
-        aiEvaluation: {
-          score: 94,
-          paintChemicalExpLevel: "high",
-          strengths: [
-            "إجابات تفصيلية ونموذجية تدل على خبرة حقيقية وعميقة في بيئة مصانع الدهانات والمواد الكيميائية.",
-            "فهم ممتاز لمخاطر الكهرباء الساكنة والمذيبات العضوية القابلة للاشتعال وحلولها الهندسية.",
-            "إلمام تام بمنهجيات التحقيق في الحوادث وإعداد تقييم المخاطر وصحائف بيانات السلامة (SDS).",
-            "امتلاك لشهادات احترافية أساسية وذهبية في السلامة (NEBOSH, ISO 45001, HAZOP)."
-          ],
-          weaknesses: [
-            "الراتب المتوقع أعلى بقليل من النطاق المعتاد، لكنه مبرر بمستوى الخبرة والشهادات الاحترافية."
-          ],
-          suggestedQuestions: [
-            "كيف قمت بقياس فعالية نظام التأريض الجديد للكهرباء الساكنة عملياً وبصورة دورية؟",
-            "صف لنا حالة قمت فيها بإقناع الإدارة العليا بالاستثمار في نظام سلامة هندسي مكلف، وكيف بررت التكلفة ماليًا؟",
-            "كيف تتعامل مع الضغوط الإنتاجية عندما يتعارض الالتزام بالسلامة مع جدول الشحن الضيق للدهانات؟"
-          ],
-          recommendation: "suitable",
-          recommendationReason: "المرشح ممتاز ويمتلك خبرة نادرة وتخصصية جداً في نفس قطاع المصنع (الدهانات والكيماويات). إجاباته الفنية تدل على وعي تام وخبرة ميدانية حقيقية تجعله قادراً على قيادة منظومة السلامة في المصنع فوراً.",
-          evaluatedAt: "2026-07-01T11:00:00Z"
-        },
-        hrEvaluation: {
-          experienceRating: 9,
-          qualificationRating: 9,
-          certificatesRating: 10,
-          technicalRating: 10,
-          writingRating: 9,
-          languageRating: 9,
-          personalityRating: 9,
-          finalScore: 93,
-          notes: "تمت مراجعة طلب المرشح أحمد الزهراني، وهو من الكفاءات الوطنية الممتازة في مجال السلامة الكيميائية والدهانات. الشهادات مكتملة ولديه فهم عميق جداً للتأريض والكهرباء الساكنة ومكافحة الانفجارات وهي من أهم ما نحتاجه في مصنعنا. نوصي بتحديد موعد للمقابلة الشخصية الفنية معه بأسرع وقت.",
-          reviewedBy: "إدارة الموارد البشرية",
-          reviewedAt: "2026-07-02T08:15:00Z"
-        }
-      },
-      {
-        id: "HSE-2026-0002",
-        status: "pending",
-        createdAt: "2026-07-03T14:15:00Z",
-        personalInfo: {
-          fullName: "سارة بنت خالد المطيري",
-          nationality: "سعودية",
-          birthDate: "1996-09-22",
-          gender: "female",
-          city: "الرياض",
-          residenceAddress: "الرياض، حي المروج",
-          phone: "0549876543",
-          email: "sara.mutairi@example.com",
-          qualification: "بكالوريوس",
-          major: "علوم البيئة والسلامة المهنية",
-          experienceYears: 4,
-          currentCompany: "مصنع الرياض للطلاء المحدود",
-          currentRole: "أخصائية بيئة وسلامة",
-          currentSalary: "9,000 ريال",
-          expectedSalary: "11,500 ريال",
-          noticePeriod: "شهر واحد",
-          linkedinUrl: "https://linkedin.com/in/sara-mutairi-hse",
-          ownsCar: "yes",
-          hasHealthIssues: "no",
-          healthIssuesDetails: "",
-          hasLocationIssue: "no",
-          cvFileName: "Sara_AlMutairi_CV.pdf"
-        },
-        industryExperience: {
-          workedInPaint: true,
-          paintCompany: "مصنع الرياض للطلاء المحدود",
-          paintYears: 4,
-          paintRole: "أخصائية سلامة وصحة مهنية ومسؤولة البيئة",
-          paintTasks: "إجراء القياسات البيئية داخل بيئة العمل (تركيز الغازات، الغبار، الضوضاء)، والتفتيش على المستودعات والتأكد من توافر أدوات غسيل العيون في مناطق خلط المواد الكيميائية.",
-          workedInChemical: false,
-          workedInIndustrial: true,
-          industrialCompany: "مصنع الرياض للطلاء المحدود",
-          industrialYears: 4,
-          industrialRole: "أخصائية سلامة وصحة مهنية",
-          industrialTasks: "التدريب على مكافحة الحرائق وحالات الطوارئ."
-        },
-        certificates: {
-          nebosh: false,
-          osha: true,
-          iosh: true,
-          iso45001: false,
-          fireSafety: true,
-          firstAid: true,
-          hazop: false,
-          hazmat: true,
-          permitToWork: true,
-          workingAtHeights: false,
-          confinedSpace: false,
-          forkliftSafety: true
-        },
-        examAnswers: {
-          q1_paint_risks: "تتركز المخاطر في مصانع الدهانات على: 1. مخاطر الحريق الناتجة عن المذيبات سريعة الاشتعال. 2. استنشاق الغازات والأبخرة الضارة أثناء عمليات الخلط والتعبئة. 3. التعرض لتهيج الجلد أو العين في حال ملامسة المواد الكيميائية السائلة مباشرة. 4. مخاطر الانزلاق والتعثر في صالات الإنتاج لوجود تسربات زيتية أو سوائل دهانية. 5. حركة الرافعات الشوكية في المستودعات المزدحمة بالبراميل.",
-          q2_hazard_vs_risk: "الخطر هو شيء يمكن أن يسبب ضرراً للإنسان أو المنشأة، كأن يكون هناك سلك كهربائي مكشوف أو مادة كيميائية حارقة.\nأما المخاطرة فهي مدى احتمال حدوث هذا الضرر وشدته، فالسلك المكشوف يمثل خطراً، والاقتراب منه أو لمسه هو المخاطرة التي تؤدي للصعق.",
-          q3_incident_investigation: "يتم التحقيق في الحادث من خلال: 1. عزل منطقة الحادث وإسعاف المصابين فوراً. 2. معاينة الموقع وتسجيل الملاحظات المبدئية. 3. الاستماع لشهادات العاملين القريبين من الحدث. 4. محاولة البحث عن الأسباب التي أدت لوقوع الحادث (مثل خلل في الآلة أو عدم ارتداء القفازات). 5. كتابة تقرير وتقديمه للمدير المباشر مع التوصية بعمل حواجز حماية للآلة أو تدريب إضافي.",
-          q4_risk_assessment: "لإعداد تقييم للمخاطر نقوم بالآتي: 1. المشي في المصنع وتحديد ما قد يسبب الأذى. 2. التفكير فيمن قد يتعرض للإصابة (العمال مثلاً). 3. تقييم حجم الخطر ومحاولة تقليله باتخاذ تدابير وقائية مثل الحواجز أو وضع لوحات إرشادية. 4. تدوين هذه الملاحظات في نموذج تقييم المخاطر المعتمد. 5. مراجعة النموذج دورياً.",
-          q5_ppe_chemical: "معدات الوقاية المطلوبة: 1. الكمامات المخصصة للأبخرة الكيميائية لمنع استنشاق الغازات المتطايرة. 2. نظارات حماية العين لمنع وصول رذاذ الكيماويات للعين. 3. قفازات النيتريل السميكة لحماية اليدين. 4. بدلة عمل كاملة وحذاء سلامة مغلق.",
-          q6_sds_msds: "صحيفة بيانات السلامة (SDS) هي ورقة تأتي مع كل مادة كيميائية تشتريها الشركة. توضح تفاصيل مهمة عن المادة مثل تركيبها الكيميائي، وكيفية إطفائها إذا احترقت، وطرق الإسعافات الأولية المناسبة لها في حال بلعها أو ملامستها للجلد، وطرق التخلص الآمن منها.",
-          q7_flammable_spill: "عند حدوث انسكاب لمادة قابلة للاشتعال: 1. نقوم فوراً بإخلاء المنطقة وإبعاد أي عمال غير مدربين. 2. فصل التيار الكهربائي أو أي مصادر للهب أو الحرارة. 3. استخدام الرمل أو المواد الكيميائية الماصة (Sorbents) المتواجدة في أدوات مواجهة الانسكابات لامتصاص السائل ومنع انتشاره. 4. جمع الرمل الملوث في كيس مغلق مخصص للمهملات الكيميائية الخطرة والتخلص منه بأمان والتهوية الجيدة للموقع.",
-          q8_ppe_refusal: "إذا رفض موظف ارتداء معدات الوقاية: 1. أتحدث معه بهدوء لمعرفة السبب (ربما تكون الكمامة ضيقة أو نظارته غير مريحة). 2. أشرح له بلطف المخاطر الصحية التي سيتعرض لها إذا استمر في العمل بدونها. 3. إذا كان السبب من المعدة نفسها أعمل على استبدالها بنوع أكثر راحة. 4. إذا أصر على الرفض دون عذر، يتم تنبيهه شفوياً وإخبار الإدارة المباشرة لتطبيق اللوائح والقوانين المتبعة.",
-          q9_daily_inspection: "النقاط الهامة في الجولة التفتيشية اليومية: 1. فحص طفايات الحريق وخراطيم المياه وصلاحيتها وضغطها. 2. التأكد من أن جميع مخارج الطوارئ مفتوحة وغير مغلقة ببضائع أو براميل. 3. التأكد من ارتداء العمال لمعدات الوقاية الشخصية. 4. التحقق من عدم وجود تسريبات كيميائية على الأرضيات ومراقبة التهوية وصوت الآلات.",
-          q10_safety_project: "شاركت في مصنعي الحالي في مشروع 'تطوير حقيبة الاستجابة لانسكاب المواد الكيميائية (Spill Kit)' وتوزيعها بشكل استراتيجي في أقسام الخلط والتعبئة مع وضع لوحات إرشادية مبسطة باللغة العربية والإنجليزية توضح بالصور خطوات التعامل مع الانسكاب وتدريب أكثر من 40 عاملاً عليها."
-        },
-        aiEvaluation: {
-          score: 82,
-          paintChemicalExpLevel: "medium",
-          strengths: [
-            "خبرة جيدة جداً مدتها 4 سنوات داخل مصنع دهانات فعلي، مما يعطيها فهماً ممتازاً لطبيعة المواد والتحديات بالموقع.",
-            "إجابات واضحة وصحيحة علمياً ومنظمة تدل على وعي كاف بمفاهيم السلامة وإدارة الانسكابات و الـ SDS.",
-            "المشاركة الإيجابية في مشروع Spill Kit العملي والتدريب عليه وهو أمر حيوي جداً في المصانع الكيميائية."
-          ],
-          weaknesses: [
-            "تفتقر لبعض الشهادات الاحترافية الكبرى مثل NEBOSH IGC أو شهادات ISO 45001 التخصصية.",
-            "الإجابات جيدة ولكنها أقل تفصيلاً في الجوانب الهندسية المعقدة كالحماية من الانفجارات وشحنات الكهرباء الساكنة."
-          ],
-          suggestedQuestions: [
-            "كيف تقيمين وعي العمال الأجانب بقراءة صحائف الـ SDS، وكيف تعاملت مع عوائق اللغة لديهم؟",
-            "ما هي طريقتك المفضلة لحساب مؤشرات الأداء الأساسية (KPIs) للسلامة؟",
-            "لماذا ترغبين في الانتقال من مصنعك الحالي، وما الذي تبحثين عنه في مصنعنا للدهانات؟"
-          ],
-          recommendation: "suitable_after_interview",
-          recommendationReason: "المرشحة مناسبة جداً ولديها الخبرة الميدانية المطلوبة في مصانع الطلاء والدهانات. بالرغم من نقص بعض الشهادات الكبرى إلا أن خلفيتها البيئية وخبرتها العملية في قياس الغازات ومكافحة الانسكاب تؤهلها لشغل الوظيفة بنجاح، وستكشف المقابلة مدى تمكنها من الجوانب القيادية والهندسية.",
-          evaluatedAt: "2026-07-03T15:00:00Z"
-        }
-      },
-      {
-        id: "HSE-2026-0003",
-        status: "pending",
-        createdAt: "2026-07-04T12:00:00Z",
-        personalInfo: {
-          fullName: "خالد بن محمد الدوسري",
-          nationality: "سعودي",
-          birthDate: "1999-01-10",
-          gender: "male",
-          city: "جدة",
-          residenceAddress: "جدة، حي النسيم",
-          phone: "0561112222",
-          email: "khalid.dossari@example.com",
-          qualification: "دبلوم",
-          major: "السلامة المهنية العامة",
-          experienceYears: 1,
-          currentCompany: "شركة الجزيرة للمقاولات العامة",
-          currentRole: "مراقب سلامة مبتدئ",
-          currentSalary: "5,500 ريال",
-          expectedSalary: "7,000 ريال",
-          noticePeriod: "فوري",
-          linkedinUrl: "https://linkedin.com/in/khalid-dossari-hse",
-          ownsCar: "yes",
-          hasHealthIssues: "no",
-          healthIssuesDetails: "",
-          hasLocationIssue: "no",
-          cvFileName: "Khalid_Dossari_CV.pdf"
-        },
-        industryExperience: {
-          workedInPaint: false,
-          workedInChemical: false,
-          workedInIndustrial: false
-        },
-        certificates: {
-          nebosh: false,
-          osha: true,
-          iosh: false,
-          iso45001: false,
-          fireSafety: false,
-          firstAid: true,
-          hazop: false,
-          hazmat: false,
-          permitToWork: true,
-          workingAtHeights: true,
-          confinedSpace: true,
-          forkliftSafety: false
-        },
-        examAnswers: {
-          q1_paint_risks: "مخاطر مصانع الدهانات هي الحريق بسبب المواد الكيميائية والألوان، وأيضاً الاختناق بسبب الغبار والغازات.",
-          q2_hazard_vs_risk: "الخطر هو الشيء الذي يضر، والمخاطرة هي حدوث الضرر نفسه.",
-          q3_incident_investigation: "يتم التحقيق من خلال الذهاب للموقع وسؤال العمال عن سبب وقوع الحادث وكتابة ذلك في ورقة وإرسالها للإدارة لتفادي تكراره.",
-          q4_risk_assessment: "عمل تقييم المخاطر يتم بفحص المكان لمعرفة الأماكن الخطرة ثم كتابتها في جدول والعمل على معالجة الأخطاء بأسرع وقت.",
-          q5_ppe_chemical: "الكمامة، النظارة، القفازات، الحذاء المقاوم والملابس الطويلة.",
-          q6_sds_msds: "الـ MSDS هي ورقة إرشادات تأتي مع الكيماويات لمعرفة كيفية التعامل معها وتجنب خطرها في المصنع.",
-          q7_flammable_spill: "تنظيف الانسكاب بسرعة ووضع تراب عليه لامتصاصه، وفتح النوافذ للتهوية ومنع أي شخص من التدخين بالقرب منه.",
-          q8_ppe_refusal: "أطلب منه ارتداءها وإذا لم يستمع لي أبلغ مديره المباشر ليتعامل معه قانونياً.",
-          q9_daily_inspection: "فحص طفايات الحريق، والتأكد من عدم وجود عوائق عند الأبواب والتأكد من ارتداء العمال للخوذة والأحذية.",
-          q10_safety_project: "شاركت في جولات التفتيش على السقالات والعمل في المرتفعات في مواقع الإنشاءات مع المهندسين."
-        },
-        aiEvaluation: {
-          score: 52,
-          paintChemicalExpLevel: "none",
-          strengths: [
-            "حاصل على دبلوم في السلامة وحاصل على دورات OSHA الأساسية وتصاريح العمل والعمل في المرتفعات.",
-            "الرغبة في التعلم والعمل في بيئة صناعية والراتب المتوقع منخفض ومناسب للمبتدئين."
-          ],
-          weaknesses: [
-            "تفتقر السيرة الذاتية لأي خبرة في البيئات الصناعية أو مصانع الدهانات والكيماويات (خبرته مقاولات وإنشاءات فقط).",
-            "إجابات الاختبار قصيرة ومختصرة جداً وتفتقر للمصطلحات الفنية العميقة والمنهجيات المعتمدة لإدارة السلامة الكيميائية."
-          ],
-          suggestedQuestions: [
-            "بيئة مصانع الدهانات تختلف تماماً عن قطاع الإنشاءات والمقاولات. ما الذي يجعلك ترى نفسك قادراً على التأقلم مع المخاطر الكيميائية المعقدة هنا؟",
-            "اشرح لنا أهمية الكهرباء الساكنة وكيف يتم تجنب شرارتها في صالات الخلط كيميائياً وفنياً؟"
-          ],
-          recommendation: "unsuitable",
-          recommendationReason: "المرشح يعتبر حديث تخرج ومبتدئ في مجال السلامة وتقتصر خبرته المحدودة (سنة واحدة) على قطاع المقاولات والإنشاءات والعمل في المرتفعات. مصانع الدهانات والمواد الكيميائية تتطلب أخصائياً بخبرة قوية في السلامة الكيميائية والحرائق وإدارة المخاطر المعقدة والكهرباء الساكنة منذ اليوم الأول، وهو ما لا يتوفر لديه حالياً.",
-          evaluatedAt: "2026-07-04T12:30:00Z"
-        }
-      }
-    ];
-
-    fs.writeFileSync(DB_FILE, JSON.stringify(seedApplicants, null, 2), "utf8");
-    console.log("Database seeded successfully with 3 applications.");
-  }
-}
-
-// Load DB helper
+// 1. Read Database Helper
 function readDB(): Applicant[] {
   return cachedApplicants;
 }
 
-async function writeDB(applicants: Applicant[]) {
-  cachedApplicants = applicants;
-  try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(applicants, null, 2), "utf8");
-  } catch (err) {
-    console.error("Error writing database (this is fine in read-only environments like Vercel):", err);
-  }
-
-  if (useSupabase && supabase) {
-    try {
-      await Promise.all(
-        applicants.map(async (applicant) => {
-          const rowData = mapApplicantToSupabase(applicant);
-          const { error: upsertErr } = await supabase
-            .from("applicants")
-            .upsert(rowData);
-          if (upsertErr) {
-            console.error(`Failed to sync writeDB to Supabase:`, upsertErr);
-          }
-        })
-      );
-    } catch (err) {
-      console.error("Failed to sync writeDB to Supabase:", err);
-    }
-  }
+// 2. Generate Application ID Helper
+async function generateApplicationId(jobRole?: string): Promise<string> {
+  const prefix = jobRole === 'marketing' ? 'MKT' : 'HSE';
+  const year = new Date().getFullYear();
+  // Filter out any setting entries and filter by role prefix to keep sequence separate
+  const roleApplicants = cachedApplicants.filter(a => !a.id.startsWith("SYSTEM_SETTING_") && a.id.startsWith(prefix));
+  const index = roleApplicants.length + 1;
+  const seq = String(index).padStart(4, "0");
+  return `${prefix}-${year}-${seq}`;
 }
 
+// 3. Sync Single Applicant to Supabase
 async function syncApplicantToSupabase(applicant: Applicant) {
   if (useSupabase && supabase) {
     try {
       const rowData = mapApplicantToSupabase(applicant);
-      const { error: upsertErr } = await supabase
+      const { error } = await supabase
         .from("applicants")
         .upsert(rowData);
-      if (upsertErr) {
-        console.error(`Failed to sync applicant ${applicant.id} to Supabase:`, upsertErr);
+      if (error) {
+        console.error(`Failed to sync applicant ${applicant.id} to Supabase:`, error);
+      } else {
+        console.log(`Successfully synced applicant ${applicant.id} to Supabase.`);
       }
     } catch (err) {
       console.error(`Failed to sync applicant ${applicant.id} to Supabase:`, err);
@@ -795,15 +493,18 @@ async function syncApplicantToSupabase(applicant: Applicant) {
   }
 }
 
+// 4. Delete Single Applicant from Supabase
 async function deleteApplicantFromSupabase(id: string) {
   if (useSupabase && supabase) {
     try {
-      const { error: deleteErr } = await supabase
+      const { error } = await supabase
         .from("applicants")
         .delete()
         .eq("id", id);
-      if (deleteErr) {
-        console.error(`Failed to delete applicant ${id} from Supabase:`, deleteErr);
+      if (error) {
+        console.error(`Failed to delete applicant ${id} from Supabase:`, error);
+      } else {
+        console.log(`Successfully deleted applicant ${id} from Supabase.`);
       }
     } catch (err) {
       console.error(`Failed to delete applicant ${id} from Supabase:`, err);
@@ -811,162 +512,102 @@ async function deleteApplicantFromSupabase(id: string) {
   }
 }
 
-// Generate application ID (HSE-YYYY-NNNN) - asynchronous & robust to prevent duplications across multiple servers
-async function generateApplicationId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `HSE-${year}-`;
-  let maxSeq = 0;
-
-  // 1. Fetch live from Supabase first if available
+// 5. Load Setting Helper
+async function getSetting(key: string): Promise<string> {
+  const settingId = `SYSTEM_SETTING_${key}`;
+  
   if (useSupabase && supabase) {
     try {
       const { data, error } = await supabase
         .from("applicants")
-        .select("id")
-        .like("id", `${prefix}%`);
-      
+        .select("*")
+        .eq("id", settingId)
+        .maybeSingle();
       if (!error && data) {
-        data.forEach((row: any) => {
-          const part = row.id.replace(prefix, "");
-          const num = parseInt(part, 10);
-          if (!isNaN(num) && num > maxSeq) {
-            maxSeq = num;
-          }
-        });
+        return data.personal_info?.settingValue || "";
       }
     } catch (err) {
-      console.error("Error fetching max application ID from Supabase:", err);
+      console.error(`Error loading setting ${key} from Supabase:`, err);
     }
   }
 
-  // 2. Cross-reference with our in-memory/local cache to catch concurrent submissions
-  const cached = cachedApplicants || [];
-  const yearApplicants = cached.filter(a => a.id && a.id.startsWith(prefix));
-  yearApplicants.forEach(a => {
-    const part = a.id.replace(prefix, "");
-    const num = parseInt(part, 10);
-    if (!isNaN(num) && num > maxSeq) {
-      maxSeq = num;
+  // Fallback to local cached applicants (as we also store system settings there)
+  const localSetting = cachedApplicants.find(a => a.id === settingId);
+  if (localSetting) {
+    return (localSetting.personalInfo as any).settingValue || "";
+  }
+  
+  // Or read from DB file if not in cache
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const localApplicants: Applicant[] = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+      const fileSetting = localApplicants.find(a => a.id === settingId);
+      if (fileSetting) {
+        return (fileSetting.personalInfo as any).settingValue || "";
+      }
     }
-  });
+  } catch (err) {
+    console.error(`Error reading setting ${key} from file:`, err);
+  }
 
-  const nextSeq = String(maxSeq + 1).padStart(4, "0");
-  return `${prefix}${nextSeq}`;
+  return "";
 }
 
-// Save and get custom settings (e.g. company logo) from Supabase and local fallback
-async function saveSetting(key: string, value: string) {
-  // 1. Save locally to settings.json
-  const settingsFile = path.join(DB_DIR, "settings.json");
-  let localSettings: any = {};
-  try {
-    if (!fs.existsSync(DB_DIR)) {
-      fs.mkdirSync(DB_DIR, { recursive: true });
-    }
-    if (fs.existsSync(settingsFile)) {
-      localSettings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
-    }
-  } catch (err) {}
+// 6. Save Setting Helper
+async function saveSetting(key: string, value: string): Promise<void> {
+  const settingId = `SYSTEM_SETTING_${key}`;
   
-  localSettings[key] = value;
-  
-  try {
-    fs.writeFileSync(settingsFile, JSON.stringify(localSettings, null, 2), "utf8");
-  } catch (err) {}
+  const settingObj: Applicant = {
+    id: settingId,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+    personalInfo: {
+      fullName: "SYSTEM SETTING",
+      settingValue: value
+    } as any,
+    industryExperience: {} as any,
+    certificates: {} as any,
+    examAnswers: {} as any
+  };
 
-  // 2. Save to Supabase (try settings table, fallback to storing as system row in applicants table)
+  // Update in-memory cache
+  const idx = cachedApplicants.findIndex(a => a.id === settingId);
+  if (idx !== -1) {
+    cachedApplicants[idx] = settingObj;
+  } else {
+    cachedApplicants.push(settingObj);
+  }
+
+  // Save local file
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(cachedApplicants, null, 2), "utf8");
+  } catch (err) {
+    console.error(`Failed to save setting ${key} locally:`, err);
+  }
+
+  // Save to Supabase
   if (useSupabase && supabase) {
     try {
+      const rowData = mapApplicantToSupabase(settingObj);
       const { error } = await supabase
-        .from("settings")
-        .upsert({ key, value });
-      
-      if (error) {
-        console.log(`Table 'settings' might not exist, saving setting '${key}' in 'applicants' table as a fallback...`);
-        const systemId = `SYSTEM_SETTING_${key.toUpperCase()}`;
-        const { error: fallbackError } = await supabase
-          .from("applicants")
-          .upsert({
-            id: systemId,
-            status: "system_setting",
-            created_at: new Date().toISOString(),
-            personal_info: { value },
-            industry_experience: {},
-            certificates: {},
-            exam_answers: {},
-            ai_evaluation: null,
-            hr_evaluation: null
-          });
-        if (fallbackError) {
-          console.error("Failed to save setting to applicants table:", fallbackError.message);
-        } else {
-          console.log(`Successfully saved setting '${key}' to applicants table.`);
-        }
-      } else {
-        console.log(`Successfully saved setting '${key}' to settings table.`);
-      }
-    } catch (err: any) {
-      console.error("Error saving setting to Supabase:", err.message);
-    }
-  }
-}
-
-async function getSetting(key: string): Promise<string | null> {
-  // 1. Try to fetch from Supabase settings table
-  if (useSupabase && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("settings")
-        .select("value")
-        .eq("key", key)
-        .maybeSingle();
-      if (!error && data) {
-        return data.value;
-      }
-      
-      // Fallback: check applicants table for SYSTEM_SETTING_ key
-      const systemId = `SYSTEM_SETTING_${key.toUpperCase()}`;
-      const { data: fallbackData, error: fallbackError } = await supabase
         .from("applicants")
-        .select("personal_info")
-        .eq("id", systemId)
-        .maybeSingle();
-      
-      if (!fallbackError && fallbackData && fallbackData.personal_info) {
-        return (fallbackData.personal_info as any).value || null;
+        .upsert(rowData);
+      if (error) {
+        console.error(`Failed to save setting ${key} to Supabase:`, error);
       }
-    } catch (err) {}
-  }
-
-  // 2. Fallback to local settings.json
-  const settingsFile = path.join(DB_DIR, "settings.json");
-  try {
-    if (fs.existsSync(settingsFile)) {
-      const localSettings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
-      return localSettings[key] || null;
+    } catch (err) {
+      console.error(`Failed to save setting ${key} to Supabase:`, err);
     }
-  } catch (err) {}
-
-  return null;
+  }
 }
 
-// Initialize Gemini Client
+// AI client initialization helper
 let aiClient: GoogleGenAI | null = null;
 function getAiClient(): GoogleGenAI | null {
   if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
-    if (key && key !== "MY_GEMINI_API_KEY") {
-      aiClient = new GoogleGenAI({
-        apiKey: key,
-        httpOptions: {
-          headers: {
-            "User-Agent": "aistudio-build",
-          },
-        },
-      });
-      console.log("Gemini API Client initialized successfully.");
-    } else {
-      console.warn("GEMINI_API_KEY environment variable is not defined or is default placeholder.");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey) {
+      aiClient = new GoogleGenAI({ apiKey });
     }
   }
   return aiClient;
@@ -975,109 +616,206 @@ function getAiClient(): GoogleGenAI | null {
 // AI evaluation helper
 async function evaluateApplicantWithAi(applicant: Applicant): Promise<AiEvaluation> {
   const ai = getAiClient();
-  
+  const answersLength = Object.values(applicant.examAnswers).reduce((acc, text) => acc + (text?.length || 0), 0);
+  const hasPaintExp = applicant.industryExperience.workedInPaint;
+  const hasChemicalExp = applicant.industryExperience.workedInChemical;
+  const certCount = Object.values(applicant.certificates).filter(Boolean).length;
+  const isMarketing = applicant.personalInfo.jobRole === 'marketing';
+
   if (!ai) {
     console.warn("Using high-fidelity simulated AI evaluation due to missing GEMINI_API_KEY.");
-    // Return high-fidelity fallback evaluation based on applicant answers length and experience
-    const answersLength = Object.values(applicant.examAnswers).reduce((acc, text) => acc + (text?.length || 0), 0);
-    const hasPaintExp = applicant.industryExperience.workedInPaint;
-    const hasChemicalExp = applicant.industryExperience.workedInChemical;
-    const certCount = Object.values(applicant.certificates).filter(Boolean).length;
     
-    let score = 50 + Math.min(certCount * 3, 20) + Math.min(applicant.personalInfo.experienceYears * 3, 20);
-    if (answersLength > 1500) score += 10;
-    else if (answersLength > 800) score += 5;
-    
-    if (hasPaintExp) score += 10;
-    if (hasChemicalExp) score += 10;
-    score = Math.min(Math.max(score, 30), 100);
+    if (isMarketing) {
+      let score = 50 + Math.min(applicant.personalInfo.experienceYears * 4, 25);
+      if (answersLength > 1500) score += 15;
+      else if (answersLength > 800) score += 8;
+      
+      if (hasPaintExp) score += 10;
+      score = Math.min(Math.max(score, 30), 100);
 
-    let rec: "suitable" | "suitable_after_interview" | "unsuitable" = "suitable_after_interview";
-    let reason = "المرشح لديه مؤهلات جيدة وخبرة مناسبة بقطاع المصانع، لكن نوصي بمقابلة شخصية للتأكد من مهاراته الميدانية والقيادية.";
-    
-    if (score >= 85) {
-      rec = "suitable";
-      reason = "المرشح ممتاز ويتمتع بخبرة واسعة ومخصصة في مصانع الدهانات والمواد الكيميائية ولديه معرفة فنية عالية جداً بسلامة العمليات والوقاية من الانفجارات وشحنات الكهرباء الساكنة.";
-    } else if (score < 60) {
-      rec = "unsuitable";
-      reason = "المرشح لا يمتلك الخبرة الكافية في القطاع الصناعي الكيماوي المعقد أو مصانع الدهانات، وإجاباته على الاختبار الفني تظهر وعياً محدوداً بسلامة العمليات ومكافحة الانسكاب الكيميائي.";
+      let rec: "suitable" | "suitable_after_interview" | "unsuitable" = "suitable_after_interview";
+      let reason = "المرشح يظهر فهماً جيداً لأساليب التسويق وإدارة العلامات التجارية الرقمية، ونوصي بمقابلة شخصية لمناقشة أفكاره الإبداعية وعرض أعماله السابقة بشكل مفصل.";
+      
+      if (score >= 85) {
+        rec = "suitable";
+        reason = "المرشح متميز للغاية في مجال التسويق وإدارة العلامة التجارية ولديه خبرة قيمة وسجل حافل من الحملات الناجحة ومعرض أعمال غني بالأفكار والنتائج الإبداعية الملموسة.";
+      } else if (score < 60) {
+        rec = "unsuitable";
+        reason = "المرشح يفتقر للخبرة الكافية في التسويق المتكامل أو بناء الهوية الرقمية، وإجاباته على الأسئلة المقالية تظهر مهارات محدودة وغير مطابقة للمستوى المطلوب لوظيفة أخصائي تسويق.";
+      }
+
+      return {
+        score,
+        paintChemicalExpLevel: hasPaintExp ? "high" : "none",
+        strengths: [
+          `خبرة عملية إجمالية قدرها ${applicant.personalInfo.experienceYears} سنوات في التسويق وصناعة المحتوى.`,
+          applicant.personalInfo.portfolioBase64 ? "قام بتقديم ورفع ملف عينة من الأعمال السابقة (بورتفوليو) بجودة عالية." : "لديه مهارات جيدة في استخدام الأدوات والتطبيقات الإعلانية وصناعة العلامة التجارية.",
+          applicant.industryExperience.workedInPaint ? "لديه فهم ممتاز لكيفية التسويق والترويج لمنتجات الدهانات والمواد الإنشائية الكيميائية B2B/B2C." : "يمتلك معرفة جيدة بإدارة الهوية الرقمية وإعداد الخطط التسويقية المبتكرة."
+        ],
+        weaknesses: [
+          score < 75 ? "قد يحتاج لتطوير مهارات تحليل البيانات العميقة ومؤشرات الأداء التسويقية الحساسة." : "قد يتطلب تكييف استراتيجياته لتلائم قطاع الصناعة المباشرة (B2B).",
+          "نوصي بطلب تقديم تفاصيل إضافية عن معدل التحويل والعائد على الاستثمار للحملات السابقة."
+        ],
+        suggestedQuestions: [
+          "كيف تخطط لبناء هوية تسويقية مميزة لمنتج دهانات جديد لمنافسة الأسماء العريقة في السوق؟",
+          "ما هي الاستراتيجية الأفضل من وجهة نظرك لجذب عملاء B2B (شركات المقاولات والمشاريع) مقارنة بالمستهلك النهائي (B2C)؟",
+          "حدثنا عن مشروع تسويقي واجهت فيه ميزانية محدودة للغاية، وكيف تمكنت من تحقيق نتائج عالية؟"
+        ],
+        recommendation: rec,
+        recommendationReason: reason,
+        evaluatedAt: new Date().toISOString()
+      };
+    } else {
+      let score = 50 + Math.min(certCount * 3, 20) + Math.min(applicant.personalInfo.experienceYears * 3, 20);
+      if (answersLength > 1500) score += 10;
+      else if (answersLength > 800) score += 5;
+      
+      if (hasPaintExp) score += 10;
+      if (hasChemicalExp) score += 10;
+      score = Math.min(Math.max(score, 30), 100);
+
+      let rec: "suitable" | "suitable_after_interview" | "unsuitable" = "suitable_after_interview";
+      let reason = "المرشح لديه مؤهلات جيدة وخبرة مناسبة بقطاع المصانع، لكن نوصي بمقابلة شخصية للتأكد من مهاراته الميدانية والقيادية.";
+      
+      if (score >= 85) {
+        rec = "suitable";
+        reason = "المرشح ممتاز ويتمتع بخبرة واسعة ومخصصة في مصانع الدهانات والمواد الكيميائية ولديه معرفة فنية عالية جداً بسلامة العمليات والوقاية من الانفجارات وشحنات الكهرباء الساكنة.";
+      } else if (score < 60) {
+        rec = "unsuitable";
+        reason = "المرشح لا يمتلك الخبرة الكافية في القطاع أو المعرفة الكافية بإجراءات السلامة ومكافحة الانسكابات.";
+      }
+
+      return {
+        score,
+        paintChemicalExpLevel: hasPaintExp && hasChemicalExp ? "high" : hasPaintExp || hasChemicalExp ? "medium" : "low",
+        strengths: [
+          `خبرة عملية إجمالية قدرها ${applicant.personalInfo.experienceYears} سنوات في مجال السلامة والصحة المهنية.`,
+          `يمتلك ${certCount} شهادات ودورات تدريبية متخصصة في الأمن والسلامة.`,
+          applicant.industryExperience.workedInPaint ? "لديه خبرة مباشرة في التعامل مع المخاطر الخاصة بمصانع الدهانات والمذيبات." : "لديه معرفة جيدة بأساسيات الأمن والسلامة الصناعية العامة."
+        ],
+        weaknesses: [
+          score < 75 ? "بحاجة لتعزيز معرفته بالأنظمة والمعايير الدولية للسلامة والصحة المهنية مثل الأوشا (OSHA)." : "نقاط الضعف الفنية تكاد تكون منعدمة ويفضل التركيز على تقييم المهارات السلوكية والقيادية.",
+          "نوصي بالتحقق من مدى إلمامه الميداني بسلامة العمليات المعقدة في مصانع الدهانات."
+        ],
+        suggestedQuestions: [
+          "كيف تتعامل مع انسكاب كيميائي مفاجئ لمادة قابلة للاشتعال في قسم الإنتاج؟",
+          "اذكر موقفاً واجهت فيه رفضاً من بعض العمال لارتداء معدات الوقاية الشخصية، وكيف تصرفت حيال ذلك؟",
+          "ما هي أهم النقاط التي ستركز عليها في جولتك التفتيشية اليومية الأولى في مصنعنا؟"
+        ],
+        recommendation: rec,
+        recommendationReason: reason,
+        evaluatedAt: new Date().toISOString()
+      };
     }
-
-    return {
-      score,
-      paintChemicalExpLevel: hasPaintExp && hasChemicalExp ? "high" : hasPaintExp || hasChemicalExp ? "medium" : "low",
-      strengths: [
-        `خبرة عملية إجمالية قدرها ${applicant.personalInfo.experienceYears} سنوات في المجال.`,
-        `حاصل على ${certCount} شهادات ودورات احترافية في مجالات السلامة المختلفة.`,
-        applicant.industryExperience.workedInPaint ? "لديه معرفة مباشرة ببيئة عمل مصانع الدهانات والمواد الكيميائية." : "يمتلك فهماً عاماً لإجراءات السلامة المهنية وتصاريح العمل."
-      ],
-      weaknesses: [
-        score < 75 ? "بحاجة لتعزيز مهاراته الفنية في مكافحة الحرائق الكيميائية وإدارة الانسكابات الكبيرة." : "مستوى الراتب المتوقع قد يتطلب مراجعة مقارنة بمتوسط رواتب السوق.",
-        "يفضل حصوله على شهادات مهنية تخصصية أعلى مثل NEBOSH IGC إذا لم تكن متوفرة لديه."
-      ],
-      suggestedQuestions: [
-        "كيف تتعامل مع مواقف التسرب الكيميائي الطارئة تحت الضغط الميداني؟",
-        "اذكر لنا مثالاً على تطبيق هرم التحكم بالمخاطر (Hierarchy of Controls) في بيئة عملك السابقة.",
-        "كيف تقوم بإقناع عمال الإنتاج بالالتزام الصارم بارتداء معدات الوقاية الشخصية الثقيلة في الصيف؟"
-      ],
-      recommendation: rec,
-      recommendationReason: reason,
-      evaluatedAt: new Date().toISOString()
-    };
   }
 
   // Build the prompt for real Gemini evaluation
-  const prompt = `
-أنت خبير تقييم ومقابلات فنية في الصحة والسلامة والبيئة (HSE) مخصص لتقييم المتقدمين لوظيفة "أخصائي أمن وسلامة" في مصنع دهانات ومواد كيميائية.
-قم بتحليل بيانات المرشح وإجاباته الفنية بدقة كاملة، وأعط تقييماً تفصيلياً باللغة العربية.
+  let prompt = "";
+  if (isMarketing) {
+    prompt = `
+أنت خبير تقييم ومقابلات فنية في قطاع التسويق وإدارة العلامات التجارية، مخصص لتقييم المتقدمين لوظيفة "أخصائي تسويق" في مصنع دهانات رائد ومواد كيميائية إنشائية.
+قم بتحليل بيانات المرشح وإجاباته الفنية والتسويقية بدقة كاملة، وأعط تقييماً تفصيلياً باللغة العربية الفصحى.
 
 بيانات المرشح:
-الاسم الكامل: ${applicant.personalInfo.fullName}
-المؤهل العلمي والتخصص: ${applicant.personalInfo.qualification} - ${applicant.personalInfo.major}
-سنوات الخبرة: ${applicant.personalInfo.experienceYears} سنة
-الشركة الحالية والدور الحالي: ${applicant.personalInfo.currentCompany} - ${applicant.personalInfo.currentRole}
+الاسم الكامل: \${applicant.personalInfo.fullName}
+المؤهل العلمي والتخصص: \${applicant.personalInfo.qualification} - \${applicant.personalInfo.major}
+سنوات الخبرة: \${applicant.personalInfo.experienceYears} سنة
+الشركة الحالية والدور الحالي: \${applicant.personalInfo.currentCompany} - \${applicant.personalInfo.currentRole}
 
 الخبرات الصناعية التخصصية:
-- هل عمل في مصنع دهانات؟ ${applicant.industryExperience.workedInPaint ? `نعم، شركة: ${applicant.industryExperience.paintCompany}، سنوات: ${applicant.industryExperience.paintYears}، دور: ${applicant.industryExperience.paintRole}، مهام: ${applicant.industryExperience.paintTasks}` : 'لا'}
-- هل عمل في مصنع كيميائي؟ ${applicant.industryExperience.workedInChemical ? `نعم، شركة: ${applicant.industryExperience.chemicalCompany}، سنوات: ${applicant.industryExperience.chemicalYears}، دور: ${applicant.industryExperience.chemicalRole}، مهام: ${applicant.industryExperience.chemicalTasks}` : 'لا'}
-- هل عمل في منشأة صناعية؟ ${applicant.industryExperience.workedInIndustrial ? `نعم، شركة: ${applicant.industryExperience.industrialCompany}، سنوات: ${applicant.industryExperience.industrialYears}، دور: ${applicant.industryExperience.industrialRole}، مهام: ${applicant.industryExperience.industrialTasks}` : 'لا'}
+- هل عمل في مصنع دهانات؟ \${applicant.industryExperience.workedInPaint ? \`نعم، شركة: \${applicant.industryExperience.paintCompany}، سنوات: \${applicant.industryExperience.paintYears}، دور: \${applicant.industryExperience.paintRole}، مهام: \${applicant.industryExperience.paintTasks}\` : 'لا'}
+- هل عمل في مصنع كيميائي أو تسويق؟ \${applicant.industryExperience.workedInChemical ? \`نعم، شركة: \${applicant.industryExperience.chemicalCompany}• سنوات: \${applicant.industryExperience.chemicalYears}• دور: \${applicant.industryExperience.chemicalRole}• مهام: \${applicant.industryExperience.chemicalTasks}\` : 'لا'}
+- هل عمل في منشأة صناعية عامة؟ \${applicant.industryExperience.workedInIndustrial ? \`نعم، شركة: \${applicant.industryExperience.industrialCompany}، سنوات: \${applicant.industryExperience.industrialYears}، دور: \${applicant.industryExperience.industrialRole}، مهام: \${applicant.industryExperience.industrialTasks}\` : 'لا'}
+
+الشهادات المهنية والتسويقية التي يمتلكها:
+\${Object.entries(applicant.certificates).filter(([_, has]) => has).map(([name]) => name.toUpperCase()).join(", ")}
+
+إجابات الاختبار الفني والتسويقي (المكون من 10 أسئلة مقالية):
+السؤال 1- ما هي أبرز الحملات التسويقية التي قمت بتخطيطها وإدارتها سابقاً؟
+إجابة المرشح: \${applicant.examAnswers.q1_paint_risks}
+
+السؤال 2- كيف تدير الهوية الرقمية للعلامة التجارية وتصنع المحتوى الإبداعي؟
+إجابة المرشح: \${applicant.examAnswers.q2_hazard_vs_risk}
+
+السؤال 3- ما هي خبرتك بالتفصيل في تسجيل واعتماد الشركات لدى منصات الموردين الرسمية والجهات التنظيمية؟
+إجابة المرشح: \${applicant.examAnswers.q3_incident_investigation}
+
+السؤال 4- كيف توظف أدوات تحليل البيانات ومؤشرات الأداء (KPIs) لتطوير خطتك التسويقية؟
+إجابة المرشح: \${applicant.examAnswers.q4_risk_assessment}
+
+السؤال 5- اذكر بالتفصيل "أعمالاً ومشاريع تسويقية تم تنفيذها" ودورك الدقيق والإبداعي فيها.
+إجابة المرشح: \${applicant.examAnswers.q5_ppe_chemical}
+
+السؤال 6- يرجى تزويدنا بروابط أعمالك السابقة أو معرض أعمالك الرقمي (Portfolio) - [أعمال تم تنفيذها].
+إجابة المرشح: \${applicant.examAnswers.q6_sds_msds}
+
+السؤال 7- ما هي الأدوات والمنصات الإعلانية وتطبيقات التصميم ومونتاج الفيديو التي تتقن العمل عليها باحترافية؟
+إجابة المرشح: \${applicant.examAnswers.q7_flammable_spill}
+
+السؤال 8- كيف تتعامل مع ميزانيات التسويق المحدودة لتحقيق أقصى فاعلية وأعلى معدل تحويل للعملاء؟
+إجابة المرشح: \${applicant.examAnswers.q8_ppe_refusal}
+
+السؤال 9- كيف تصمم وتنفذ استراتيجية تسويق لمنتجات مصانع الدهانات والمعاجين (قطاع صناعي B2B و B2C)؟
+إجابة المرشح: \${applicant.examAnswers.q9_daily_inspection}
+
+السؤال 10- يرجى تزويدنا بوصف وملخص لملف "عينة من أعمالك السابقة" التي ستقوم برفعها كملف مرفق أدناه.
+إجابة المرشح: \${applicant.examAnswers.q10_safety_project}
+
+قم بإرجاع التقييم على شكل كائن JSON متوافق تماماً مع المخطط (Schema) التالي، مع ضمان كتابة جميع النصوص والتحليلات باللغة العربية الفصحى وبأسلوب فني راق واحترافي.
+`;
+  } else {
+    prompt = `
+أنت خبير تقييم ومقابلات فنية في الصحة والسلامة والبيئة (HSE) مخصص لتقييم المتقدمين لوظيفة "أخصائي أمن وسلامة" في مصنع دهانات ومواد كيميائية.
+قم بتحليل بيانات المرشح وإجاباته الفنية بدقة كاملة، وأعط تقييماً تفصيلياً باللغة العربية الفصحى.
+
+بيانات المرشح:
+الاسم الكامل: \${applicant.personalInfo.fullName}
+المؤهل العلمي والتخصص: \${applicant.personalInfo.qualification} - \${applicant.personalInfo.major}
+سنوات الخبرة: \${applicant.personalInfo.experienceYears} سنة
+الشركة الحالية والدور الحالي: \${applicant.personalInfo.currentCompany} - \${applicant.personalInfo.currentRole}
+
+الخبرات الصناعية التخصصية:
+- هل عمل في مصنع دهانات؟ \${applicant.industryExperience.workedInPaint ? \`نعم، شركة: \${applicant.industryExperience.paintCompany}، سنوات: \${applicant.industryExperience.paintYears}، دور: \${applicant.industryExperience.paintRole}، مهام: \${applicant.industryExperience.paintTasks}\` : 'لا'}
+- هل عمل في مصنع كيميائي؟ \${applicant.industryExperience.workedInChemical ? \`نعم، شركة: \${applicant.industryExperience.chemicalCompany}، سنوات: \${applicant.industryExperience.chemicalYears}، دور: \${applicant.industryExperience.chemicalRole}• مهام: \${applicant.industryExperience.chemicalTasks}\` : 'لا'}
+- هل عمل في منشأة صناعية؟ \${applicant.industryExperience.workedInIndustrial ? \`نعم، شركة: \${applicant.industryExperience.industrialCompany}، سنوات: \${applicant.industryExperience.industrialYears}، دور: \${applicant.industryExperience.industrialRole}، مهام: \${applicant.industryExperience.industrialTasks}\` : 'لا'}
 
 الشهادات المهنية التي يمتلكها:
-${Object.entries(applicant.certificates).filter(([_, has]) => has).map(([name]) => name.toUpperCase()).join(", ")}
+\${Object.entries(applicant.certificates).filter(([_, has]) => has).map(([name]) => name.toUpperCase()).join(", ")}
 
 إجابات الاختبار الفني (المكون من 10 أسئلة مقالية):
 السؤال 1- ما أهم المخاطر داخل مصانع الدهانات؟
-إجابة المرشح: ${applicant.examAnswers.q1_paint_risks}
+إجابة المرشح: \${applicant.examAnswers.q1_paint_risks}
 
 السؤال 2- ما الفرق بين الخطر والمخاطرة؟
-إجابة المرشح: ${applicant.examAnswers.q2_hazard_vs_risk}
+إجابة المرشح: \${applicant.examAnswers.q2_hazard_vs_risk}
 
 السؤال 3- كيف تحقق في حادث عمل؟
-إجابة المرشح: ${applicant.examAnswers.q3_incident_investigation}
+إجابة المرشح: \${applicant.examAnswers.q3_incident_investigation}
 
 السؤال 4- كيف تقوم بإعداد تقييم مخاطر؟
-إجابة المرشح: ${applicant.examAnswers.q4_risk_assessment}
+إجابة المرشح: \${applicant.examAnswers.q4_risk_assessment}
 
 السؤال 5- ما معدات الوقاية الشخصية المطلوبة عند التعامل مع المواد الكيميائية؟
-إجابة المرشح: ${applicant.examAnswers.q5_ppe_chemical}
+إجابة المرشح: \${applicant.examAnswers.q5_ppe_chemical}
 
 السؤال 6- ما هي SDS أو MSDS وما أهميتها؟
-إجابة المرشح: ${applicant.examAnswers.q6_sds_msds}
+إجابة المرشح: \${applicant.examAnswers.q6_sds_msds}
 
 السؤال 7- ماذا ستفعل عند حدوث انسكاب لمادة كيميائية قابلة للاشتعال؟
-إجابة المرشح: ${applicant.examAnswers.q7_flammable_spill}
+إجابة المرشح: \${applicant.examAnswers.q7_flammable_spill}
 
 السؤال 8- كيف تتعامل مع موظف يرفض ارتداء معدات الوقاية الشخصية؟
-إجابة المرشح: ${applicant.examAnswers.q8_ppe_refusal}
+إجابة المرشح: \${applicant.examAnswers.q8_ppe_refusal}
 
 السؤال 9- ما أهم النقاط التي يجب فحصها أثناء الجولة التفتيشية اليومية؟
-إجابة المرشح: ${applicant.examAnswers.q9_daily_inspection}
+إجابة المرشح: \${applicant.examAnswers.q9_daily_inspection}
 
 السؤال 10- اذكر مشروعًا أو تحسينًا في السلامة سبق أن شاركت فيه.
-إجابة المرشح: ${applicant.examAnswers.q10_safety_project}
+إجابة المرشح: \${applicant.examAnswers.q10_safety_project}
 
 قم بإرجاع التقييم على شكل كائن JSON متوافق تماماً مع المخطط (Schema) التالي، مع ضمان كتابة جميع النصوص والتحليلات باللغة العربية الفصحى وبأسلوب فني راق واحترافي.
   `;
+  }
 
   try {
     const response = await ai.models.generateContent({
@@ -1133,15 +871,83 @@ ${Object.entries(applicant.certificates).filter(([_, has]) => has).map(([name]) 
 
   } catch (error) {
     console.error("Error in Gemini evaluation API:", error);
-    // If anything fails or throws, return mock fallback
+    // If anything fails or throws, return fallback evaluation matching role
+    if (isMarketing) {
+      let score = 50 + Math.min(applicant.personalInfo.experienceYears * 4, 25);
+      if (answersLength > 1500) score += 15;
+      else if (answersLength > 800) score += 8;
+      if (hasPaintExp) score += 10;
+      score = Math.min(Math.max(score, 30), 100);
+
+      let rec: "suitable" | "suitable_after_interview" | "unsuitable" = "suitable_after_interview";
+      let reason = "المرشح يظهر فهماً جيداً لأساليب التسويق وإدارة العلامات التجارية الرقمية، ونوصي بمقابلة شخصية لمناقشة أفكاره الإبداعية وعرض أعماله السابقة بشكل مفصل.";
+      if (score >= 85) {
+        rec = "suitable";
+        reason = "المرشح متميز للغاية في مجال التسويق وإدارة العلامة التجارية ولديه خبرة قيمة وسجل حافل من الحملات الناجحة ومعرض أعمال غني بالأفكار والنتائج الإبداعية الملموسة.";
+      } else if (score < 60) {
+        rec = "unsuitable";
+        reason = "المرشح يفتقر للخبرة الكافية في التسويق المتكامل أو بناء الهوية الرقمية، وإجاباته على الأسئلة المقالية تظهر مهارات محدودة وغير مطابقة للمستوى المطلوب لوظيفة أخصائي تسويق.";
+      }
+
+      return {
+        score,
+        paintChemicalExpLevel: hasPaintExp ? "high" : "none",
+        strengths: [
+          `خبرة عملية إجمالية قدرها ${applicant.personalInfo.experienceYears} سنوات في التسويق وصناعة المحتوى.`,
+          applicant.personalInfo.portfolioBase64 ? "قام بتقديم ورفع ملف عينة من الأعمال السابقة (بورتفوليو) بجودة عالية." : "لديه مهارات جيدة في استخدام الأدوات والتطبيقات الإعلانية وصناعة العلامة التجارية.",
+          applicant.industryExperience.workedInPaint ? "لديه فهم ممتاز لكيفية التسويق والترويج لمنتجات الدهانات والمواد الإنشائية الكيميائية B2B/B2C." : "يمتلك معرفة جيدة بإدارة الهوية الرقمية وإعداد الخطط التسويقية المبتكرة."
+        ],
+        weaknesses: [
+          score < 75 ? "قد يحتاج لتطوير مهارات تحليل البيانات العميقة ومؤشرات الأداء التسويقية الحساسة." : "قد يتطلب تكييف استراتيجياته لتلائم قطاع الصناعة المباشرة (B2B).",
+          "نوصي بطلب تقديم تفاصيل إضافية عن معدل التحويل والعائد على الاستثمار للحملات السابقة."
+        ],
+        suggestedQuestions: [
+          "كيف تخطط لبناء هوية تسويقية مميزة لمنتج دهانات جديد لمنافسة الأسماء العريقة في السوق؟",
+          "ما هي الاستراتيجية الأفضل من وجهة نظرك لجذب عملاء B2B (شركات المقاولات والمشاريع) مقارنة بالمستهلك النهائي (B2C)؟",
+          "حدثنا عن مشروع تسويقي واجهت فيه ميزانية محدودة للغاية، وكيف تمكنت من تحقيق نتائج عالية؟"
+        ],
+        recommendation: rec,
+        recommendationReason: reason,
+        evaluatedAt: new Date().toISOString()
+      };
+    }
+
+    let score = 50 + Math.min(certCount * 3, 20) + Math.min(applicant.personalInfo.experienceYears * 3, 20);
+    if (answersLength > 1500) score += 10;
+    else if (answersLength > 800) score += 5;
+    if (hasPaintExp) score += 10;
+    if (hasChemicalExp) score += 10;
+    score = Math.min(Math.max(score, 30), 100);
+
+    let rec: "suitable" | "suitable_after_interview" | "unsuitable" = "suitable_after_interview";
+    let reason = "المرشح لديه مؤهلات جيدة وخبرة مناسبة بقطاع المصانع، لكن نوصي بمقابلة شخصية للتأكد من مهاراته الميدانية والقيادية.";
+    if (score >= 85) {
+      rec = "suitable";
+      reason = "المرشح ممتاز ويتمتع بخبرة واسعة ومخصصة في مصانع الدهانات والمواد الكيميائية ولديه معرفة فنية عالية جداً بسلامة العمليات والوقاية من الانفجارات وشحنات الكهرباء الساكنة.";
+    } else if (score < 60) {
+      rec = "unsuitable";
+      reason = "المرشح لا يمتلك الخبرة الكافية في القطاع أو المعرفة الكافية بإجراءات السلامة ومكافحة الانسكابات.";
+    }
+
     return {
-      score: 75,
-      paintChemicalExpLevel: applicant.industryExperience.workedInPaint ? "medium" : "low",
-      strengths: ["يمتلك خلفية جيدة في شروط السلامة العامة", "أبدى تفاعلاً إيجابياً مع الأسئلة المقالية المطروحة"],
-      weaknesses: ["بحاجة للتأكد من قدراته على التحكم ببيئات الإنتاج الكيميائية المعقدة من خلال مقابلة شخصية"],
-      suggestedQuestions: ["كيف تدير المخاطر المصاحبة للمركبات الكيميائية العضوية المتطايرة (VOCs)؟"],
-      recommendation: "suitable_after_interview",
-      recommendationReason: "تم إصدار هذه التوصية الاحتياطية نتيجة تعذر اكتمال التحليل اللحظي عبر خوادم الذكاء الاصطناعي بنجاح، يوصى بمقابلة المرشح يدوياً للتحقق من تفاصيله.",
+      score,
+      paintChemicalExpLevel: hasPaintExp && hasChemicalExp ? "high" : hasPaintExp || hasChemicalExp ? "medium" : "low",
+      strengths: [
+        `خبرة عملية إجمالية قدرها ${applicant.personalInfo.experienceYears} سنوات في مجال السلامة والصحة المهنية.`,
+        `يمتلك ${certCount} شهادات ودورات تدريبية متخصصة في الأمن والسلامة.`,
+        applicant.industryExperience.workedInPaint ? "لديه خبرة مباشرة في التعامل مع المخاطر الخاصة بمصانع الدهانات والمذيبات." : "لديه معرفة جيدة بأساسيات الأمن والسلامة الصناعية العامة."
+      ],
+      weaknesses: [
+        score < 75 ? "بحاجة لتعزيز معرفته بالأنظمة والمعايير الدولية للسلامة والصحة المهنية مثل الأوشا (OSHA)." : "نقاط الضعف الفنية تكاد تكون منعدمة ويفضل التركيز على تقييم المهارات السلوكية والقيادية.",
+        "نوصي بالتحقق من مدى إلمامه الميداني بسلامة العمليات المعقدة في مصانع الدهانات."
+      ],
+      suggestedQuestions: [
+        "كيف تتعامل مع انسكاب كيميائي مفاجئ لمادة قابلة للاشتعال في قسم الإنتاج؟",
+        "اذكر موقفاً واجهت فيه رفضاً من بعض العمال لارتداء معدات الوقاية الشخصية، وكيف تصرفت حيال ذلك؟",
+        "ما هي أهم النقاط التي ستركز عليها في جولتك التفتيشية اليومية الأولى في مصنعنا؟"
+      ],
+      recommendation: rec,
+      recommendationReason: reason,
       evaluatedAt: new Date().toISOString()
     };
   }
@@ -1177,7 +983,7 @@ app.post("/api/submit", async (req, res) => {
       ...personalInfo
     };
 
-    const newId = await generateApplicationId();
+    const newId = await generateApplicationId(finalPersonalInfo.jobRole);
     
     const newApplicant: Applicant = {
       id: newId,
@@ -1428,7 +1234,16 @@ app.delete("/api/admin/delete-admin/:id", requireAdmin, async (req, res) => {
 
 // 3. Get Dashboard Stats
 app.get("/api/admin/stats", requireAdmin, (req, res) => {
-  const applicants = readDB();
+  let applicants = readDB().filter(a => !a.id.startsWith("SYSTEM_SETTING_"));
+  const { jobRole } = req.query;
+  
+  if (jobRole) {
+    const rolePrefix = jobRole === 'marketing' ? 'MKT' : 'HSE';
+    applicants = applicants.filter(a => {
+      const aRole = a.personalInfo?.jobRole || (a.id.startsWith("MKT") ? "marketing" : "hse");
+      return aRole === jobRole;
+    });
+  }
   
   const total = applicants.length;
   const pending = applicants.filter(a => a.status === "pending").length;
@@ -1460,9 +1275,17 @@ app.get("/api/admin/stats", requireAdmin, (req, res) => {
 
 // 4. Get Applicants List (with Search & Filtering)
 app.get("/api/admin/applicants", requireAdmin, (req, res) => {
-  let applicants = readDB();
+  let applicants = readDB().filter(a => !a.id.startsWith("SYSTEM_SETTING_"));
   
-  const { search, status, experience, hrScore, sortBy, sortOrder, manualEval } = req.query;
+  const { search, status, experience, hrScore, sortBy, sortOrder, manualEval, jobRole } = req.query;
+  
+  // Filter by jobRole
+  if (jobRole) {
+    applicants = applicants.filter(a => {
+      const aRole = a.personalInfo?.jobRole || (a.id.startsWith("MKT") ? "marketing" : "hse");
+      return aRole === jobRole;
+    });
+  }
   
   // Apply search
   if (search) {

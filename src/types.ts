@@ -1,5 +1,6 @@
 // GitHub Sync: Minor update to trigger re-push
 export type ApplicationStatus = 'pending' | 'reviewing' | 'accepted' | 'rejected' | 'interview' | 'waitlist' | 'archived';
+export type JobRole = 'hse' | 'marketing';
 
 export interface PersonalInfo {
   fullName: string;
@@ -30,8 +31,11 @@ export interface PersonalInfo {
   cvFileName?: string;
   certsBase64?: string;
   certsFileName?: string;
+  portfolioBase64?: string;
+  portfolioFileName?: string;
   adminDocuments?: AdminDocument[];
   additionalDocuments?: AdminDocument[];
+  jobRole?: JobRole;
 }
 
 export interface AdminDocument {

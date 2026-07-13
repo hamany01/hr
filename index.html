@@ -34,7 +34,7 @@
         }
 
         const shadow = {};
-        window.global = new Proxy(shadow, {
+        const proxy = new Proxy(shadow, {
           set(target, prop, value) {
             if (prop === 'fetch') {
               target[prop] = value;
@@ -54,12 +54,16 @@
             if (prop === 'fetch') {
               return target[prop] || window.fetch;
             }
+            if (prop === 'parent' || prop === 'top' || prop === 'frames' || prop === 'opener' || prop === 'window' || prop === 'self' || prop === 'global') {
+              return proxy;
+            }
             if (prop in target) {
               return target[prop];
             }
             return window[prop];
           }
         });
+        window.global = proxy;
       }
     </script>
     <meta charset="UTF-8" />

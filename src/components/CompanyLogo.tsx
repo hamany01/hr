@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeStorage } from '../lib/safeStorage';
 
 interface CompanyLogoProps {
   className?: string;
@@ -6,7 +7,7 @@ interface CompanyLogoProps {
 
 export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
   const [logo, setLogo] = useState<string | null>(() => {
-    return localStorage.getItem('company_logo');
+    return safeStorage.getItem('company_logo');
   });
 
   useEffect(() => {
@@ -18,10 +19,10 @@ export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
           const data = await res.json();
           if (data.logo) {
             setLogo(data.logo);
-            localStorage.setItem('company_logo', data.logo);
+            safeStorage.setItem('company_logo', data.logo);
           } else {
             setLogo(null);
-            localStorage.removeItem('company_logo');
+            safeStorage.removeItem('company_logo');
           }
         }
       } catch (err) {
@@ -33,7 +34,7 @@ export default function CompanyLogo({ className = "h-10" }: CompanyLogoProps) {
 
     // 2. React to real-time events when admin uploads or resets a logo
     const handleStorageChange = () => {
-      const updatedLogo = localStorage.getItem('company_logo');
+      const updatedLogo = safeStorage.getItem('company_logo');
       setLogo(updatedLogo);
     };
 

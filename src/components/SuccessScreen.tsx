@@ -96,17 +96,17 @@ export default function SuccessScreen({ applicationId, status, aiEvaluation, app
           <div className="bg-emerald-50 border border-emerald-200 p-6 rounded-xl text-center space-y-4" id="whatsapp-direct-contact-block">
             <div className="flex justify-center">
               <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
-                💡 خطوة هامة ومباشرة للمتابعة السريعة
+                هل لديك أي استفسارات؟
               </span>
             </div>
-            <h3 className="font-extrabold text-slate-900 text-sm md:text-base">تواصل معنا فوراً بالواتساب لتأكيد طلبك</h3>
+            <h3 className="font-extrabold text-slate-900 text-sm md:text-base">تواصل معنا عبر الواتساب</h3>
             <p className="text-slate-600 text-xs max-w-lg mx-auto leading-relaxed">
-              يرجى النقر على زر الواتساب أدناه لإرسال رسالة آلية تحتوي على اسمك ورقم طلبك المرجعي <span className="font-bold font-mono text-emerald-800 bg-emerald-100/50 px-1.5 py-0.5 rounded">{applicationId}</span> مباشرةً إلى الرقم <span className="font-bold font-mono">966537375580</span> لبدء المتابعة السريعة والمباشرة مع مسؤولي التوظيف.
+              في حال كان لديك أي استفسار، يمكنك النقر على زر الواتساب أدناه للتواصل معنا، وسيكون رقم طلبك المرجعي <span className="font-bold font-mono text-emerald-800 bg-emerald-100/50 px-1.5 py-0.5 rounded">{applicationId}</span> مدرجاً في الرسالة الآلية لتسهيل خدمتك.
             </p>
             <div className="flex justify-center">
               <a
                 href={`https://wa.me/966537375580?text=${encodeURIComponent(
-                  `السلام عليكم ورحمة الله وبركاته،\nأنا ${applicantName || 'المتقدم'} عندي بعض الاستفسارات بخصوص وظيفة أخصائي صحة وسلامة وبيئة (HSE).\n\nرقم الطلب الخاص بي: *${applicationId}*\nتقييم المطابقة المبدئي: *${aiEvaluation?.score || 'قيد الدراسة'} / 100*`
+                  `السلام عليكم ورحمة الله وبركاته،\nأنا ${applicantName || 'المتقدم'} عندي بعض الاستفسارات بخصوص وظيفة ${applicationId?.startsWith('MKT') ? 'التسويق' : 'أخصائي صحة وسلامة وبيئة (HSE)'}.\n\nرقم الوظيفة (Job ID): *${applicationId?.startsWith('MKT') ? 'MKT-2026-0010' : '20260706023116938'}*\nتقييم المطابقة المبدئي: *${aiEvaluation?.score || 'قيد الدراسة'} / 100*`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"

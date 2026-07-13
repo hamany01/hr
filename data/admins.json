@@ -4,5 +4,11 @@
     "email": "hamany01@gmail.com",
     "passwordHash": "98991f1dce50d066e60542a39292d113d166d5118f1e3503968ffc1e20deaa82",
     "createdAt": "2026-07-11T09:41:43.615+00:00"
+  },
+  {
+    "id": "admin-1783845824370",
+    "email": "a@a",
+    "passwordHash": "c4318372f98f4c46ed3a32c16ee4d7a76c832886d887631c0294b3314f34edf1",
+    "createdAt": "2026-07-12T08:43:44.37+00:00"
   }
 ]

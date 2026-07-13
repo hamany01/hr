@@ -13,6 +13,7 @@ type ViewState = 'home' | 'apply' | 'success' | 'admin';
 export default function App() {
   const [view, setView] = useState<ViewState>('home');
   const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'hse' | 'marketing'>('hse');
   
   // Success states
   const [submittedId, setSubmittedId] = useState('');
@@ -20,7 +21,12 @@ export default function App() {
   const [submittedAiEval, setSubmittedAiEval] = useState<AiEvaluation | undefined>(undefined);
   const [submittedApplicantName, setSubmittedApplicantName] = useState('');
 
-  const handleStartApply = () => {
+  const handleStartApply = (role?: 'hse' | 'marketing') => {
+    if (role) {
+      setSelectedRole(role);
+    } else {
+      setSelectedRole('hse');
+    }
     setIsTermsOpen(true);
   };
 
@@ -105,6 +111,7 @@ export default function App() {
 
           {view === 'apply' && (
             <ApplicationForm 
+              jobRole={selectedRole}
               onCancel={handleGoHome} 
               onSubmitSuccess={handleSubmissionSuccess} 
             />
@@ -147,6 +154,7 @@ export default function App() {
         isOpen={isTermsOpen}
         onClose={() => setIsTermsOpen(false)}
         onAccept={handleTermsAccepted}
+        jobRole={selectedRole}
       />
 
     </div>

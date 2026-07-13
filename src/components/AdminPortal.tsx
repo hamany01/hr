@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeStorage } from '../lib/safeStorage';
 // GitHub Sync: Minor update to trigger re-push
 import { 
   Lock, Shield, Users, FileText, CheckCircle, XCircle, Clock, Calendar, 
@@ -18,6 +19,7 @@ interface AdminPortalProps {
 
 export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [portalRole, setPortalRole] = useState<"hse" | "marketing" | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -105,9 +107,17 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [selectedSchedules, setSelectedSchedules] = useState<string[]>([]);
   const [isBulkCancelling, setIsBulkCancelling] = useState(false);
 
+  // Selected Job for Settings
+  const [settingsJobRole, setSettingsJobRole] = useState<'hse' | 'marketing'>('hse');
+
+  // Helper to get storage key
+  const getStorageKey = (baseKey: string, role: 'hse' | 'marketing') => {
+    return role === 'hse' ? baseKey : `${baseKey}_${role}`;
+  };
+
   const [defaultMeetingLink, setDefaultMeetingLink] = useState(() => {
     try {
-      const saved = localStorage.getItem('defaultMeetingLink');
+      const saved = safeStorage.getItem('defaultMeetingLink');
       if (saved) return saved;
     } catch {}
     return 'https://meet.google.com/abc-defg-hij';
@@ -116,7 +126,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   // WhatsApp announcement customization states
   const [announcementAppUrl, setAnnouncementAppUrl] = useState(() => {
     try {
-      const saved = localStorage.getItem('announcementAppUrl');
+      const saved = safeStorage.getItem('announcementAppUrl');
       if (saved) return saved;
       return window.location.origin;
     } catch {
@@ -128,7 +138,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   
   const [announcementTitle, setAnnouncementTitle] = useState(() => {
     try {
-      return localStorage.getItem('announcementTitle') || 'أخصائي صحة وسلامة وبيئة (HSE)';
+      return safeStorage.getItem('announcementTitle') || 'أخصائي صحة وسلامة وبيئة (HSE)';
     } catch {
       return 'أخصائي صحة وسلامة وبيئة (HSE)';
     }
@@ -136,7 +146,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   
   const [announcementId, setAnnouncementId] = useState(() => {
     try {
-      return localStorage.getItem('announcementId') || '20260706023116938';
+      return safeStorage.getItem('announcementId') || '20260706023116938';
     } catch {
       return '20260706023116938';
     }
@@ -144,7 +154,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   
   const [announcementDate, setAnnouncementDate] = useState(() => {
     try {
-      return localStorage.getItem('announcementDate') || '21/01/1448 هـ';
+      return safeStorage.getItem('announcementDate') || '21/01/1448 هـ';
     } catch {
       return '21/01/1448 هـ';
     }
@@ -152,7 +162,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   
   const [announcementSalary, setAnnouncementSalary] = useState(() => {
     try {
-      return localStorage.getItem('announcementSalary') || '4,500 ريال إلى 6,000 ريال';
+      return safeStorage.getItem('announcementSalary') || '4,500 ريال إلى 6,000 ريال';
     } catch {
       return '4,500 ريال إلى 6,000 ريال';
     }
@@ -160,7 +170,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   
   const [announcementHours, setAnnouncementHours] = useState(() => {
     try {
-      return localStorage.getItem('announcementHours') || '9 ساعات يومياً (6 أيام)';
+      return safeStorage.getItem('announcementHours') || '9 ساعات يومياً (6 أيام)';
     } catch {
       return '9 ساعات يومياً (6 أيام)';
     }
@@ -168,7 +178,8 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   
   const [announcementLocation, setAnnouncementLocation] = useState(() => {
     try {
-      return localStorage.getItem('announcementLocation') || 'حي الرحاب، جدة';
+      const saved = safeStorage.getItem('announcementLocation');
+      return saved || 'حي الرحاب، جدة';
     } catch {
       return 'حي الرحاب، جدة';
     }
@@ -190,20 +201,20 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
 
   const [interviewTemplate, setInterviewTemplate] = useState(() => {
     try {
-      const saved = localStorage.getItem('interviewTemplate');
+      const saved = safeStorage.getItem('interviewTemplate');
       if (saved) return saved;
     } catch {}
-    return `السلام عليكم ورحمة الله وبركاته، أستاذ/أستاذة {NAME} المحترم.
+    return `السلام عليكم ورحمة الله وبركاته، {TITLE} {NAME} المحترم.
 
 نفيدكم من إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين، بأنه يسعدنا تحديد موعد المقابلة الشخصية معكم للوظيفة التالية:
-📌 المسمى الوظيفي: {JOB}
-🔢 رقم الطلب: {ID}
+المسمى الوظيفي: {JOB}
+رقم الطلب: {ID}
 
-📅 اليوم والتاريخ: {DATE}
-⏰ الوقت المحدد: في تمام الساعة {TIME}
-🔗 رابط المقابلة: {LINK}
+اليوم والتاريخ: {DATE}
+الوقت المحدد: في تمام الساعة {TIME}
+رابط المقابلة: {LINK}
 
-⚠️ نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.
+نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.
 
 نسأل الله لكم التوفيق والنجاح.
 إدارة الموارد البشرية
@@ -212,10 +223,10 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
 
   const [rejectionTemplate, setRejectionTemplate] = useState(() => {
     try {
-      const saved = localStorage.getItem('rejectionTemplate');
+      const saved = safeStorage.getItem('rejectionTemplate');
       if (saved) return saved;
     } catch {}
-    return `السلام عليكم ورحمة الله وبركاته، أستاذ/أستاذة {NAME} المحترم.
+    return `السلام عليكم ورحمة الله وبركاته، {TITLE} {NAME} المحترم.
 
 نشكر لكم تقديمكم واهتمامكم بالانضمام إلى شركة مصنع جدة للدهانات والمعاجين لوظيفة {JOB} ورقم الطلب {ID}.
 
@@ -228,44 +239,147 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
 
   const [announcementTemplate, setAnnouncementTemplate] = useState(() => {
     try {
-      const saved = localStorage.getItem('announcementTemplate');
+      const saved = safeStorage.getItem('announcementTemplate');
       if (saved) return saved;
     } catch {}
-    return `📣 *إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين* 🇸🇦
+    return `إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين
 
 يسر إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين الإعلان عن توفر فرصة وظيفية شاغرة ومتاحة للتقديم المباشر لجميع المواطنين المؤهلين:
 
-💼 *المسمى الوظيفي:* {JOB}
-🔢 *رقم الإعلان الوظيفي:* {ID}
-📅 *تاريخ الإعلان:* {DATE}
+المسمى الوظيفي: {JOB}
+رقم الإعلان الوظيفي: {ID}
+تاريخ الإعلان: {DATE}
 
-📍 *مقر العمل:* {LOCATION}
+مقر العمل: {LOCATION}
 
-🎯 *الهدف الوظيفي:*
+الهدف الوظيفي:
 الإشراف الشامل على صالات الإنتاج والمستودعات والتحكم في المخاطر الكيميائية وتطبيق نظام صارم للوقاية من الحريق وتأمين ممارسات العمل لضمان صفر حوادث وإصابات.
 
-🛠️ *المؤهلات والشروط المطلوبة:*
-1️⃣ درجة البكالوريوس في الهندسة الكيميائية، هندسة السلامة، علوم البيئة، أو تخصص مماثل.
-2️⃣ خبرة عملية لا تقل عن سنتين (2) في المصانع الكيميائية أو مصانع الطلاء والدهانات.
-3️⃣ شهادة مهنية دولية معتمدة (مثل NEBOSH IGC أو OSHA 30-Hour المتقدمة).
-4️⃣ معرفة قوية بمتطلبات السلامة العامة والحرائق الكيميائية وإدارة معايير ISO 45001.
-5️⃣ مهارات تواصل ممتازة وكتابة التقارير باللغتين العربية والإنجليزية.
-6️⃣ *يفضل تقديم السيرة الذاتية باللغة العربية.* 📄
-7️⃣ *يفضل وجود ترخيص معتمد من منصة كوادر (سيطلب رفعه في نموذج التقديم إن وُجد).* 🛡️
+المؤهلات والشروط المطلوبة:
+1. درجة البكالوريوس في الهندسة الكيميائية، هندسة السلامة، علوم البيئة، أو تخصص مماثل.
+2. خبرة عملية لا تقل عن سنتين (2) في المصانع الكيميائية أو مصانع الطلاء والدهانات.
+3. شهادة مهنية دولية معتمدة (مثل NEBOSH IGC أو OSHA 30-Hour المتقدمة).
+4. معرفة قوية بمتطلبات السلامة العامة والحرائق الكيميائية وإدارة معايير ISO 45001.
+5. مهارات تواصل ممتازة وكتابة التقارير باللغتين العربية والإنجليزية.
+6. يفضل تقديم السيرة الذاتية باللغة العربية.
+7. يفضل وجود ترخيص معتمد من منصة كوادر (سيطلب رفعه في نموذج التقديم إن وُجد).
 
-💰 *المزايا وبيئة العمل الموفرة:*
+المزايا وبيئة العمل الموفرة:
 • الراتب شهرياً: {SALARY}
 • ساعات العمل: {HOURS}
 • إجازة سنوية مدفوعة الأجر طبقاً لنظام العمل السعودي (21 يوماً).
 
-🔗 *رابط التقديم المباشر وتعبئة الطلب:*
+رابط التقديم المباشر وتعبئة الطلب:
 {LINK}
 
-📞 *للاستفسارات والتواصل المباشر عبر الواتساب:*
+للاستفسارات والتواصل المباشر عبر الواتساب:
 https://wa.me/966537375580
 
-✨ *نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!*`;
+نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!`;
   });
+
+  // Refresh settings when job role changes
+  useEffect(() => {
+    setAnnouncementTitle(safeStorage.getItem(getStorageKey('announcementTitle', settingsJobRole)) || (settingsJobRole === 'hse' ? 'أخصائي صحة وسلامة وبيئة (HSE)' : 'أخصائي تسويق (Marketing)'));
+    setAnnouncementId(safeStorage.getItem(getStorageKey('announcementId', settingsJobRole)) || (settingsJobRole === 'hse' ? '20260706023116938' : 'MKT-2026-0010'));
+    setAnnouncementDate(safeStorage.getItem(getStorageKey('announcementDate', settingsJobRole)) || '21/01/1448 هـ');
+    setAnnouncementSalary(safeStorage.getItem(getStorageKey('announcementSalary', settingsJobRole)) || '4,500 ريال إلى 6,000 ريال');
+    setAnnouncementHours(safeStorage.getItem(getStorageKey('announcementHours', settingsJobRole)) || '9 ساعات يومياً (6 أيام)');
+    setAnnouncementLocation(safeStorage.getItem(getStorageKey('announcementLocation', settingsJobRole)) || (settingsJobRole === 'marketing' ? 'جدة حي الرحاب - https://maps.app.goo.gl/VpghMeUKVdNUF4YT7' : 'حي الرحاب، جدة'));
+    
+    setInterviewTemplate(safeStorage.getItem(getStorageKey('interviewTemplate', settingsJobRole)) || `السلام عليكم ورحمة الله وبركاته، {TITLE} {NAME} المحترم.
+
+نفيدكم من إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين، بأنه يسعدنا تحديد موعد المقابلة الشخصية معكم للوظيفة التالية:
+المسمى الوظيفي: {JOB}
+رقم الطلب: {ID}
+
+اليوم والتاريخ: {DATE}
+الوقت المحدد: في تمام الساعة {TIME}
+رابط المقابلة: {LINK}
+
+نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.
+
+نسأل الله لكم التوفيق والنجاح.
+إدارة الموارد البشرية
+شركة مصنع جدة للدهانات والمعاجين`);
+
+    setRejectionTemplate(safeStorage.getItem(getStorageKey('rejectionTemplate', settingsJobRole)) || `السلام عليكم ورحمة الله وبركاته، {TITLE} {NAME} المحترم.
+
+نشكر لكم تقديمكم واهتمامكم بالانضمام إلى شركة مصنع جدة للدهانات والمعاجين لوظيفة {JOB} ورقم الطلب {ID}.
+
+يؤسفنا إبلاغكم بأنه تم اختيار مرشحين آخرين تتناسب مؤهلاتهم بشكل وثيق مع متطلبات الوظيفة الحالية. سنحتفظ بملفكم في قاعدة بياناتنا للتواصل معكم في حال توفر شواغر مستقبلية تناسب خبراتكم المميزة.
+
+نتمنى لكم كل التوفيق في مسيرتكم المهنية.
+إدارة الموارد البشرية
+شركة مصنع جدة للدهانات والمعاجين`);
+
+    setAnnouncementTemplate(safeStorage.getItem(getStorageKey('announcementTemplate', settingsJobRole)) || (settingsJobRole === 'marketing' ? `إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين
+
+يسر إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين الإعلان عن توفر فرصة وظيفية شاغرة ومتاحة للتقديم المباشر لجميع المواطنين المؤهلين:
+
+المسمى الوظيفي: {JOB}
+رقم الإعلان الوظيفي: {ID}
+تاريخ الإعلان: {DATE}
+
+مقر العمل: {LOCATION}
+
+الهدف الوظيفي:
+تطوير وتنفيذ خطط تسويقية مبتكرة لتعزيز العلامة التجارية للمصنع، وإدارة الحملات الإعلانية، وتحليل السوق لزيادة المبيعات والوصول للعملاء المستهدفين.
+
+المؤهلات والشروط المطلوبة:
+1. درجة البكالوريوس في التسويق، إدارة الأعمال، أو تخصص ذي صلة.
+2. خبرة عملية لا تقل عن سنتين (2) في مجال التسويق والمبيعات.
+3. إجادة استخدام أدوات التسويق الرقمي ومنصات التواصل الاجتماعي.
+4. القدرة على تحليل بيانات السوق وتقديم تقارير دورية.
+5. مهارات تواصل ممتازة وكتابة إبداعية باللغتين العربية والإنجليزية.
+6. يفضل تقديم السيرة الذاتية باللغة العربية.
+
+المزايا وبيئة العمل الموفرة:
+• الراتب شهرياً: {SALARY}
+• ساعات العمل: {HOURS}
+• إجازة سنوية مدفوعة الأجر طبقاً لنظام العمل السعودي (21 يوماً).
+
+رابط التقديم المباشر وتعبئة الطلب:
+{LINK}
+
+للاستفسارات والتواصل المباشر عبر الواتساب:
+https://wa.me/966537375580
+
+نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!` : `إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين
+
+يسر إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين الإعلان عن توفر فرصة وظيفية شاغرة ومتاحة للتقديم المباشر لجميع المواطنين المؤهلين:
+
+المسمى الوظيفي: {JOB}
+رقم الإعلان الوظيفي: {ID}
+تاريخ الإعلان: {DATE}
+
+مقر العمل: {LOCATION}
+
+الهدف الوظيفي:
+الإشراف الشامل على صالات الإنتاج والمستودعات والتحكم في المخاطر الكيميائية وتطبيق نظام صارم للوقاية من الحريق وتأمين ممارسات العمل لضمان صفر حوادث وإصابات.
+
+المؤهلات والشروط المطلوبة:
+1. درجة البكالوريوس في الهندسة الكيميائية، هندسة السلامة، علوم البيئة، أو تخصص مماثل.
+2. خبرة عملية لا تقل عن سنتين (2) في المصانع الكيميائية أو مصانع الطلاء والدهانات.
+3. شهادة مهنية دولية معتمدة (مثل NEBOSH IGC أو OSHA 30-Hour المتقدمة).
+4. معرفة قوية بمتطلبات السلامة العامة والحرائق الكيميائية وإدارة معايير ISO 45001.
+5. مهارات تواصل ممتازة وكتابة التقارير باللغتين العربية والإنجليزية.
+6. يفضل تقديم السيرة الذاتية باللغة العربية.
+7. يفضل وجود ترخيص معتمد من منصة كوادر (سيطلب رفعه في نموذج التقديم إن وُجد).
+
+المزايا وبيئة العمل الموفرة:
+• الراتب شهرياً: {SALARY}
+• ساعات العمل: {HOURS}
+• إجازة سنوية مدفوعة الأجر طبقاً لنظام العمل السعودي (21 يوماً).
+
+رابط التقديم المباشر وتعبئة الطلب:
+{LINK}
+
+للاستفسارات والتواصل المباشر عبر الواتساب:
+https://wa.me/966537375580
+
+نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!`));
+  }, [settingsJobRole]);
 
   // Manual HR Evaluation form state
   const [hrEvalForm, setHrEvalForm] = useState<HrEvaluation>({
@@ -317,7 +431,7 @@ https://wa.me/966537375580
           });
 
           if (res.ok) {
-            localStorage.setItem('company_logo', base64);
+            safeStorage.setItem('company_logo', base64);
             setLogoStateTrigger(prev => prev + 1);
             window.dispatchEvent(new Event('company_logo_updated'));
             alert("تم رفع وتحديث شعار المصنع وحفظه في قاعدة البيانات بنجاح!");
@@ -348,7 +462,7 @@ https://wa.me/966537375580
       });
 
       if (res.ok) {
-        localStorage.removeItem('company_logo');
+        safeStorage.removeItem('company_logo');
         setLogoStateTrigger(prev => prev + 1);
         window.dispatchEvent(new Event('company_logo_updated'));
         alert("تمت استعادة الشعار الافتراضي وحذفه من قاعدة البيانات بنجاح.");
@@ -360,7 +474,7 @@ https://wa.me/966537375580
     }
   };
 
-  const adminToken = localStorage.getItem('hse_admin_token');
+  const adminToken = safeStorage.getItem('hse_admin_token');
 
   // Check existing token
   useEffect(() => {
@@ -386,7 +500,7 @@ https://wa.me/966537375580
 
   // Load applicants and statistics
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !portalRole) return;
 
     const fetchAdminData = async () => {
       setLoading(true);
@@ -394,9 +508,9 @@ https://wa.me/966537375580
         const headers = { 'Authorization': `Bearer ${adminToken}` };
         
         // Fetch stats
-        const statsRes = await fetch('/api/admin/stats', { headers });
+        const statsRes = await fetch(`/api/admin/stats?jobRole=${portalRole}`, { headers });
         if (statsRes.status === 401 || statsRes.status === 403) {
-          localStorage.removeItem('hse_admin_token');
+          safeStorage.removeItem('hse_admin_token');
           setIsAuthenticated(false);
           return;
         }
@@ -413,12 +527,13 @@ https://wa.me/966537375580
           hrScore: hrScoreFilter !== 'all' ? hrScoreFilter : '',
           sortBy,
           sortOrder,
-          manualEval: manualEvalFilter
+          manualEval: manualEvalFilter,
+          jobRole: portalRole
         });
 
         const appRes = await fetch(`/api/admin/applicants?${queryParams}`, { headers });
         if (appRes.status === 401 || appRes.status === 403) {
-          localStorage.removeItem('hse_admin_token');
+          safeStorage.removeItem('hse_admin_token');
           setIsAuthenticated(false);
           return;
         }
@@ -434,7 +549,7 @@ https://wa.me/966537375580
     };
 
     fetchAdminData();
-  }, [isAuthenticated, searchTerm, statusFilter, experienceFilter, hrScoreFilter, sortBy, sortOrder, manualEvalFilter, refreshTrigger]);
+  }, [isAuthenticated, searchTerm, statusFilter, experienceFilter, hrScoreFilter, sortBy, sortOrder, manualEvalFilter, refreshTrigger, portalRole]);
 
   // Handle Login
   const handleLogin = async (e: React.FormEvent) => {
@@ -454,7 +569,7 @@ https://wa.me/966537375580
         throw new Error(data.error || "فشل تسجيل الدخول.");
       }
 
-      localStorage.setItem('hse_admin_token', data.token);
+      safeStorage.setItem('hse_admin_token', data.token);
       setIsAuthenticated(true);
     } catch (err: any) {
       setLoginError(err.message);
@@ -471,7 +586,7 @@ https://wa.me/966537375580
         headers: { 'Authorization': `Bearer ${adminToken}` }
       });
       if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('hse_admin_token');
+        safeStorage.removeItem('hse_admin_token');
         setIsAuthenticated(false);
         return;
       }
@@ -583,7 +698,7 @@ https://wa.me/966537375580
 
   // Handle Logout
   const handleLogout = () => {
-    localStorage.removeItem('hse_admin_token');
+    safeStorage.removeItem('hse_admin_token');
     setIsAuthenticated(false);
     setSelectedApplicant(null);
     setIsReviewMode(false);
@@ -1021,10 +1136,20 @@ https://wa.me/966537375580
 
   // Generate hybrid WhatsApp link and open it in a new window
   const handleSendWhatsApp = (applicant: Applicant, name: string, date: string, time: string, type: string, customMeetingLink?: string) => {
-    let text = interviewTemplate;
+    const roleKey = applicant.id?.startsWith('MKT') ? 'marketing' : 'hse';
+    const roleInterviewTemplate = safeStorage.getItem(getStorageKey('interviewTemplate', roleKey)) || interviewTemplate;
+    const roleAnnouncementTitle = safeStorage.getItem(getStorageKey('announcementTitle', roleKey)) || (roleKey === 'marketing' ? 'أخصائي تسويق (Marketing)' : 'أخصائي صحة وسلامة وبيئة (HSE)');
+    
+    let text = roleInterviewTemplate;
+    
+    // Dynamic Title based on Gender
+    const title = applicant.personalInfo?.gender === 'female' ? 'أستاذة' : 'أستاذ';
+    text = text.replace(/{TITLE}/g, title);
+    text = text.replace(/أستاذ\/أستاذة/g, title);
+    
     text = text.replace(/{NAME}/g, name || '');
-    text = text.replace(/{JOB}/g, announcementTitle || 'أخصائي صحة وسلامة وبيئة (HSE)');
-    text = text.replace(/{ID}/g, applicant.id || '');
+    text = text.replace(/{JOB}/g, roleAnnouncementTitle);
+    text = text.replace(/{ID}/g, safeStorage.getItem(getStorageKey('announcementId', roleKey)) || (roleKey === 'marketing' ? 'MKT-2026-0010' : '20260706023116938'));
     
     const formattedDate = date 
       ? new Date(date).toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -1033,8 +1158,9 @@ https://wa.me/966537375580
     text = text.replace(/{TIME}/g, time || '');
     text = text.replace(/{TYPE}/g, type === 'remote' ? 'عن بعد' : 'حضوري بمقر الشركة');
     
-    const meetingLinkToUse = customMeetingLink || applicant.interviewSchedule?.meetingLink || defaultMeetingLink;
-    text = text.replace(/{LINK}/g, meetingLinkToUse || announcementAppUrl || window.location.origin);
+    const meetingLinkToUse = customMeetingLink || applicant.interviewSchedule?.meetingLink || safeStorage.getItem(getStorageKey('defaultMeetingLink', roleKey)) || defaultMeetingLink;
+    const roleAppUrl = safeStorage.getItem(getStorageKey('announcementAppUrl', roleKey)) || announcementAppUrl;
+    text = text.replace(/{LINK}/g, meetingLinkToUse || roleAppUrl || window.location.origin);
 
     const encodedMessage = encodeURIComponent(text);
     const cleanPhone = applicant.personalInfo.phone.replace(/[\s\-\+\(\)]/g, '');
@@ -1051,11 +1177,22 @@ https://wa.me/966537375580
 
   // Send customizable rejection / apology message
   const handleSendRejectionWhatsApp = (applicant: Applicant) => {
-    let text = rejectionTemplate;
+    const roleKey = applicant.id?.startsWith('MKT') ? 'marketing' : 'hse';
+    const roleRejectionTemplate = safeStorage.getItem(getStorageKey('rejectionTemplate', roleKey)) || rejectionTemplate;
+    const roleAnnouncementTitle = safeStorage.getItem(getStorageKey('announcementTitle', roleKey)) || (roleKey === 'marketing' ? 'أخصائي تسويق (Marketing)' : 'أخصائي صحة وسلامة وبيئة (HSE)');
+    const roleAppUrl = safeStorage.getItem(getStorageKey('announcementAppUrl', roleKey)) || announcementAppUrl;
+
+    let text = roleRejectionTemplate;
+    
+    // Dynamic Title based on Gender
+    const title = applicant.personalInfo?.gender === 'female' ? 'أستاذة' : 'أستاذ';
+    text = text.replace(/{TITLE}/g, title);
+    text = text.replace(/أستاذ\/أستاذة/g, title);
+    
     text = text.replace(/{NAME}/g, applicant.personalInfo.fullName || '');
-    text = text.replace(/{JOB}/g, announcementTitle || 'أخصائي صحة وسلامة وبيئة (HSE)');
-    text = text.replace(/{ID}/g, applicant.id || '');
-    text = text.replace(/{LINK}/g, announcementAppUrl || window.location.origin);
+    text = text.replace(/{JOB}/g, roleAnnouncementTitle);
+    text = text.replace(/{ID}/g, safeStorage.getItem(getStorageKey('announcementId', roleKey)) || (roleKey === 'marketing' ? 'MKT-2026-0010' : '20260706023116938'));
+    text = text.replace(/{LINK}/g, roleAppUrl || window.location.origin);
 
     const encodedMessage = encodeURIComponent(text);
     const cleanPhone = applicant.personalInfo.phone.replace(/[\s\-\+\(\)]/g, '');
@@ -1372,6 +1509,52 @@ https://wa.me/966537375580
     );
   }
 
+  // --- JOB ROLE SELECTOR SCREEN ---
+  if (isAuthenticated && !portalRole) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 relative overflow-hidden" id="admin-job-selector">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-50 -z-10 translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50 -z-10 -translate-x-1/2 translate-y-1/2"></div>
+        
+        <div className="text-center mb-10">
+          <CompanyLogo className="w-16 h-16 mx-auto mb-4" />
+          <h2 className="text-2xl font-extrabold text-slate-800">اختر مسار الوظيفة</h2>
+          <p className="text-sm text-slate-500 mt-2">يرجى اختيار الوظيفة التي ترغب بإدارتها</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+          {/* HSE Role */}
+          <button 
+            onClick={() => { setPortalRole('hse'); setSettingsJobRole('hse'); }}
+            className="group bg-white hover:bg-orange-50 border-2 border-slate-200 hover:border-orange-500 rounded-2xl p-8 text-center transition-all shadow-sm hover:shadow-lg flex flex-col items-center gap-4"
+          >
+            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Shield className="w-10 h-10 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-1">أخصائي صحة وسلامة وبيئة</h3>
+              <p className="text-xs text-slate-500 font-medium">HSE Specialist</p>
+            </div>
+          </button>
+
+          {/* Marketing Role */}
+          <button 
+            onClick={() => { setPortalRole('marketing'); setSettingsJobRole('marketing'); }}
+            className="group bg-white hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-8 text-center transition-all shadow-sm hover:shadow-lg flex flex-col items-center gap-4"
+          >
+            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Briefcase className="w-10 h-10 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-1">أخصائي تسويق</h3>
+              <p className="text-xs text-slate-500 font-medium">Marketing Specialist</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full bg-slate-50 min-h-screen text-slate-800 font-sans" id="admin-dashboard-view">
       
@@ -1402,6 +1585,17 @@ https://wa.me/966537375580
         </div>
         
         <div className="flex items-center gap-3">
+          <div className="bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1">
+            <Briefcase className="w-3.5 h-3.5" />
+            <span>{portalRole === 'marketing' ? 'التسويق' : 'الصحة والسلامة'}</span>
+          </div>
+          <button
+            onClick={() => { setPortalRole(null); setSelectedApplicant(null); }}
+            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/50 text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+            <span>تبديل الوظيفة</span>
+          </button>
           <button
             onClick={() => setShowAdminManagement(true)}
             className="bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/50 text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1"
@@ -1585,7 +1779,10 @@ https://wa.me/966537375580
                   </div>
                   <div>
                     <span className="text-slate-400 block">تاريخ الميلاد:</span>
-                    <span className="font-bold text-slate-800">{selectedApplicant.personalInfo.birthDate}</span>
+                    <span className="font-bold text-slate-800">
+                      {selectedApplicant.personalInfo.birthDate}
+                      {selectedApplicant.personalInfo.birthDate && ` (العمر: ${Math.abs(new Date(Date.now() - new Date(selectedApplicant.personalInfo.birthDate).getTime()).getUTCFullYear() - 1970)} سنة)`}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-400 block">المدينة وعنوان السكن:</span>
@@ -1709,6 +1906,30 @@ https://wa.me/966537375580
                       </div>
                     ) : (
                       <div className="text-xs text-slate-400 italic text-center p-2 border border-dashed rounded-lg">لم يتم توفير شهادات ورقية من المرشح</div>
+                    )}
+
+                    {/* Portfolio Preview */}
+                    {selectedApplicant.personalInfo.portfolioBase64 && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handlePreviewAttachment(selectedApplicant.personalInfo.portfolioBase64, selectedApplicant.personalInfo.portfolioFileName)}
+                          className="flex-1 bg-blue-50 hover:bg-blue-100/80 text-blue-700 border border-blue-200/50 p-3 rounded-xl flex items-center justify-between text-right text-xs font-bold transition-all group"
+                          title="انقر لاستعراض ملف عينة الأعمال (البورتفوليو) مباشرة"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="w-4 h-4 text-blue-600" />
+                            <span>استعراض عينة من الأعمال (بورتفوليو) 👁️</span>
+                          </div>
+                          <Eye className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
+                        </button>
+                        <button
+                          onClick={() => handleDownloadAttachment(selectedApplicant.personalInfo.portfolioBase64, selectedApplicant.personalInfo.portfolioFileName)}
+                          className="bg-slate-100 hover:bg-slate-200 text-slate-600 p-3 rounded-xl flex items-center justify-center transition-all border border-slate-200/40"
+                          title="تحميل عينة الأعمال كنسخة احتياطية"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      </div>
                     )}
 
                     {/* Kawader License Preview */}
@@ -2315,7 +2536,7 @@ https://wa.me/966537375580
                     onChange={handleLogoUpload}
                   />
                 </label>
-                {localStorage.getItem('company_logo') && (
+                {safeStorage.getItem('company_logo') && (
                   <button
                     onClick={handleLogoReset}
                     className="bg-white hover:bg-rose-50 text-rose-600 border border-rose-100 hover:border-rose-200 font-bold text-[10px] py-1.5 px-3 rounded-lg transition-all flex items-center justify-center gap-1"
@@ -2361,7 +2582,7 @@ https://wa.me/966537375580
               }`}
             >
               <MessageSquare className="w-4 h-4" />
-              <span>إعلان الوظيفة للواتساب 📣</span>
+              <span>إعلان الوظيفة للواتساب</span>
             </button>
             <button
               onClick={() => setActiveSubTab('templates')}
@@ -3209,6 +3430,41 @@ https://wa.me/966537375580
 
           {activeSubTab === 'announcements' && (
             <div className="space-y-8 animate-fade-in text-right" id="announcements-view-tab">
+              {/* Settings Job Role Selector */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="bg-orange-100 p-2 rounded-lg">
+                    <Settings className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-800 text-sm">إعدادات الإعلان والقوالب</h4>
+                    <p className="text-[10px] text-slate-500">اختر الوظيفة التي تريد تعديل إعداداتها</p>
+                  </div>
+                </div>
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setSettingsJobRole('hse')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      settingsJobRole === 'hse'
+                        ? 'bg-white text-orange-600 shadow-sm border border-slate-200'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    أخصائي صحة وسلامة وبيئة (HSE)
+                  </button>
+                  <button
+                    onClick={() => setSettingsJobRole('marketing')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      settingsJobRole === 'marketing'
+                        ? 'bg-white text-orange-600 shadow-sm border border-slate-200'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    أخصائي تسويق (Marketing)
+                  </button>
+                </div>
+              </div>
+
               {/* Top Banner */}
               <div className="bg-gradient-to-l from-slate-900 via-slate-850 to-slate-900 text-white p-6 md:p-8 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -z-10"></div>
@@ -3219,7 +3475,7 @@ https://wa.me/966537375580
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                     نشر عام لجميع المجموعات والمنصات (مخصصة بالكامل)
                   </span>
-                  <h3 className="text-xl md:text-2xl font-black text-white">تعديل ونشر الإعلان الوظيفي لعامة الناس 📣</h3>
+                  <h3 className="text-xl md:text-2xl font-black text-white">تعديل ونشر الإعلان الوظيفي لعامة الناس</h3>
                   <p className="text-slate-300 text-xs md:text-sm leading-relaxed font-light">
                     هنا يمكنك صياغة وتعديل الإعلان الموجه لعامة الناس للتقديم على الوظيفة. قمنا بتنسيق الإعلان بشكل احترافي للغاية ليتناسب مع النشر المباشر عبر مجموعات الواتساب ومواقع التواصل، ويمكنك الآن تعديل المسمى الوظيفي، الراتب، الساعات، الرقم المعتمد، وتاريخ الإعلان ليعكس أي تحديثات فوراً في النص المنسق والجاهز للمشاركة.
                   </p>
@@ -3332,13 +3588,13 @@ https://wa.me/966537375580
                       <button
                         onClick={() => {
                           try {
-                            localStorage.setItem('announcementAppUrl', announcementAppUrl);
-                            localStorage.setItem('announcementTitle', announcementTitle);
-                            localStorage.setItem('announcementId', announcementId);
-                            localStorage.setItem('announcementDate', announcementDate);
-                            localStorage.setItem('announcementSalary', announcementSalary);
-                            localStorage.setItem('announcementHours', announcementHours);
-                            localStorage.setItem('announcementLocation', announcementLocation);
+                            safeStorage.setItem(getStorageKey('announcementAppUrl', settingsJobRole), announcementAppUrl);
+                            safeStorage.setItem(getStorageKey('announcementTitle', settingsJobRole), announcementTitle);
+                            safeStorage.setItem(getStorageKey('announcementId', settingsJobRole), announcementId);
+                            safeStorage.setItem(getStorageKey('announcementDate', settingsJobRole), announcementDate);
+                            safeStorage.setItem(getStorageKey('announcementSalary', settingsJobRole), announcementSalary);
+                            safeStorage.setItem(getStorageKey('announcementHours', settingsJobRole), announcementHours);
+                            safeStorage.setItem(getStorageKey('announcementLocation', settingsJobRole), announcementLocation);
                             setSettingsSaved(true);
                             setTimeout(() => setSettingsSaved(false), 3000);
                           } catch (e) {
@@ -3460,6 +3716,41 @@ https://wa.me/966537375580
 
           {activeSubTab === 'templates' && (
             <div className="space-y-8 animate-fade-in text-right" id="templates-view-tab">
+              {/* Settings Job Role Selector */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="bg-orange-100 p-2 rounded-lg">
+                    <Settings className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-800 text-sm">إعدادات الإعلان والقوالب</h4>
+                    <p className="text-[10px] text-slate-500">اختر الوظيفة التي تريد تعديل إعداداتها</p>
+                  </div>
+                </div>
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setSettingsJobRole('hse')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      settingsJobRole === 'hse'
+                        ? 'bg-white text-orange-600 shadow-sm border border-slate-200'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    أخصائي صحة وسلامة وبيئة (HSE)
+                  </button>
+                  <button
+                    onClick={() => setSettingsJobRole('marketing')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      settingsJobRole === 'marketing'
+                        ? 'bg-white text-orange-600 shadow-sm border border-slate-200'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    أخصائي تسويق (Marketing)
+                  </button>
+                </div>
+              </div>
+
               {/* Top Banner */}
               <div className="bg-gradient-to-l from-slate-900 via-slate-850 to-slate-900 text-white p-6 md:p-8 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -z-10"></div>
@@ -3492,6 +3783,7 @@ https://wa.me/966537375580
                       <span className="text-xs font-bold text-slate-700 block">الرموز التلقائية المتاحة للاستخدام في النص:</span>
                       <div className="flex flex-wrap gap-2 pt-1">
                         {[
+                          { tag: '{TITLE}', label: 'اللقب (أستاذ/أستاذة)' },
                           { tag: '{NAME}', label: 'اسم المرشح' },
                           { tag: '{JOB}', label: 'المسمى الوظيفي' },
                           { tag: '{ID}', label: 'رقم طلب التقديم' },
@@ -3530,7 +3822,7 @@ https://wa.me/966537375580
                         onChange={(e) => {
                           setDefaultMeetingLink(e.target.value);
                           try {
-                            localStorage.setItem('defaultMeetingLink', e.target.value);
+                            safeStorage.setItem('defaultMeetingLink', e.target.value);
                           } catch {}
                         }}
                         className="w-full border border-orange-200/60 rounded-xl px-3 py-2.5 outline-none text-xs font-semibold font-mono text-left bg-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all shadow-sm"
@@ -3538,6 +3830,29 @@ https://wa.me/966537375580
                       />
                       <p className="text-[10px] text-slate-500 font-medium leading-relaxed text-right">
                         💡 هذا الرابط سيتم تعبئته تلقائياً كخيار افتراضي عند جدولة أي موعد مقابلة جديد، ليحل محل الرمز <span className="font-mono text-orange-600 font-bold">{'{LINK}'}</span> في نص رسالة الواتساب، مع بقاء الإمكانية لتغييره أو تخصيصه لكل مرشح بشكل منفصل أثناء الجدولة.
+                      </p>
+                    </div>
+
+                    {/* Job ID Configuration */}
+                    <div className="bg-indigo-50/40 p-5 rounded-2xl border border-indigo-100/80 space-y-2">
+                      <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 justify-end">
+                        <span>رقم الوظيفة (Job ID):</span>
+                        <span className="text-indigo-500 font-bold">#</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={announcementId}
+                        onChange={(e) => {
+                          setAnnouncementId(e.target.value);
+                          try {
+                            safeStorage.setItem(getStorageKey('announcementId', settingsJobRole), e.target.value);
+                          } catch {}
+                        }}
+                        className="w-full border border-indigo-200/60 rounded-xl px-3 py-2.5 outline-none text-xs font-semibold font-mono text-left bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-sm"
+                        placeholder={settingsJobRole === 'hse' ? '20260706023116938' : 'MKT-2026-0010'}
+                      />
+                      <p className="text-[10px] text-slate-500 font-medium leading-relaxed text-right">
+                        💡 رقم الوظيفة المعروض في قوالب الإعلانات ليحل محل الرمز <span className="font-mono text-indigo-600 font-bold">{'{ID}'}</span>.
                       </p>
                     </div>
 
@@ -3574,7 +3889,7 @@ https://wa.me/966537375580
                     {/* Template 3: General Job Announcement */}
                     <div className="space-y-2 pt-2">
                       <label className="text-xs font-extrabold text-slate-800 flex items-center gap-2 justify-between">
-                        <span>3. قالب الإعلان الوظيفي العام للواتساب 📣:</span>
+                        <span>3. قالب الإعلان الوظيفي العام للواتساب:</span>
                         <span className="text-[10px] text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">للنشر العام والمجموعات</span>
                       </label>
                       <textarea
@@ -3591,10 +3906,10 @@ https://wa.me/966537375580
                       <button
                         onClick={() => {
                           try {
-                            localStorage.setItem('interviewTemplate', interviewTemplate);
-                            localStorage.setItem('rejectionTemplate', rejectionTemplate);
-                            localStorage.setItem('announcementTemplate', announcementTemplate);
-                            localStorage.setItem('defaultMeetingLink', defaultMeetingLink);
+                            safeStorage.setItem(getStorageKey('interviewTemplate', settingsJobRole), interviewTemplate);
+                            safeStorage.setItem(getStorageKey('rejectionTemplate', settingsJobRole), rejectionTemplate);
+                            safeStorage.setItem(getStorageKey('announcementTemplate', settingsJobRole), announcementTemplate);
+                            safeStorage.setItem(getStorageKey('defaultMeetingLink', settingsJobRole), defaultMeetingLink);
                             setTemplatesSaved(true);
                             setTimeout(() => setTemplatesSaved(false), 3000);
                           } catch (e) {
@@ -3623,25 +3938,25 @@ https://wa.me/966537375580
                       <button
                         onClick={() => {
                           if (window.confirm('هل أنت متأكد من رغبتك في إعادة تعيين القوالب إلى الصيغة الرسمية الافتراضية؟')) {
-                            localStorage.removeItem('interviewTemplate');
-                            localStorage.removeItem('rejectionTemplate');
-                            localStorage.removeItem('announcementTemplate');
-                            setInterviewTemplate(`السلام عليكم ورحمة الله وبركاته، أستاذ/أستاذة {NAME} المحترم.
+                            safeStorage.removeItem(getStorageKey('interviewTemplate', settingsJobRole));
+                            safeStorage.removeItem(getStorageKey('rejectionTemplate', settingsJobRole));
+                            safeStorage.removeItem(getStorageKey('announcementTemplate', settingsJobRole));
+                            setInterviewTemplate(`السلام عليكم ورحمة الله وبركاته، {TITLE} {NAME} المحترم.
 
 نفيدكم من إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين، بأنه يسعدنا تحديد موعد المقابلة الشخصية معكم للوظيفة التالية:
-📌 المسمى الوظيفي: {JOB}
-🔢 رقم الطلب: {ID}
+المسمى الوظيفي: {JOB}
+رقم الطلب: {ID}
 
-📅 اليوم والتاريخ: {DATE}
-⏰ الوقت المحدد: في تمام الساعة {TIME}
-🔗 رابط المقابلة: {LINK}
+اليوم والتاريخ: {DATE}
+الوقت المحدد: في تمام الساعة {TIME}
+رابط المقابلة: {LINK}
 
-⚠️ نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.
+نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.
 
 نسأل الله لكم التوفيق والنجاح.
 إدارة الموارد البشرية
 شركة مصنع جدة للدهانات والمعاجين`);
-                            setRejectionTemplate(`السلام عليكم ورحمة الله وبركاته، أستاذ/أستاذة {NAME} المحترم.
+                            setRejectionTemplate(`السلام عليكم ورحمة الله وبركاته، {TITLE} {NAME} المحترم.
 
 نشكر لكم تقديمكم واهتمامكم بالانضمام إلى شركة مصنع جدة للدهانات والمعاجين لوظيفة {JOB} ورقم الطلب {ID}.
 
@@ -3650,40 +3965,72 @@ https://wa.me/966537375580
 نتمنى لكم كل التوفيق في مسيرتكم المهنية.
 إدارة الموارد البشرية
 شركة مصنع جدة للدهانات والمعاجين`);
-                            setAnnouncementTemplate(`📣 *إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين* 🇸🇦
+                            setAnnouncementTemplate(settingsJobRole === 'marketing' ? `إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين
 
 يسر إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين الإعلان عن توفر فرصة وظيفية شاغرة ومتاحة للتقديم المباشر لجميع المواطنين المؤهلين:
 
-💼 *المسمى الوظيفي:* {JOB}
-🔢 *رقم الإعلان الوظيفي:* {ID}
-📅 *تاريخ الإعلان:* {DATE}
+المسمى الوظيفي: {JOB}
+رقم الإعلان الوظيفي: {ID}
+تاريخ الإعلان: {DATE}
 
-📍 *مقر العمل:* {LOCATION}
+مقر العمل: {LOCATION}
 
-🎯 *الهدف الوظيفي:*
-الإشراف الشامل على صالات الإنتاج والمستودعات والتحكم في المخاطر الكيميائية وتطبيق نظام صارم للوقاية من الحريق وتأمين ممارسات العمل لضمان صفر حوادث وإصابات.
+الهدف الوظيفي:
+تطوير وتنفيذ خطط تسويقية مبتكرة لتعزيز العلامة التجارية للمصنع، وإدارة الحملات الإعلانية، وتحليل السوق لزيادة المبيعات والوصول للعملاء المستهدفين.
 
-🛠️ *المؤهلات والشروط المطلوبة:*
-1️⃣ درجة البكالوريوس في الهندسة الكيميائية، هندسة السلامة، علوم البيئة، أو تخصص مماثل.
-2️⃣ خبرة عملية لا تقل عن سنتين (2) في المصانع الكيميائية أو مصانع الطلاء والدهانات.
-3️⃣ شهادة مهنية دولية معتمدة (مثل NEBOSH IGC أو OSHA 30-Hour المتقدمة).
-4️⃣ معرفة قوية بمتطلبات السلامة العامة والحرائق الكيميائية وإدارة معايير ISO 45001.
-5️⃣ مهارات تواصل ممتازة وكتابة التقارير باللغتين العربية والإنجليزية.
-6️⃣ *يفضل تقديم السيرة الذاتية باللغة العربية.* 📄
-7️⃣ *يفضل وجود ترخيص معتمد من منصة كوادر (سيطلب رفعه في نموذج التقديم إن وُجد).* 🛡️
+المؤهلات والشروط المطلوبة:
+1. درجة البكالوريوس في التسويق، إدارة الأعمال، أو تخصص ذي صلة.
+2. خبرة عملية لا تقل عن سنتين (2) في مجال التسويق والمبيعات.
+3. إجادة استخدام أدوات التسويق الرقمي ومنصات التواصل الاجتماعي.
+4. القدرة على تحليل بيانات السوق وتقديم تقارير دورية.
+5. مهارات تواصل ممتازة وكتابة إبداعية باللغتين العربية والإنجليزية.
+6. يفضل تقديم السيرة الذاتية باللغة العربية.
 
-💰 *المزايا وبيئة العمل الموفرة:*
+المزايا وبيئة العمل الموفرة:
 • الراتب شهرياً: {SALARY}
 • ساعات العمل: {HOURS}
 • إجازة سنوية مدفوعة الأجر طبقاً لنظام العمل السعودي (21 يوماً).
 
-🔗 *رابط التقديم المباشر وتعبئة الطلب:*
+رابط التقديم المباشر وتعبئة الطلب:
 {LINK}
 
-📞 *للاستفسارات والتواصل المباشر عبر الواتساب:*
+للاستفسارات والتواصل المباشر عبر الواتساب:
 https://wa.me/966537375580
 
-✨ *نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!*`);
+نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!` : `إعلان وظيفي لعامة الناس - شركة مصنع جدة للدهانات والمعاجين
+
+يسر إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين الإعلان عن توفر فرصة وظيفية شاغرة ومتاحة للتقديم المباشر لجميع المواطنين المؤهلين:
+
+المسمى الوظيفي: {JOB}
+رقم الإعلان الوظيفي: {ID}
+تاريخ الإعلان: {DATE}
+
+مقر العمل: {LOCATION}
+
+الهدف الوظيفي:
+الإشراف الشامل على صالات الإنتاج والمستودعات والتحكم في المخاطر الكيميائية وتطبيق نظام صارم للوقاية من الحريق وتأمين ممارسات العمل لضمان صفر حوادث وإصابات.
+
+المؤهلات والشروط المطلوبة:
+1. درجة البكالوريوس في الهندسة الكيميائية، هندسة السلامة، علوم البيئة، أو تخصص مماثل.
+2. خبرة عملية لا تقل عن سنتين (2) في المصانع الكيميائية أو مصانع الطلاء والدهانات.
+3. شهادة مهنية دولية معتمدة (مثل NEBOSH IGC أو OSHA 30-Hour المتقدمة).
+4. معرفة قوية بمتطلبات السلامة العامة والحرائق الكيميائية وإدارة معايير ISO 45001.
+5. مهارات تواصل ممتازة وكتابة التقارير باللغتين العربية والإنجليزية.
+6. يفضل تقديم السيرة الذاتية باللغة العربية.
+7. يفضل وجود ترخيص معتمد من منصة كوادر (سيطلب رفعه في نموذج التقديم إن وُجد).
+
+المزايا وبيئة العمل الموفرة:
+• الراتب شهرياً: {SALARY}
+• ساعات العمل: {HOURS}
+• إجازة سنوية مدفوعة الأجر طبقاً لنظام العمل السعودي (21 يوماً).
+
+رابط التقديم المباشر وتعبئة الطلب:
+{LINK}
+
+للاستفسارات والتواصل المباشر عبر الواتساب:
+https://wa.me/966537375580
+
+نرحب بجميع الكفاءات الوطنية الطموحة للانضمام إلى فريق عملنا المتميز!`);
                           }
                         }}
                         type="button"
@@ -3774,7 +4121,7 @@ https://wa.me/966537375580
 
                     {/* General Job Announcement Preview Box */}
                     <div className="space-y-2 pt-2">
-                      <span className="text-[11px] font-bold text-slate-500 block">معاينة: نص الإعلان الوظيفي العام للواتساب 📣</span>
+                      <span className="text-[11px] font-bold text-slate-500 block">معاينة: نص الإعلان الوظيفي العام للواتساب</span>
                       <div className="bg-[#e5ddd5] p-4 rounded-2xl relative overflow-hidden min-h-[250px] border border-slate-200 flex flex-col justify-end">
                         <div className="absolute inset-0 bg-[radial-gradient(#dfdcd6_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
                         <div className="max-w-[95%] bg-[#dcf8c6] rounded-2xl rounded-tr-none p-4 shadow-sm text-slate-850 space-y-2 text-[11px] leading-relaxed mr-auto relative text-right font-medium">
