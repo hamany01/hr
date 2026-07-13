@@ -142,7 +142,7 @@ export default function App() {
               </div>
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1 text-[10px] text-slate-500"><div className="w-2 h-2 rounded-full bg-green-500"></div> الخادم متصل</span>
-                <span className="text-[10px] text-slate-500">v3.0.0-stable</span>
+                <span className="text-[10px] text-slate-500">v4.1</span>
               </div>
             </div>
           </footer>
