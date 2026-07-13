@@ -55,10 +55,11 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [experienceFilter, setExperienceFilter] = useState<string>('all');
-  const [certFilter, setCertFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('date');
+  const [hrScoreFilter, setHrScoreFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('hr_score');
   const [sortOrder, setSortOrder] = useState<string>('desc');
   const [manualEvalFilter, setManualEvalFilter] = useState<string>('all');
+  const [archivedDeptNote, setArchivedDeptNote] = useState<string>('');
 
   // Hybrid WhatsApp Interview Scheduling states
   const [activeSubTab, setActiveSubTab] = useState<'applicants' | 'schedules' | 'announcements' | 'templates'>('applicants');
@@ -409,7 +410,7 @@ https://wa.me/966537375580
           search: searchTerm,
           status: statusFilter,
           experience: experienceFilter !== 'all' ? experienceFilter : '',
-          hasCert: certFilter !== 'all' ? certFilter : '',
+          hrScore: hrScoreFilter !== 'all' ? hrScoreFilter : '',
           sortBy,
           sortOrder,
           manualEval: manualEvalFilter
@@ -433,7 +434,7 @@ https://wa.me/966537375580
     };
 
     fetchAdminData();
-  }, [isAuthenticated, searchTerm, statusFilter, experienceFilter, certFilter, sortBy, sortOrder, manualEvalFilter, refreshTrigger]);
+  }, [isAuthenticated, searchTerm, statusFilter, experienceFilter, hrScoreFilter, sortBy, sortOrder, manualEvalFilter, refreshTrigger]);
 
   // Handle Login
   const handleLogin = async (e: React.FormEvent) => {
@@ -702,6 +703,7 @@ https://wa.me/966537375580
       });
     }
     setReviewStatus(applicant.status);
+    setArchivedDeptNote(applicant.archivedDeptNote || '');
   };
 
   // Save manual HR evaluation
@@ -718,7 +720,8 @@ https://wa.me/966537375580
         },
         body: JSON.stringify({
           status: reviewStatus,
-          hrEvaluation: hrEvalForm
+          hrEvaluation: hrEvalForm,
+          archivedDeptNote: reviewStatus === 'archived' ? archivedDeptNote : ''
         })
       });
 
@@ -1262,6 +1265,8 @@ https://wa.me/966537375580
         return <span className="bg-purple-50 text-purple-600 text-xs font-bold px-3 py-1.5 rounded-lg border border-purple-100">مقابلة شخصية</span>;
       case 'waitlist':
         return <span className="bg-amber-50 text-amber-600 text-xs font-bold px-3 py-1.5 rounded-lg border border-amber-100">قائمة الانتظار</span>;
+      case 'archived':
+        return <span className="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200">الأرشيف</span>;
       default:
         return <span className="bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1.5 rounded-lg">{status}</span>;
     }
@@ -1477,6 +1482,11 @@ https://wa.me/966537375580
                 
                 <div className="flex flex-col items-center gap-3">
                   {getStatusBadge(selectedApplicant.status)}
+                  {selectedApplicant.status === 'archived' && selectedApplicant.archivedDeptNote && (
+                    <span className="bg-slate-100 text-slate-800 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200">
+                      القسم المفترض: <strong className="text-slate-900">{selectedApplicant.archivedDeptNote}</strong>
+                    </span>
+                  )}
                   {selectedApplicant.aiEvaluation && getRecBadge(selectedApplicant.aiEvaluation.recommendation)}
                 </div>
 
@@ -1930,8 +1940,24 @@ https://wa.me/966537375580
                           <option value="accepted">قبول مبدئي للتوظيف</option>
                           <option value="rejected">استبعاد ورفض الطلب</option>
                           <option value="waitlist">إرسال لقائمة الانتظار</option>
+                          <option value="archived">نقل إلى الأرشيف</option>
                         </select>
                       </div>
+
+                      {/* Archived Department Note */}
+                      {reviewStatus === 'archived' && (
+                        <div className="sm:col-span-3 text-right">
+                          <label className="block text-xs font-bold text-slate-300 mb-2">القسم المقترح لهذا الموظف/المتقدم بالأرشيف *</label>
+                          <input
+                            type="text"
+                            value={archivedDeptNote}
+                            onChange={(e) => setArchivedDeptNote(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 outline-none text-xs focus:border-orange-500"
+                            placeholder="مثال: قسم الأمن والسلامة، إدارة المشاريع، إدارة تقنية المعلومات..."
+                            required
+                          />
+                        </div>
+                      )}
 
                       {/* Reviewer Note */}
                       <div className="sm:col-span-3 text-right">
@@ -2204,7 +2230,7 @@ https://wa.me/966537375580
 
           {/* Dashboard Stats Panel Cards */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-4">
               
               {/* Card 1 */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-right">
@@ -2249,6 +2275,12 @@ https://wa.me/966537375580
               </div>
 
               {/* Card 8 */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-right">
+                <span className="text-slate-400 text-[10px] font-bold block mb-1">الأرشيف</span>
+                <span className="text-2xl font-black text-slate-500 font-mono">{stats.archived || 0}</span>
+              </div>
+
+              {/* Card 9 */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-right">
                 <span className="text-slate-400 text-[10px] font-bold block mb-1">متوسط درجة الذكاء</span>
                 <span className="text-2xl font-black text-orange-600 font-mono">{stats.averageAiScore} <span className="text-xs text-slate-400">/ 100</span></span>
@@ -2391,6 +2423,7 @@ https://wa.me/966537375580
                 <option value="accepted">مقبول</option>
                 <option value="rejected">مرفوض</option>
                 <option value="waitlist">قائمة الانتظار</option>
+                <option value="archived">الأرشيف</option>
               </select>
 
               {/* Experience filter */}
@@ -2405,19 +2438,18 @@ https://wa.me/966537375580
                 <option value="senior">خبرة متقدمة (أكثر من 5 سنوات)</option>
               </select>
 
-              {/* Certificates Filter */}
+              {/* Manual Score Range Filter */}
               <select
-                value={certFilter}
-                onChange={(e) => setCertFilter(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none text-xs bg-white"
+                value={hrScoreFilter}
+                onChange={(e) => setHrScoreFilter(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none text-xs bg-white font-semibold"
               >
-                <option value="all">تصفية حسب الشهادة الفنية</option>
-                <option value="nebosh">حاصل على NEBOSH IGC</option>
-                <option value="osha">حاصل على OSHA</option>
-                <option value="iso45001">حاصل على ISO 45001</option>
-                <option value="hazop">حاصل على HAZOP</option>
-                <option value="hazmat">حاصل على HAZMAT</option>
-                <option value="confinedSpace">حاصل على Confined Space</option>
+                <option value="all">درجة التقييم اليدوي: الكل</option>
+                <option value="90-100">ممتاز (90 فأعلى)</option>
+                <option value="80-89">جيد جداً (80 - 89)</option>
+                <option value="70-79">جيد (70 - 79)</option>
+                <option value="60-69">مقبول (60 - 69)</option>
+                <option value="under-60">ضعيف (أقل من 60)</option>
               </select>
 
               {/* Manual HR Evaluation filter */}
@@ -2467,7 +2499,7 @@ https://wa.me/966537375580
                       <th className="p-4">اسم المتقدم</th>
                       <th className="p-4">الجوال</th>
                       <th className="p-4 text-center">الخبرة (سنة)</th>
-                      <th className="p-4 text-center">الشهادات</th>
+                      <th className="p-4 text-center">التقييم اليدوي</th>
                       <th className="p-4 text-center">الدرجة الذكية</th>
                       <th className="p-4 text-center">التوصية التلقائية</th>
                       <th className="p-4 text-center">الحالة</th>
@@ -2482,8 +2514,19 @@ https://wa.me/966537375580
                         <td className="p-4 font-bold text-slate-950">{a.personalInfo.fullName}</td>
                         <td className="p-4 font-mono ltr text-right">{a.personalInfo.phone}</td>
                         <td className="p-4 text-center font-bold text-slate-700">{a.personalInfo.experienceYears}</td>
-                        <td className="p-4 text-center font-bold text-slate-500 font-mono">
-                          {getCertCount(a.certificates)} / 12
+                        <td className="p-4 text-center">
+                          {a.hrEvaluation ? (
+                            <span className={`font-mono font-black text-sm px-2.5 py-1 rounded-lg ${
+                              a.hrEvaluation.finalScore >= 90 ? 'text-emerald-600 bg-emerald-50 border border-emerald-100' :
+                              a.hrEvaluation.finalScore >= 80 ? 'text-teal-600 bg-teal-50 border border-teal-100' :
+                              a.hrEvaluation.finalScore >= 70 ? 'text-orange-600 bg-orange-50 border border-orange-100' :
+                              'text-rose-600 bg-rose-50 border border-rose-100'
+                            }`}>
+                              {a.hrEvaluation.finalScore} / 100
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-xs font-semibold">غير مقيم ⏳</span>
+                          )}
                         </td>
                         <td className="p-4 text-center">
                           <span className={`font-mono font-black text-sm px-2.5 py-1 rounded-lg ${

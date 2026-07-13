@@ -46,7 +46,10 @@ function mapApplicantToSupabase(applicant: Applicant) {
     id: applicant.id,
     status: applicant.status,
     created_at: applicant.createdAt,
-    personal_info: applicant.personalInfo,
+    personal_info: {
+      ...applicant.personalInfo,
+      archivedDeptNote: applicant.archivedDeptNote || null
+    },
     industry_experience: applicant.industryExperience,
     certificates: applicant.certificates,
     exam_answers: applicant.examAnswers,
@@ -72,7 +75,8 @@ function mapSupabaseToApplicant(row: any): Applicant {
     examAnswers: row.exam_answers,
     aiEvaluation: row.ai_evaluation || undefined,
     hrEvaluation: hasRealEval ? row.hr_evaluation : undefined,
-    interviewSchedule: row.hr_evaluation?.interviewSchedule || undefined
+    interviewSchedule: row.hr_evaluation?.interviewSchedule || undefined,
+    archivedDeptNote: row.personal_info?.archivedDeptNote || undefined
   };
 }
 
@@ -156,6 +160,18 @@ async function syncDatabase() {
   try {
     if (fs.existsSync(DB_FILE)) {
       localApplicants = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+      // Filter out test/seed applicants
+      const idsToDelete = [
+        "HSE-2026-001", "HSE-2026-0001", "HSE-2026-0002", "HSE-2026-0003", "HSE-2026-0004",
+        "HSE-2026-0005", "HSE-2026-0006", "HSE-2026-0007", "HSE-2026-0008", "HSE-2026-0009",
+        "HSE-2026-0010", "HSE-2026-0011", "HSE-2026-0012"
+      ];
+      const initialLength = localApplicants.length;
+      localApplicants = localApplicants.filter(a => !idsToDelete.includes(a.id));
+      if (localApplicants.length !== initialLength) {
+        console.log(`Filtered out ${initialLength - localApplicants.length} test applicants locally.`);
+        fs.writeFileSync(DB_FILE, JSON.stringify(localApplicants, null, 2), "utf8");
+      }
     }
   } catch (err) {
     console.error("Error reading local applicants file:", err);
@@ -164,6 +180,26 @@ async function syncDatabase() {
   if (useSupabase && supabase) {
     try {
       console.log("Synchronizing with cloud Supabase...");
+      
+      // Clean up test/seed applicants from Supabase
+      const idsToDelete = [
+        "HSE-2026-001", "HSE-2026-0001", "HSE-2026-0002", "HSE-2026-0003", "HSE-2026-0004",
+        "HSE-2026-0005", "HSE-2026-0006", "HSE-2026-0007", "HSE-2026-0008", "HSE-2026-0009",
+        "HSE-2026-0010", "HSE-2026-0011", "HSE-2026-0012"
+      ];
+      try {
+        const { error: deleteErr } = await supabase
+          .from("applicants")
+          .delete()
+          .in("id", idsToDelete);
+        if (deleteErr) {
+          console.error("Failed to delete test applicants from Supabase:", deleteErr);
+        } else {
+          console.log("Successfully ran deletion of test/seed applicants from Supabase.");
+        }
+      } catch (err) {
+        console.error("Failed to delete test applicants from Supabase:", err);
+      }
       
       // Load admins from Supabase
       const { data: supabaseAdmins, error: adminsErr } = await supabase
@@ -1401,6 +1437,7 @@ app.get("/api/admin/stats", requireAdmin, (req, res) => {
   const rejected = applicants.filter(a => a.status === "rejected").length;
   const interview = applicants.filter(a => a.status === "interview").length;
   const waitlist = applicants.filter(a => a.status === "waitlist").length;
+  const archived = applicants.filter(a => a.status === "archived").length;
   
   const aiScores = applicants.filter(a => a.aiEvaluation).map(a => a.aiEvaluation!.score);
   const averageAiScore = aiScores.length > 0 ? Math.round(aiScores.reduce((sum, s) => sum + s, 0) / aiScores.length) : 0;
@@ -1413,6 +1450,7 @@ app.get("/api/admin/stats", requireAdmin, (req, res) => {
     rejected,
     interview,
     waitlist,
+    archived,
     averageAiScore,
     databaseType: useSupabase ? "Supabase" : "Local",
     isSupabaseConnected: useSupabase,
@@ -1424,7 +1462,7 @@ app.get("/api/admin/stats", requireAdmin, (req, res) => {
 app.get("/api/admin/applicants", requireAdmin, (req, res) => {
   let applicants = readDB();
   
-  const { search, status, experience, hasCert, sortBy, sortOrder, manualEval } = req.query;
+  const { search, status, experience, hrScore, sortBy, sortOrder, manualEval } = req.query;
   
   // Apply search
   if (search) {
@@ -1453,10 +1491,19 @@ app.get("/api/admin/applicants", requireAdmin, (req, res) => {
     }
   }
 
-  // Filter by certificates (if has certain certificates)
-  if (hasCert && hasCert !== "all") {
-    const certKey = String(hasCert) as keyof typeof applicants[0]["certificates"];
-    applicants = applicants.filter(a => a.certificates[certKey] === true);
+  // Filter by manual evaluation score range
+  if (hrScore && hrScore !== "all") {
+    const scoreVal = String(hrScore);
+    applicants = applicants.filter(a => {
+      const score = a.hrEvaluation?.finalScore;
+      if (score === undefined) return false;
+      if (scoreVal === "90-100") return score >= 90;
+      if (scoreVal === "80-89") return score >= 80 && score < 90;
+      if (scoreVal === "70-79") return score >= 70 && score < 80;
+      if (scoreVal === "60-69") return score >= 60 && score < 70;
+      if (scoreVal === "under-60") return score < 60;
+      return true;
+    });
   }
 
   // Filter by manual evaluation status
@@ -1508,7 +1555,7 @@ app.get("/api/admin/applicants/:id", requireAdmin, (req, res) => {
 
 // 6. Update Applicant Status or Human Resource Review
 app.patch("/api/admin/applicants/:id/review", requireAdmin, async (req, res) => {
-  const { status, hrEvaluation, interviewSchedule, personalInfo } = req.body;
+  const { status, hrEvaluation, interviewSchedule, personalInfo, archivedDeptNote } = req.body;
   const applicants = readDB();
   const index = applicants.findIndex(a => a.id === req.params.id);
   
@@ -1518,6 +1565,10 @@ app.patch("/api/admin/applicants/:id/review", requireAdmin, async (req, res) => 
   
   if (status) {
     applicants[index].status = status;
+  }
+
+  if (archivedDeptNote !== undefined) {
+    applicants[index].archivedDeptNote = archivedDeptNote;
   }
 
   if (interviewSchedule !== undefined) {

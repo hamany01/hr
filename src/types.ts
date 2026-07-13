@@ -1,5 +1,5 @@
 // GitHub Sync: Minor update to trigger re-push
-export type ApplicationStatus = 'pending' | 'reviewing' | 'accepted' | 'rejected' | 'interview' | 'waitlist';
+export type ApplicationStatus = 'pending' | 'reviewing' | 'accepted' | 'rejected' | 'interview' | 'waitlist' | 'archived';
 
 export interface PersonalInfo {
   fullName: string;
@@ -134,6 +134,7 @@ export interface Applicant {
   aiEvaluation?: AiEvaluation;
   hrEvaluation?: HrEvaluation;
   interviewSchedule?: InterviewSchedule;
+  archivedDeptNote?: string;
 }
 
 export interface DashboardStats {
@@ -144,6 +145,7 @@ export interface DashboardStats {
   rejected: number;
   interview: number;
   waitlist: number;
+  archived: number;
   averageAiScore: number;
   databaseType?: "Supabase" | "Local";
   isSupabaseConnected?: boolean;
