@@ -3833,26 +3833,115 @@ https://wa.me/966537375580
                       </p>
                     </div>
 
-                    {/* Job ID Configuration */}
-                    <div className="bg-indigo-50/40 p-5 rounded-2xl border border-indigo-100/80 space-y-2">
-                      <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 justify-end">
-                        <span>رقم الوظيفة (Job ID):</span>
-                        <span className="text-indigo-500 font-bold">#</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={announcementId}
-                        onChange={(e) => {
-                          setAnnouncementId(e.target.value);
-                          try {
-                            safeStorage.setItem(getStorageKey('announcementId', settingsJobRole), e.target.value);
-                          } catch {}
-                        }}
-                        className="w-full border border-indigo-200/60 rounded-xl px-3 py-2.5 outline-none text-xs font-semibold font-mono text-left bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-sm"
-                        placeholder={settingsJobRole === 'hse' ? '20260706023116938' : 'MKT-2026-0010'}
-                      />
-                      <p className="text-[10px] text-slate-500 font-medium leading-relaxed text-right">
-                        💡 رقم الوظيفة المعروض في قوالب الإعلانات ليحل محل الرمز <span className="font-mono text-indigo-600 font-bold">{'{ID}'}</span>.
+                    {/* Job Variable Parameters & ID Configuration */}
+                    <div className="bg-indigo-50/40 p-5 rounded-3xl border border-indigo-100/70 space-y-4">
+                      <div className="flex items-center justify-between border-b border-indigo-150 pb-2">
+                        <span className="text-[10px] text-indigo-500 bg-indigo-100/70 px-2.5 py-0.5 rounded-full font-bold">تحديث فوري للمتغيرات النشطة</span>
+                        <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                          <span>التحكم في قيم المتغيرات الوظيفية النشطة:</span>
+                          <span className="text-indigo-500 font-bold">#</span>
+                        </label>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-right">
+                        {/* Title */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-600 block">المسمى الوظيفي {"{JOB}"}:</label>
+                          <input
+                            type="text"
+                            value={announcementTitle}
+                            onChange={(e) => {
+                              setAnnouncementTitle(e.target.value);
+                              try {
+                                safeStorage.setItem(getStorageKey('announcementTitle', settingsJobRole), e.target.value);
+                              } catch {}
+                            }}
+                            className="w-full border border-slate-200 rounded-xl px-2.5 py-2 outline-none text-xs bg-white focus:border-indigo-500 font-bold text-slate-850 shadow-sm"
+                          />
+                        </div>
+
+                        {/* ID */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-600 block">رقم الإعلان الوظيفي {"{ID}"}:</label>
+                          <input
+                            type="text"
+                            value={announcementId}
+                            onChange={(e) => {
+                              setAnnouncementId(e.target.value);
+                              try {
+                                safeStorage.setItem(getStorageKey('announcementId', settingsJobRole), e.target.value);
+                              } catch {}
+                            }}
+                            className="w-full border border-slate-200 rounded-xl px-2.5 py-2 outline-none text-xs bg-white focus:border-indigo-500 font-mono font-bold text-slate-850 text-left shadow-sm"
+                          />
+                        </div>
+
+                        {/* Date */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-600 block">تاريخ الإعلان {"{DATE}"}:</label>
+                          <input
+                            type="text"
+                            value={announcementDate}
+                            onChange={(e) => {
+                              setAnnouncementDate(e.target.value);
+                              try {
+                                safeStorage.setItem(getStorageKey('announcementDate', settingsJobRole), e.target.value);
+                              } catch {}
+                            }}
+                            className="w-full border border-slate-200 rounded-xl px-2.5 py-2 outline-none text-xs bg-white focus:border-indigo-500 font-semibold text-slate-850 shadow-sm"
+                          />
+                        </div>
+
+                        {/* Location */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-600 block">مقر العمل {"{LOCATION}"}:</label>
+                          <input
+                            type="text"
+                            value={announcementLocation}
+                            onChange={(e) => {
+                              setAnnouncementLocation(e.target.value);
+                              try {
+                                safeStorage.setItem(getStorageKey('announcementLocation', settingsJobRole), e.target.value);
+                              } catch {}
+                            }}
+                            className="w-full border border-slate-200 rounded-xl px-2.5 py-2 outline-none text-xs bg-white focus:border-indigo-500 font-semibold text-slate-850 shadow-sm"
+                          />
+                        </div>
+
+                        {/* Salary */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-600 block">الراتب شهرياً {"{SALARY}"}:</label>
+                          <input
+                            type="text"
+                            value={announcementSalary}
+                            onChange={(e) => {
+                              setAnnouncementSalary(e.target.value);
+                              try {
+                                safeStorage.setItem(getStorageKey('announcementSalary', settingsJobRole), e.target.value);
+                              } catch {}
+                            }}
+                            className="w-full border border-slate-200 rounded-xl px-2.5 py-2 outline-none text-xs bg-white focus:border-indigo-500 font-semibold text-slate-850 shadow-sm"
+                          />
+                        </div>
+
+                        {/* Hours */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-600 block">ساعات العمل والأيام {"{HOURS}"}:</label>
+                          <input
+                            type="text"
+                            value={announcementHours}
+                            onChange={(e) => {
+                              setAnnouncementHours(e.target.value);
+                              try {
+                                safeStorage.setItem(getStorageKey('announcementHours', settingsJobRole), e.target.value);
+                              } catch {}
+                            }}
+                            className="w-full border border-slate-200 rounded-xl px-2.5 py-2 outline-none text-xs bg-white focus:border-indigo-500 font-semibold text-slate-850 shadow-sm"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium leading-relaxed text-right pt-1">
+                        💡 سيتم استبدال هذه المتغيرات فوراً في قوالب رسائل دعوة المقابلة والرفض والإعلان العام لتسريع عملية التواصل والتنسيق مع المرشحين.
                       </p>
                     </div>
 
@@ -3910,6 +3999,12 @@ https://wa.me/966537375580
                             safeStorage.setItem(getStorageKey('rejectionTemplate', settingsJobRole), rejectionTemplate);
                             safeStorage.setItem(getStorageKey('announcementTemplate', settingsJobRole), announcementTemplate);
                             safeStorage.setItem(getStorageKey('defaultMeetingLink', settingsJobRole), defaultMeetingLink);
+                            safeStorage.setItem(getStorageKey('announcementTitle', settingsJobRole), announcementTitle);
+                            safeStorage.setItem(getStorageKey('announcementId', settingsJobRole), announcementId);
+                            safeStorage.setItem(getStorageKey('announcementDate', settingsJobRole), announcementDate);
+                            safeStorage.setItem(getStorageKey('announcementSalary', settingsJobRole), announcementSalary);
+                            safeStorage.setItem(getStorageKey('announcementHours', settingsJobRole), announcementHours);
+                            safeStorage.setItem(getStorageKey('announcementLocation', settingsJobRole), announcementLocation);
                             setTemplatesSaved(true);
                             setTimeout(() => setTemplatesSaved(false), 3000);
                           } catch (e) {

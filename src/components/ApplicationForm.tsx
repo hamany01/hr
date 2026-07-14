@@ -1286,7 +1286,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
       {currentStep === 2 && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" id="step-2-experience">
           <div className="bg-white text-slate-800 p-6 md:p-8 border-b border-slate-200">
-            <h3 className="text-lg md:text-xl font-bold text-blue-900 mb-1 font-sans">الخطوة الثانية: الخبرات المهنية المهنية التخصصية والشهادات</h3>
+            <h3 className="text-lg md:text-xl font-bold text-blue-900 mb-1 font-sans">الخطوة الثانية: الخبرات المهنية التخصصية والشهادات</h3>
             <p className="text-xs text-slate-400 font-medium">
               {jobRole === 'marketing' 
                 ? 'نبحث بشكل مركز عن الخبرات التسويقية والمهارات الرقمية والاعتمادات الرسمية. يرجى تحديد خبراتك وإثبات مهاراتك.'
@@ -1303,7 +1303,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                   : 'هل تملك خبرات عمل في القطاعات الصناعية التالية؟'}
               </h4>
               <div className="space-y-6">
-                
+
                 {/* Paint Factory */}
                 <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30">
                   <label className="flex items-start gap-3.5 cursor-pointer group mb-4">
@@ -1402,10 +1402,10 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                     </div>
                     <div>
                       <h5 className="font-bold text-slate-800 group-hover:text-slate-950">
-                        {jobRole === 'marketing' ? 'خبرة في التسويق الرقمي وإدارة قنوات التواصل وصناعة المحتوى' : 'لقد سبق لي العمل في مصانع للمواد الكيميائية أو البتروكيماويات'}
+                        {jobRole === 'marketing' ? 'خبرة في التسويق الرقمي وإدارة قنوات التواصل وصناعة المحتوى' : 'لقد سبق لي العمل في مصانع للصناعات الكيماوية والمواد الخطرة'}
                       </h5>
                       <p className="text-xs text-slate-500">
-                        {jobRole === 'marketing' ? 'حدد هذا الخيار إذا كان لديك خبرة عملية في كتابة المحتوى، إطلاق الحملات الممولة، إدارة السوشيال ميديا وتوليد العملاء.' : 'حدد هذا الخيار إذا كان لديك خبرة مباشرة مع المواد الكيميائية السائلة، الغازية، التخزين المعقد، وإجراءات السلامة للمواد الخطرة.'}
+                        {jobRole === 'marketing' ? 'حدد هذا الخيار إذا كان لديك خبرة تسويقية في إدارة الإعلانات الرقمية، أو إدارة حسابات التواصل الاجتماعي، أو كتابة وتصميم المحتوى الإبداعي.' : 'حدد هذا الخيار إذا كنت قد عملت في مصانع للكيماويات، المنظفات، الغازات، المواد القابلة للاشتعال أو المتفجرة وتعرف إجراءات الوقاية المناسبة لها.'}
                       </p>
                     </div>
                   </label>
@@ -1414,7 +1414,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-200/60 pt-4 mt-2">
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">
-                          {jobRole === 'marketing' ? 'اسم الوكالة التسويقية / المنشأة *' : 'اسم المصنع الكيميائي *'}
+                          {jobRole === 'marketing' ? 'اسم الجهة / الشركة التي عملت لصالحها *' : 'اسم المصنع الكيماوي *'}
                         </label>
                         <input
                           type="text"
@@ -1422,7 +1422,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           value={industryExperience.chemicalCompany || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, chemicalCompany: e.target.value }))}
                           className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
-                          placeholder={jobRole === 'marketing' ? 'اسم الوكالة أو الشركة' : 'اسم الشركة'}
+                          placeholder={jobRole === 'marketing' ? 'وكالة تسويق رقمي / شركة تجارية' : 'اسم المصنع الكيماوي'}
                         />
                       </div>
                       <div>
@@ -1437,7 +1437,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">
-                          {jobRole === 'marketing' ? 'المسمى الوظيفي الرقمي لديك *' : 'المسمى الوظيفي لديك *'}
+                          {jobRole === 'marketing' ? 'المسمى الوظيفي التسويقي لديك *' : 'المسمى الوظيفي لديك *'}
                         </label>
                         <input
                           type="text"
@@ -1445,19 +1445,19 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           value={industryExperience.chemicalRole || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, chemicalRole: e.target.value }))}
                           className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
-                          placeholder={jobRole === 'marketing' ? 'صانع محتوى / مدير حملات ممولة' : 'مهندس سلامة بيئية'}
+                          placeholder={jobRole === 'marketing' ? 'أخصائي تسويق / كاتب محتوى' : 'أخصائي سلامة كيميائية'}
                         />
                       </div>
                       <div className="md:col-span-3">
                         <label className="block text-xs font-bold text-slate-600 mb-1">
-                          {jobRole === 'marketing' ? 'أبرز الحملات وقنوات التواصل التي أدرتها ومؤشراتها' : 'أبرز مسؤولياتك وإنجازاتك في المصنع'}
+                          {jobRole === 'marketing' ? 'أبرز مسؤولياتك وإنجازاتك التسويقية هناك' : 'أبرز مسؤولياتك وإنجازاتك هناك'}
                         </label>
                         <textarea
                           rows={2}
                           value={industryExperience.chemicalTasks || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, chemicalTasks: e.target.value }))}
                           className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none resize-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
-                          placeholder={jobRole === 'marketing' ? 'كتابة محتوى، إطلاق إعلانات ممولة على قنوات التواصل، متابعة مؤشرات الأداء والـ KPIs...' : 'مراقبة انبعاثات الغازات الخطرة، تصاريح العمل الساخن، تطبيق معايير الـ SDS ومكافحة الانسكاب الكيماوي...'}
+                          placeholder={jobRole === 'marketing' ? 'إدارة الإعلانات، تحسين SEO، صناعة وتصميم المنشورات...' : 'الإشراف على المواد الخطرة، تطبيق صحائف SDS، إدارة الانسكابات...'}
                         />
                       </div>
                     </div>
@@ -1502,7 +1502,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           value={industryExperience.industrialCompany || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, industrialCompany: e.target.value }))}
                           className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
-                          placeholder={jobRole === 'marketing' ? 'مثال: مصنع جدة للدهانات' : 'اسم المصنع'}
+                          placeholder={jobRole === 'marketing' ? 'وكالة تسويق رقمي / شركة تجارية' : 'اسم المنشأة الصناعية'}
                         />
                       </div>
                       <div>
@@ -1517,7 +1517,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">
-                          {jobRole === 'marketing' ? 'مسمى دورك التنظيمي / الإداري *' : 'المسمى الوظيفي لديك *'}
+                          {jobRole === 'marketing' ? 'المسمى الوظيفي التسويقي لديك *' : 'المسمى الوظيفي لديك *'}
                         </label>
                         <input
                           type="text"
@@ -1525,19 +1525,19 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           value={industryExperience.industrialRole || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, industrialRole: e.target.value }))}
                           className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
-                          placeholder={jobRole === 'marketing' ? 'مسؤول تسجيل واعتمادات / منسق علاقات عامة' : 'مراقب / مشرف سلامة وصحة مهنية'}
+                          placeholder={jobRole === 'marketing' ? 'أخصائي تسويق / كاتب محتوى' : 'أخصائي سلامة صناعية'}
                         />
                       </div>
                       <div className="md:col-span-3">
                         <label className="block text-xs font-bold text-slate-600 mb-1">
-                          {jobRole === 'marketing' ? 'أبرز المنصات والاعتمادات التي قمت بالتسجيل فيها وإدارتها بنجاح' : 'أبرز مسؤولياتك وإنجازاتك هناك'}
+                          {jobRole === 'marketing' ? 'أبرز مسؤولياتك وإنجازاتك التسويقية هناك' : 'أبرز مسؤولياتك وإنجازاتك هناك'}
                         </label>
                         <textarea
                           rows={2}
                           value={industryExperience.industrialTasks || ''}
                           onChange={(e) => setIndustryExperience(prev => ({ ...prev, industrialTasks: e.target.value }))}
                           className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 outline-none resize-none focus:border-${jobRole === 'marketing' ? 'blue' : 'orange'}-500`}
-                          placeholder={jobRole === 'marketing' ? 'تسجيل في منصة اعتماد، إصدار شهادات سابر، تحديث ملف بلدي، تنسيق المستندات الرسمية...' : 'الإشراف على سلامة الآلات، مخاطر الكهرباء، الرافعات الشوكية، وتدريب العمال على الإخلاء...'}
+                          placeholder={jobRole === 'marketing' ? 'إدارة الإعلانات، تحسين SEO، صناعة وتصميم المنشورات...' : 'الإشراف على سلامة الآلات، مخاطر الكهرباء، الرافعات الشوكية، وتدريب العمال على الإخلاء...'}
                         />
                       </div>
                     </div>
@@ -1547,58 +1547,47 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               </div>
             </div>
 
-            {/* Certificates Checklist */}
-            <div className="border-t border-slate-100 pt-8">
-              <h4 className="text-lg font-bold text-slate-900 mb-2">
-                {jobRole === 'marketing' ? 'المهارات والقدرات والاعتمادات التسويقية' : 'الشهادات والدورات المهنية المعتمدة'}
-              </h4>
-              <p className="text-xs text-slate-500 mb-6">
-                {jobRole === 'marketing' 
-                  ? 'يرجى تحديد المهارات والمنصات التي تتقن العمل عليها وتملك بها سابق معرفة أو إثبات (يمكنك تحديد أكثر من خيار):' 
-                  : 'يرجى تحديد الشهادات المهنية المعتمدة والبرامج التدريبية المعتمدة التي حصلت عليها بالفعل وتملك إثباتاً لها:'}
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { key: 'nebosh', hse: 'NEBOSH IGC', mkt: 'كتابة المحتوى التسويقي والإبداعي (Copywriting)' },
-                  { key: 'osha', hse: 'OSHA 30-Hour', mkt: 'إدارة الحملات الإعلانية الممولة (Google, Meta, Snapchat)' },
-                  { key: 'iosh', hse: 'IOSH Managing Safely', mkt: 'تهيئة محركات البحث وتحسين الظهور (SEO/SEM)' },
-                  { key: 'iso45001', hse: 'ISO 45001 Lead Auditor', mkt: 'إعداد خطط التسويق الرقمي واستراتيجيات النمو' },
-                  { key: 'fireSafety', hse: 'Industrial Fire Safety (سلامة الحرائق)', mkt: 'إدارة منصات التواصل الاجتماعي والردود (Social Media)' },
-                  { key: 'firstAid', hse: 'First Aid (الإسعافات الأولية المعتمدة)', mkt: 'صناعة المحتوى المرئي وتصميم منشورات السوشيال ميديا' },
-                  { key: 'hazop', hse: 'HAZOP (دراسات المخاطر التشغيلية)', mkt: 'التسجيل في منصة اعتماد وإدارة المناقصات الحكومية' },
-                  { key: 'hazmat', hse: 'HAZMAT (التعامل مع المواد الخطرة)', mkt: 'التعامل مع منصة بلدي والاعتمادات البلدية' },
-                  { key: 'permitToWork', hse: 'Permit To Work (نظام تصاريح العمل)', mkt: 'التسجيل في منصة سابر وإصدار شهادات المطابقة والجمارك' },
-                  { key: 'workingAtHeights', hse: 'Working At Heights (العمل على المرتفعات)', mkt: 'التنسيق وإدارة العلاقات العامة والتنظيمية للشركات' },
-                  { key: 'confinedSpace', hse: 'Confined Space Entry (العمل في الأماكن المغلقة)', mkt: 'تحليل البيانات والتسويق الرقمي وإدارة مؤشرات الأداء (KPIs)' },
-                  { key: 'forkliftSafety', hse: 'Forklift Safety (سلامة الرافعات الشوكية)', mkt: 'إصدار التراخيص وعقود التشغيل والبلديات والأمانات' }
-                ].map((item) => {
-                  const isChecked = (certificates as any)[item.key];
-                  return (
-                    <label key={item.key} className="flex items-start gap-3 cursor-pointer group p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/20 hover:bg-slate-50/50 transition-all">
-                      <div className="relative flex items-center justify-center mt-0.5">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => setCertificates(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                          className="sr-only"
-                        />
-                        <div className={`w-5 h-5 rounded-lg border transition-all flex items-center justify-center ${
-                          isChecked 
-                            ? jobRole === 'marketing' ? 'bg-blue-600 border-blue-600 shadow-sm' : 'bg-orange-500 border-orange-500 shadow-sm' 
-                            : 'border-slate-300 group-hover:border-slate-400 bg-white'
-                        }`}>
-                          {isChecked && <Check className="w-3.5 h-3.5 text-white stroke-[3px]" />}
-                        </div>
+            {/* Certificates selection (only if Safety Inspector) */}
+            {jobRole !== 'marketing' && (
+              <div>
+                <h4 className="text-lg font-bold text-slate-900 mb-6 border-b border-slate-100 pb-2 font-sans">
+                  الشهادات المهنية والاعتمادات التي تحملها
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {[
+                    { id: 'nebosh', label: 'NEBOSH IGC' },
+                    { id: 'osha', label: 'OSHA 30-Hour' },
+                    { id: 'iosh', label: 'IOSH Managing Safely' },
+                    { id: 'iso45001', label: 'ISO 45001 Lead Auditor' },
+                    { id: 'fireSafety', label: 'Industrial Fire Safety' },
+                    { id: 'firstAid', label: 'First Aid & CPR' },
+                    { id: 'hazop', label: 'HAZOP' },
+                    { id: 'hazmat', label: 'HAZMAT' },
+                    { id: 'permitToWork', label: 'Permit To Work' },
+                    { id: 'workingAtHeights', label: 'Working At Heights' },
+                    { id: 'confinedSpace', label: 'Confined Space' },
+                    { id: 'forkliftSafety', label: 'Forklift Safety' }
+                  ].map((cert) => (
+                    <label key={cert.id} className="flex items-center gap-3 p-3.5 border border-slate-100 rounded-xl bg-slate-50/30 hover:bg-slate-50 cursor-pointer transition-all group">
+                      <input
+                        type="checkbox"
+                        checked={!!(certificates as any)[cert.id]}
+                        onChange={(e) => setCertificates(prev => ({ ...prev, [cert.id]: e.target.checked }))}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded border transition-all flex items-center justify-center ${
+                        (certificates as any)[cert.id]
+                          ? 'bg-orange-500 border-orange-500 text-white'
+                          : 'border-slate-300 bg-white group-hover:border-slate-400'
+                      }`}>
+                        {(certificates as any)[cert.id] && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </div>
-                      <span className="text-xs font-bold text-slate-700 select-none group-hover:text-slate-900 leading-relaxed">
-                        {jobRole === 'marketing' ? item.mkt : item.hse}
-                      </span>
+                      <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900">{cert.label}</span>
                     </label>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
 
@@ -1614,20 +1603,22 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
             <button
               onClick={handleNext}
               className={`text-white font-bold px-8 py-3 rounded-xl shadow-lg flex items-center gap-2 transition-all hover:gap-3 active:scale-95 ${
-                jobRole === 'marketing'
-                  ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10'
+                jobRole === 'marketing' 
+                  ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10' 
                   : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/10'
               }`}
+              id="step2-next-btn"
             >
-              الانتقال للخطوة التالية
+              المتابعة للخطوة التالية
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>
-
         </div>
       )}
 
-      {/* --- STEP 3: TECHNICAL EXAM / PORTFOLIO --- */}
+      
+
+{/* --- STEP 3: TECHNICAL EXAM / PORTFOLIO --- */}
       {currentStep === 3 && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" id="step-3-exam">
           <div className="bg-white text-slate-800 p-6 md:p-8 border-b border-slate-200">
