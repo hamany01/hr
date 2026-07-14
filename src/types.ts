@@ -36,6 +36,8 @@ export interface PersonalInfo {
   adminDocuments?: AdminDocument[];
   additionalDocuments?: AdminDocument[];
   jobRole?: JobRole;
+  isJeddahResident?: string; // 'yes' | 'no'
+  hasCarAndLicense?: string; // 'yes' | 'no'
 }
 
 export interface AdminDocument {

@@ -25,31 +25,91 @@ export default function Home({ onStartApply, onGoToAdmin }: HomeProps) {
 
         <div className="max-w-6xl mx-auto relative z-10">
           
-          {/* Job Selection Tabs */}
-          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-10 max-w-2xl mx-auto bg-slate-800/60 p-1.5 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
+          {/* Job Selection Title & Tabs */}
+          <div className="text-center mb-8">
+            <h3 className="text-xs md:text-sm font-bold text-slate-400 tracking-wider uppercase mb-3">اختر إحدى الوظائف الشاغرة للتقديم والاطلاع على التفاصيل:</h3>
+            <div className="w-24 h-1 bg-gradient-to-r from-orange-500 to-blue-600 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-12 max-w-3xl mx-auto">
+            {/* HSE Job Option */}
             <button
               onClick={() => setActiveTab('hse')}
-              className={`flex-1 flex items-center justify-center gap-2.5 py-3 px-5 rounded-xl font-bold text-xs md:text-sm transition-all ${
+              className={`group relative flex flex-col items-center sm:items-start text-right p-5 rounded-2xl border-2 transition-all duration-300 ${
                 activeTab === 'hse'
-                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                  ? 'bg-slate-800/90 border-orange-500 shadow-xl shadow-orange-500/10 scale-[1.02] ring-4 ring-orange-500/20 text-white'
+                  : 'bg-slate-800/40 border-slate-700/50 text-slate-300 hover:border-orange-500/50 hover:bg-slate-800/70 hover:scale-[1.01]'
               }`}
               id="tab-select-hse"
             >
-              <Shield className="w-4 h-4 shrink-0" />
-              أخصائي صحة وسلامة وبيئة (HSE)
+              {/* Highlight ribbon indicator */}
+              <div className={`absolute top-0 right-1/2 translate-x-1/2 sm:translate-x-0 sm:right-6 -translate-y-1/2 text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-widest transition-all ${
+                activeTab === 'hse' ? 'bg-orange-500 text-white shadow-md' : 'bg-slate-700 text-slate-300 group-hover:bg-orange-500 group-hover:text-white'
+              }`}>
+                إدارة الأمان والسلامة
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mt-2 w-full">
+                <div className={`p-3 rounded-xl transition-all duration-300 ${
+                  activeTab === 'hse' ? 'bg-orange-500 text-white rotate-6' : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-orange-400'
+                }`}>
+                  <Shield className="w-6 h-6 shrink-0 animate-pulse" />
+                </div>
+                <div className="text-center sm:text-right flex-1">
+                  <h4 className={`text-base md:text-lg font-black transition-all ${
+                    activeTab === 'hse' ? 'text-orange-400' : 'text-slate-200 group-hover:text-orange-400'
+                  }`}>
+                    أخصائي صحة وسلامة وبيئة (HSE)
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-1 font-light leading-relaxed">
+                    تأمين بيئة عمل آمنة، خالية من المخاطر الكيميائية والحرائق الصناعية.
+                  </p>
+                  <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-700 text-slate-300 rounded-md">دوام كامل</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-orange-500/10 text-orange-400 rounded-md">راتب حتى 6000 ريال</span>
+                  </div>
+                </div>
+              </div>
             </button>
+
+            {/* Marketing Job Option */}
             <button
               onClick={() => setActiveTab('marketing')}
-              className={`flex-1 flex items-center justify-center gap-2.5 py-3 px-5 rounded-xl font-bold text-xs md:text-sm transition-all ${
+              className={`group relative flex flex-col items-center sm:items-start text-right p-5 rounded-2xl border-2 transition-all duration-300 ${
                 activeTab === 'marketing'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                  ? 'bg-slate-800/90 border-blue-500 shadow-xl shadow-blue-500/10 scale-[1.02] ring-4 ring-blue-500/20 text-white'
+                  : 'bg-slate-800/40 border-slate-700/50 text-slate-300 hover:border-blue-500/50 hover:bg-slate-800/70 hover:scale-[1.01]'
               }`}
               id="tab-select-marketing"
             >
-              <Megaphone className="w-4 h-4 shrink-0" />
-              أخصائي تسويق (Marketing)
+              {/* Highlight ribbon indicator */}
+              <div className={`absolute top-0 right-1/2 translate-x-1/2 sm:translate-x-0 sm:right-6 -translate-y-1/2 text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-widest transition-all ${
+                activeTab === 'marketing' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-700 text-slate-300 group-hover:bg-blue-600 group-hover:text-white'
+              }`}>
+                إدارة التسويق والهوية الرقمية
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mt-2 w-full">
+                <div className={`p-3 rounded-xl transition-all duration-300 ${
+                  activeTab === 'marketing' ? 'bg-blue-600 text-white -rotate-6' : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-blue-400'
+                }`}>
+                  <Megaphone className="w-6 h-6 shrink-0" />
+                </div>
+                <div className="text-center sm:text-right flex-1">
+                  <h4 className={`text-base md:text-lg font-black transition-all ${
+                    activeTab === 'marketing' ? 'text-blue-400' : 'text-slate-200 group-hover:text-blue-400'
+                  }`}>
+                    أخصائي تسويق (Marketing)
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-1 font-light leading-relaxed">
+                    إدارة الحملات الرقمية، صناعة المحتوى، والاعتمادات الرسمية لدى الجهات.
+                  </p>
+                  <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-700 text-slate-300 rounded-md">دوام كامل</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-md">راتب 5500 ريال</span>
+                  </div>
+                </div>
+              </div>
             </button>
           </div>
 

@@ -52,7 +52,9 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
     portfolioFileName: '',
     portfolioBase64: '',
     additionalDocuments: [],
-    jobRole: jobRole
+    jobRole: jobRole,
+    isJeddahResident: 'no',
+    hasCarAndLicense: 'no'
   });
 
   // --- Step 2: Experience & Certifications ---
@@ -131,7 +133,9 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
         portfolioBase64: '',
         kawaderLicenseFileName: '',
         kawaderLicenseBase64: '',
-        jobRole: roleKey
+        jobRole: roleKey,
+        isJeddahResident: 'no',
+        hasCarAndLicense: 'no'
       }));
     }
     
@@ -345,54 +349,69 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
   // --- Form Validation Helpers ---
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
-    if (!personalInfo.fullName.trim()) {
-      newErrors.fullName = 'الاسم الكامل مطلوب';
-    } else if (personalInfo.fullName.trim().split(/\s+/).filter(Boolean).length < 2) {
-      newErrors.fullName = 'يرجى كتابة الاسم الثنائي على الأقل (الاسم واسم العائلة)';
-    }
+    const isMkt = jobRole === 'marketing';
 
-    if (!personalInfo.nationality.trim()) {
-      newErrors.nationality = 'الجنسية مطلوبة';
-    }
+    if (!isMkt) {
+      if (!personalInfo.fullName.trim()) {
+        newErrors.fullName = 'الاسم الكامل مطلوب';
+      } else if (personalInfo.fullName.trim().split(/\s+/).filter(Boolean).length < 2) {
+        newErrors.fullName = 'يرجى كتابة الاسم الثنائي على الأقل (الاسم واسم العائلة)';
+      }
 
-    if (!personalInfo.phone.trim()) {
-      newErrors.phone = 'رقم الجوال مطلوب';
-    } else if (!/^(05|5)\d{8}$/.test(personalInfo.phone.trim())) {
-      newErrors.phone = 'يجب إدخال رقم جوال سعودي صحيح يبدأ بـ 05 ويتكون من 10 أرقام';
-    }
+      if (!personalInfo.nationality.trim()) {
+        newErrors.nationality = 'الجنسية مطلوبة';
+      }
 
-    if (!personalInfo.email.trim()) {
-      newErrors.email = 'البريد الإلكتروني مطلوب';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email.trim())) {
-      newErrors.email = 'البريد الإلكتروني المدخل غير صحيح';
-    }
+      if (!personalInfo.phone.trim()) {
+        newErrors.phone = 'رقم الجوال مطلوب';
+      } else if (!/^(05|5)\d{8}$/.test(personalInfo.phone.trim())) {
+        newErrors.phone = 'يجب إدخال رقم جوال سعودي صحيح يبدأ بـ 05 ويتكون من 10 أرقام';
+      }
 
-    if (!personalInfo.city.trim()) {
-      newErrors.city = 'المدينة مطلوبة';
-    }
+      if (!personalInfo.email.trim()) {
+        newErrors.email = 'البريد الإلكتروني مطلوب';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email.trim())) {
+        newErrors.email = 'البريد الإلكتروني المدخل غير صحيح';
+      }
 
-    if (!personalInfo.residenceAddress.trim()) {
-      newErrors.residenceAddress = 'العنوان السكني التفصيلي مطلوب';
-    }
+      if (!personalInfo.city.trim()) {
+        newErrors.city = 'المدينة مطلوبة';
+      }
 
-    if (!personalInfo.major.trim()) {
-      newErrors.major = 'التخصص العلمي مطلوب';
-    }
+      if (!personalInfo.residenceAddress.trim()) {
+        newErrors.residenceAddress = 'العنوان السكني التفصيلي مطلوب';
+      }
 
-    if (!personalInfo.birthDate) {
-      newErrors.birthDate = 'تاريخ الميلاد مطلوب';
-    }
+      if (!personalInfo.major.trim()) {
+        newErrors.major = 'التخصص العلمي مطلوب';
+      }
 
-    if (!personalInfo.expectedSalary.trim()) {
-      newErrors.expectedSalary = 'الراتب المتوقع مطلوب';
-    }
+      if (!personalInfo.birthDate) {
+        newErrors.birthDate = 'تاريخ الميلاد مطلوب';
+      }
 
-    if (!personalInfo.cvBase64) {
-      newErrors.cv = 'ملف السيرة الذاتية (CV) بصيغة PDF مطلوب للتقديم';
-    }
+      if (!personalInfo.expectedSalary.trim()) {
+        newErrors.expectedSalary = 'الراتب المتوقع مطلوب';
+      }
 
-    if (personalInfo.hasKawaderLicense === 'yes' && !personalInfo.kawaderLicenseBase64) {
-      newErrors.kawaderLicense = 'يرجى تحميل ترخيص منصة كوادر لتأكيد إجابتك';
+      if (!personalInfo.cvBase64) {
+        newErrors.cv = 'ملف السيرة الذاتية (CV) بصيغة PDF مطلوب للتقديم';
+      }
+
+      if (personalInfo.hasKawaderLicense === 'yes' && !personalInfo.kawaderLicenseBase64) {
+        newErrors.kawaderLicense = 'يرجى تحميل ترخيص منصة كوادر لتأكيد إجابتك';
+      }
+    } else {
+      // For marketing, fields are optional. We only validate formats if value is provided.
+      if (personalInfo.fullName.trim() && personalInfo.fullName.trim().split(/\s+/).filter(Boolean).length < 2) {
+        newErrors.fullName = 'يرجى كتابة الاسم الثنائي على الأقل (الاسم واسم العائلة)';
+      }
+      if (personalInfo.phone.trim() && !/^(05|5)\d{8}$/.test(personalInfo.phone.trim())) {
+        newErrors.phone = 'يجب إدخال رقم جوال سعودي صحيح يبدأ بـ 05 ويتكون من 10 أرقام';
+      }
+      if (personalInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email.trim())) {
+        newErrors.email = 'البريد الإلكتروني المدخل غير صحيح';
+      }
     }
 
     setErrors(newErrors);
@@ -407,42 +426,46 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
   const validateStep2 = () => {
     const newErrors: Record<string, string> = {};
     const isMkt = jobRole === 'marketing';
-    if (industryExperience.workedInPaint) {
-      if (!industryExperience.paintCompany.trim()) {
-        newErrors.paintCompany = isMkt ? 'اسم شركة الدهانات / المنشأة الصناعية مطلوب' : 'اسم شركة الدهانات مطلوب';
+
+    if (!isMkt) {
+      if (industryExperience.workedInPaint) {
+        if (!industryExperience.paintCompany.trim()) {
+          newErrors.paintCompany = 'اسم شركة الدهانات مطلوب';
+        }
+        if (Number(industryExperience.paintYears) <= 0) newErrors.paintYears = 'عدد سنوات الخبرة مطلوب';
+        if (!industryExperience.paintRole.trim()) {
+          newErrors.paintRole = 'المسمى الوظيفي مطلوب';
+        }
+        if (!industryExperience.paintTasks.trim()) {
+          newErrors.paintTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+        }
       }
-      if (Number(industryExperience.paintYears) <= 0) newErrors.paintYears = 'عدد سنوات الخبرة مطلوب';
-      if (!industryExperience.paintRole.trim()) {
-        newErrors.paintRole = isMkt ? 'المسمى الوظيفي التسويقي مطلوب' : 'المسمى الوظيفي مطلوب';
+      if (industryExperience.workedInChemical) {
+        if (!industryExperience.chemicalCompany.trim()) {
+          newErrors.chemicalCompany = 'اسم شركة الصناعات الكيماوية مطلوب';
+        }
+        if (Number(industryExperience.chemicalYears) <= 0) newErrors.chemicalYears = 'عدد سنوات الخبرة مطلوب';
+        if (!industryExperience.chemicalRole.trim()) {
+          newErrors.chemicalRole = 'المسمى الوظيفي مطلوب';
+        }
+        if (!industryExperience.chemicalTasks.trim()) {
+          newErrors.chemicalTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+        }
       }
-      if (!industryExperience.paintTasks.trim()) {
-        newErrors.paintTasks = isMkt ? 'المهام والمسؤوليات التسويقية مطلوبة' : 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+      if (industryExperience.workedInIndustrial) {
+        if (!industryExperience.industrialCompany.trim()) {
+          newErrors.industrialCompany = 'اسم المنشأة الصناعية مطلوب';
+        }
+        if (Number(industryExperience.industrialYears) <= 0) newErrors.industrialYears = 'عدد سنوات الخبرة مطلوب';
+        if (!industryExperience.industrialRole.trim()) {
+          newErrors.industrialRole = 'المسمى الوظيفي مطلوب';
+        }
+        if (!industryExperience.industrialTasks.trim()) {
+          newErrors.industrialTasks = 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
+        }
       }
     }
-    if (industryExperience.workedInChemical) {
-      if (!industryExperience.chemicalCompany.trim()) {
-        newErrors.chemicalCompany = isMkt ? 'اسم الوكالة التسويقية / المنشأة مطلوب' : 'اسم شركة الصناعات الكيماوية مطلوب';
-      }
-      if (Number(industryExperience.chemicalYears) <= 0) newErrors.chemicalYears = 'عدد سنوات الخبرة مطلوب';
-      if (!industryExperience.chemicalRole.trim()) {
-        newErrors.chemicalRole = isMkt ? 'المسمى الوظيفي الرقمي مطلوب' : 'المسمى الوظيفي مطلوب';
-      }
-      if (!industryExperience.chemicalTasks.trim()) {
-        newErrors.chemicalTasks = isMkt ? 'أبرز الحملات وقنوات التواصل مطلوبة' : 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
-      }
-    }
-    if (industryExperience.workedInIndustrial) {
-      if (!industryExperience.industrialCompany.trim()) {
-        newErrors.industrialCompany = isMkt ? 'اسم الجهة / الشركة مطلوب' : 'اسم المنشأة الصناعية مطلوب';
-      }
-      if (Number(industryExperience.industrialYears) <= 0) newErrors.industrialYears = 'عدد سنوات الخبرة مطلوب';
-      if (!industryExperience.industrialRole.trim()) {
-        newErrors.industrialRole = isMkt ? 'مسمى دورك التنظيمي مطلوب' : 'المسمى الوظيفي مطلوب';
-      }
-      if (!industryExperience.industrialTasks.trim()) {
-        newErrors.industrialTasks = isMkt ? 'أبرز المنصات والاعتمادات مطلوبة' : 'المهام والمسؤوليات مطلوبة لتقييم عمق خبرتك';
-      }
-    }
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       alert("يرجى إكمال تفاصيل الخبرات المهنية التي قمت بتفعيلها أولاً.");
@@ -453,34 +476,27 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
   const validateStep3 = () => {
     const newErrors: Record<string, string> = {};
-    const questions = [
-      'q1_paint_risks', 'q2_hazard_vs_risk', 'q3_incident_investigation',
-      'q4_risk_assessment', 'q5_ppe_chemical', 'q6_sds_msds',
-      'q7_flammable_spill', 'q8_ppe_refusal', 'q9_daily_inspection',
-      'q10_safety_project'
-    ];
     
-    questions.forEach((q) => {
-      const ans = examAnswers[q as keyof ExamAnswers] || '';
-      if (ans.trim().length < 15) {
-        newErrors[q] = `الإجابة مطلوبة ويجب ألا تقل عن 15 حرفاً لضمان دقة التقييم الذكي`;
-      }
-    });
-
-    if (jobRole === 'marketing' && !personalInfo.portfolioBase64) {
-      newErrors.portfolioFile = 'يرجى تحميل ملف عينة من أعمالك السابقة لتأكيد تقديمك على الوظيفة';
+    // Answering questions is only mandatory for HSE role
+    if (jobRole !== 'marketing') {
+      const questions = [
+        'q1_paint_risks', 'q2_hazard_vs_risk', 'q3_incident_investigation',
+        'q4_risk_assessment', 'q5_ppe_chemical', 'q6_sds_msds',
+        'q7_flammable_spill', 'q8_ppe_refusal', 'q9_daily_inspection',
+        'q10_safety_project'
+      ];
+      
+      questions.forEach((q) => {
+        const ans = examAnswers[q as keyof ExamAnswers] || '';
+        if (ans.trim().length < 15) {
+          newErrors[q] = `الإجابة مطلوبة ويجب ألا تقل عن 15 حرفاً لضمان دقة التقييم الذكي`;
+        }
+      });
     }
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-      if (newErrors.portfolioFile && Object.keys(newErrors).length === 1) {
-        alert("يرجى تحميل ملف عينة من أعمالك السابقة (بورتفوليو) للمتابعة.");
-      } else {
-        alert(jobRole === 'marketing' 
-          ? "يرجى الإجابة على جميع أسئلة اختبار الجدارة بوضوح وبما لا يقل عن 15 حرفاً لكل سؤال، وتحميل ملف عينة أعمالك لتفعيل التقييم الذكي."
-          : "يرجى الإجابة على جميع أسئلة الاختبار الفني بوضوح وبما لا يقل عن 15 حرفاً لكل سؤال لتفعيل التقييم الذكي التلقائي."
-        );
-      }
+      alert("يرجى الإجابة على جميع أسئلة الاختبار الفني بوضوح وبما لا يقل عن 15 حرفاً لكل سؤال لتفعيل التقييم الذكي التلقائي.");
       return false;
     }
     return true;
@@ -628,17 +644,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Full Name */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">الاسم الكامل (ثلاثي أو رباعي) *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  الاسم الكامل (ثلاثي أو رباعي) {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
+                </label>
                 <input
                   type="text"
-                  required
+                  required={jobRole !== 'marketing'}
                   value={personalInfo.fullName}
                   onChange={(e) => {
                     setPersonalInfo(prev => ({ ...prev, fullName: e.target.value }));
                     if (errors.fullName) setErrors(prev => { const n = { ...prev }; delete n.fullName; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.fullName ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.fullName 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                   placeholder="أدخل اسمك الكامل كما في الهوية"
                 />
@@ -647,17 +669,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
               {/* Nationality */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">الجنسية *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  الجنسية {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
+                </label>
                 <input
                   type="text"
-                  required
+                  required={jobRole !== 'marketing'}
                   value={personalInfo.nationality}
                   onChange={(e) => {
                     setPersonalInfo(prev => ({ ...prev, nationality: e.target.value }));
                     if (errors.nationality) setErrors(prev => { const n = { ...prev }; delete n.nationality; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.nationality ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.nationality 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                   placeholder="مثال: سعودي"
                 />
@@ -670,7 +698,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <select
                   value={personalInfo.gender}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, gender: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all bg-white"
+                  className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all bg-white`}
                 >
                   <option value="male">ذكر</option>
                   <option value="female">أنثى</option>
@@ -679,17 +707,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
               {/* Birth Date */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">تاريخ الميلاد *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  تاريخ الميلاد {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
+                </label>
                 <input
                   type="date"
-                  required
+                  required={jobRole !== 'marketing'}
                   value={personalInfo.birthDate}
                   onChange={(e) => {
                     setPersonalInfo(prev => ({ ...prev, birthDate: e.target.value }));
                     if (errors.birthDate) setErrors(prev => { const n = { ...prev }; delete n.birthDate; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.birthDate ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.birthDate 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                 />
                 {errors.birthDate && <p className="text-red-500 text-xs font-bold mt-1">{errors.birthDate}</p>}
@@ -697,17 +731,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
               {/* City */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">مدينة الإقامة الحالية *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  مدينة الإقامة الحالية {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
+                </label>
                 <input
                   type="text"
-                  required
+                  required={jobRole !== 'marketing'}
                   value={personalInfo.city}
                   onChange={(e) => {
                     setPersonalInfo(prev => ({ ...prev, city: e.target.value }));
                     if (errors.city) setErrors(prev => { const n = { ...prev }; delete n.city; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.city ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.city 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                   placeholder="مثال: الجبيل، الرياض، جدة"
                 />
@@ -716,17 +756,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
               {/* Residence Address */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">عنوان السكن التفصيلي *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  عنوان السكن التفصيلي {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
+                </label>
                 <input
                   type="text"
-                  required
+                  required={jobRole !== 'marketing'}
                   value={personalInfo.residenceAddress}
                   onChange={(e) => {
                     setPersonalInfo(prev => ({ ...prev, residenceAddress: e.target.value }));
                     if (errors.residenceAddress) setErrors(prev => { const n = { ...prev }; delete n.residenceAddress; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.residenceAddress ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.residenceAddress 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                   placeholder="مثال: جدة، حي الصفا، شارع الأربعين"
                 />
@@ -735,17 +781,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
               {/* Phone */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">رقم الجوال النشط *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  رقم الجوال النشط {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
+                </label>
                 <input
                   type="tel"
-                  required
+                  required={jobRole !== 'marketing'}
                   value={personalInfo.phone}
                   onChange={(e) => {
                     setPersonalInfo(prev => ({ ...prev, phone: e.target.value }));
                     if (errors.phone) setErrors(prev => { const n = { ...prev }; delete n.phone; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.phone ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.phone 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                   placeholder="مثال: 05XXXXXXXX"
                 />
@@ -754,17 +806,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">البريد الإلكتروني *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  البريد الإلكتروني {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
+                </label>
                 <input
                   type="email"
-                  required
+                  required={jobRole !== 'marketing'}
                   value={personalInfo.email}
                   onChange={(e) => {
                     setPersonalInfo(prev => ({ ...prev, email: e.target.value }));
                     if (errors.email) setErrors(prev => { const n = { ...prev }; delete n.email; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.email ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.email 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                   placeholder="example@domain.com"
                 />
@@ -777,7 +835,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <select
                   value={personalInfo.qualification}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, qualification: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all bg-white"
+                  className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all bg-white`}
                 >
                   <option value="دبلوم">دبلوم</option>
                   <option value="بكالوريوس">بكالوريوس</option>
@@ -788,17 +846,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
               {/* Major */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">التخصص الدراسي الدقيق *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  التخصص الدراسي الدقيق {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
+                </label>
                 <input
                   type="text"
-                  required
+                  required={jobRole !== 'marketing'}
                   value={personalInfo.major}
                   onChange={(e) => {
                     setPersonalInfo(prev => ({ ...prev, major: e.target.value }));
                     if (errors.major) setErrors(prev => { const n = { ...prev }; delete n.major; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.major ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.major 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                   placeholder="مثال: الهندسة الكيميائية / سلامة مهنية"
                 />
@@ -807,7 +871,9 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
               {/* Experience Years */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">سنوات الخبرة في مجال السلامة (HSE) *</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  {jobRole === 'marketing' ? 'سنوات الخبرة في مجال التسويق *' : 'سنوات الخبرة في مجال السلامة (HSE) *'}
+                </label>
                 <input
                   type="number"
                   min={0}
@@ -815,7 +881,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                   required
                   value={personalInfo.experienceYears}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, experienceYears: parseInt(e.target.value, 10) || 0 }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all`}
                 />
               </div>
 
@@ -826,7 +892,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                   type="text"
                   value={personalInfo.currentCompany}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, currentCompany: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all`}
                   placeholder="اسم الشركة الحالية"
                 />
               </div>
@@ -838,7 +904,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                   type="text"
                   value={personalInfo.currentRole}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, currentRole: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all`}
                   placeholder="المسمى الوظيفي"
                 />
               </div>
@@ -850,7 +916,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                   type="text"
                   value={personalInfo.currentSalary}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, currentSalary: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                  className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all`}
                   placeholder="إذا لا توجد وظيفة ضع 0"
                 />
               </div>
@@ -866,8 +932,12 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                     setPersonalInfo(prev => ({ ...prev, expectedSalary: e.target.value }));
                     if (errors.expectedSalary) setErrors(prev => { const n = { ...prev }; delete n.expectedSalary; return n; });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${
-                    errors.expectedSalary ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-orange-500'
+                  className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
+                    errors.expectedSalary 
+                      ? 'border-red-500 bg-red-50/20' 
+                      : `border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
+                  } ${
+                    jobRole === 'marketing' ? 'focus:ring-blue-600/20' : 'focus:ring-orange-500/20'
                   }`}
                   placeholder="مثال: 12,000 ريال"
                 />
@@ -880,7 +950,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <select
                   value={personalInfo.noticePeriod}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, noticePeriod: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all bg-white"
+                  className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all bg-white`}
                 >
                   <option value="فوري">بدء فوري / بدون إشعار</option>
                   <option value="أسبوعين">أسبوعين</option>
@@ -899,7 +969,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                   type="url"
                   value={personalInfo.linkedinUrl}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, linkedinUrl: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ltr"
+                  className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} focus:ring-2 focus:ring-${jobRole === 'marketing' ? 'blue-600/20' : 'orange-500/20'} outline-none transition-all ltr`}
                   placeholder="https://linkedin.com/in/yourprofile"
                 />
               </div>
@@ -907,78 +977,184 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               {/* Additional Critical Questions */}
               <div className="border-t border-slate-100 pt-8 mt-4 md:col-span-3">
                 <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <ShieldCheck className="text-orange-500 w-4 h-4" />
-                  معلومات إضافية هامة للعمل بالمصنع
+                  <ShieldCheck className={`${jobRole === 'marketing' ? 'text-blue-600' : 'text-orange-500'} w-4 h-4`} />
+                  {jobRole === 'marketing' ? 'معلومات إضافية هامة للعمل بالإدارة' : 'معلومات إضافية هامة للعمل بالمصنع'}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
-                  {/* Owns Car */}
-                  <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
-                    <label className="block text-sm font-bold text-slate-700 mb-2">هل تملك سيارة خاصة؟ *</label>
-                    <div className="flex gap-6 mt-1">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="ownsCar"
-                          value="yes"
-                          checked={personalInfo.ownsCar === 'yes'}
-                          onChange={() => setPersonalInfo(prev => ({ ...prev, ownsCar: 'yes' }))}
-                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
-                        />
-                        <span className="text-xs font-semibold text-slate-800">نعم</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="ownsCar"
-                          value="no"
-                          checked={personalInfo.ownsCar === 'no'}
-                          onChange={() => setPersonalInfo(prev => ({ ...prev, ownsCar: 'no' }))}
-                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
-                        />
-                        <span className="text-xs font-semibold text-slate-800">لا</span>
-                      </label>
-                    </div>
-                  </div>
+                  {jobRole === 'marketing' ? (
+                    <>
+                      {/* Is Jeddah Resident */}
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 space-y-3">
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">هل أنت من سكان مدينة جدة؟ *</label>
+                          <div className="flex gap-6 mt-1">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="isJeddahResident"
+                                value="yes"
+                                checked={personalInfo.isJeddahResident === 'yes'}
+                                onChange={() => setPersonalInfo(prev => ({ ...prev, isJeddahResident: 'yes' }))}
+                                className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                              />
+                              <span className="text-xs font-semibold text-slate-800">نعم</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="isJeddahResident"
+                                value="no"
+                                checked={personalInfo.isJeddahResident === 'no'}
+                                onChange={() => setPersonalInfo(prev => ({ ...prev, isJeddahResident: 'no', hasCarAndLicense: 'no' }))}
+                                className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                              />
+                              <span className="text-xs font-semibold text-slate-800">لا</span>
+                            </label>
+                          </div>
+                        </div>
 
-                  {/* Location Issue */}
-                  <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
-                      هل لديك أي مشكلة في العمل بموقع المصنع هذا؟ *
-                      <a
-                        href="https://maps.app.goo.gl/1htzCJMahE5mh2AJA"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-orange-500 hover:underline text-xs mr-2 font-bold inline-block"
-                      >
-                        (موقع المصنع على الخريطة 🗺️)
-                      </a>
-                    </label>
-                    <div className="flex gap-6 mt-1">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="hasLocationIssue"
-                          value="yes"
-                          checked={personalInfo.hasLocationIssue === 'yes'}
-                          onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'yes' }))}
-                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
-                        />
-                        <span className="text-xs font-semibold text-slate-800">نعم (لدي مشكلة)</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="hasLocationIssue"
-                          value="no"
-                          checked={personalInfo.hasLocationIssue === 'no'}
-                          onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'no' }))}
-                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
-                        />
-                        <span className="text-xs font-semibold text-slate-800">لا (لا توجد مشكلة)</span>
-                      </label>
-                    </div>
-                  </div>
+                        {personalInfo.isJeddahResident === 'yes' && (
+                          <div className="border-t border-slate-200/60 pt-3 mt-2">
+                            <label className="block text-sm font-bold text-slate-700 mb-2">هل عندك سيارة ورخصة قيادة؟ *</label>
+                            <div className="flex gap-6 mt-1">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="hasCarAndLicense"
+                                  value="yes"
+                                  checked={personalInfo.hasCarAndLicense === 'yes'}
+                                  onChange={() => setPersonalInfo(prev => ({ ...prev, hasCarAndLicense: 'yes' }))}
+                                  className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                                />
+                                <span className="text-xs font-semibold text-slate-800">نعم (عندي رخصة وسيارة للتنقل)</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="hasCarAndLicense"
+                                  value="no"
+                                  checked={personalInfo.hasCarAndLicense === 'no'}
+                                  onChange={() => setPersonalInfo(prev => ({ ...prev, hasCarAndLicense: 'no' }))}
+                                  className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                                />
+                                <span className="text-xs font-semibold text-slate-800">لا</span>
+                              </label>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Location Issue (Admin Office map link for marketing) */}
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
+                        <label className="block text-sm font-bold text-slate-700 mb-2">
+                          هل لديك أي مشكلة في العمل بموقع الإدارة هذا؟ *
+                          <a
+                            href="https://maps.app.goo.gl/vwvTg73b6S1b26Si9"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-xs mr-2 font-bold inline-block"
+                          >
+                            (موقع الإدارة على الخريطة 🗺️)
+                          </a>
+                        </label>
+                        <div className="flex gap-6 mt-1">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="hasLocationIssue"
+                              value="yes"
+                              checked={personalInfo.hasLocationIssue === 'yes'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'yes' }))}
+                              className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">نعم (لدي مشكلة)</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="hasLocationIssue"
+                              value="no"
+                              checked={personalInfo.hasLocationIssue === 'no'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'no' }))}
+                              className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">لا (لا توجد مشكلة)</span>
+                          </label>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Owns Car */}
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
+                        <label className="block text-sm font-bold text-slate-700 mb-2">هل تملك سيارة خاصة؟ *</label>
+                        <div className="flex gap-6 mt-1">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="ownsCar"
+                              value="yes"
+                              checked={personalInfo.ownsCar === 'yes'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, ownsCar: 'yes' }))}
+                              className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">نعم</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="ownsCar"
+                              value="no"
+                              checked={personalInfo.ownsCar === 'no'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, ownsCar: 'no' }))}
+                              className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">لا</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Location Issue */}
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
+                        <label className="block text-sm font-bold text-slate-700 mb-2">
+                          هل لديك أي مشكلة في العمل بموقع المصنع هذا؟ *
+                          <a
+                            href="https://maps.app.goo.gl/1htzCJMahE5mh2AJA"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-orange-500 hover:underline text-xs mr-2 font-bold inline-block"
+                          >
+                            (موقع المصنع على الخريطة 🗺️)
+                          </a>
+                        </label>
+                        <div className="flex gap-6 mt-1">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="hasLocationIssue"
+                              value="yes"
+                              checked={personalInfo.hasLocationIssue === 'yes'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'yes' }))}
+                              className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">نعم (لدي مشكلة)</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="hasLocationIssue"
+                              value="no"
+                              checked={personalInfo.hasLocationIssue === 'no'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'no' }))}
+                              className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">لا (لا توجد مشكلة)</span>
+                          </label>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   {/* Health Issues */}
                   <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 md:col-span-2">
@@ -991,7 +1167,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           value="yes"
                           checked={personalInfo.hasHealthIssues === 'yes'}
                           onChange={() => setPersonalInfo(prev => ({ ...prev, hasHealthIssues: 'yes' }))}
-                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                          className={`w-4 h-4 ${jobRole === 'marketing' ? 'text-blue-600 focus:ring-blue-500' : 'text-orange-500 focus:ring-orange-500'} border-slate-300`}
                         />
                         <span className="text-xs font-semibold text-slate-800">نعم (أعاني من مشاكل صحية)</span>
                       </label>
@@ -1002,7 +1178,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           value="no"
                           checked={personalInfo.hasHealthIssues === 'no'}
                           onChange={() => setPersonalInfo(prev => ({ ...prev, hasHealthIssues: 'no' }))}
-                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                          className={`w-4 h-4 ${jobRole === 'marketing' ? 'text-blue-600 focus:ring-blue-500' : 'text-orange-500 focus:ring-orange-500'} border-slate-300`}
                         />
                         <span className="text-xs font-semibold text-slate-800">لا (سليم والحمد لله)</span>
                       </label>
@@ -1016,94 +1192,100 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           required
                           value={personalInfo.healthIssuesDetails || ''}
                           onChange={(e) => setPersonalInfo(prev => ({ ...prev, healthIssuesDetails: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all font-sans text-xs"
+                          className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 outline-none transition-all font-sans text-xs ${
+                            jobRole === 'marketing' 
+                              ? 'focus:border-blue-600 focus:ring-blue-600/20' 
+                              : 'focus:border-orange-500 focus:ring-orange-500/20'
+                          }`}
                           placeholder="مثال: حساسية شديدة من المركبات العضوية المتطايرة، ضيق تنفس..."
                         />
                       </div>
                     )}
                   </div>
 
-                  {/* Kawader Platform License Question */}
-                  <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 md:col-span-2 space-y-3">
-                    <label className="block text-sm font-bold text-slate-700">هل لديك ترخيص من منصة كوادر؟ *</label>
-                    <div className="flex gap-6 mt-1">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="hasKawaderLicense"
-                          value="yes"
-                          checked={personalInfo.hasKawaderLicense === 'yes'}
-                          onChange={() => {
-                            setPersonalInfo(prev => ({ ...prev, hasKawaderLicense: 'yes' }));
-                            if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
-                          }}
-                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
-                        />
-                        <span className="text-xs font-semibold text-slate-800">نعم (لدي ترخيص)</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="hasKawaderLicense"
-                          value="no"
-                          checked={personalInfo.hasKawaderLicense === 'no'}
-                          onChange={() => {
-                            setPersonalInfo(prev => ({ ...prev, hasKawaderLicense: 'no', kawaderLicenseFileName: '', kawaderLicenseBase64: '' }));
-                            if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
-                          }}
-                          className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
-                        />
-                        <span className="text-xs font-semibold text-slate-800">لا (لا يوجد ترخيص)</span>
-                      </label>
-                    </div>
-
-                    {personalInfo.hasKawaderLicense === 'yes' && (
-                      <div className="mt-3 bg-white p-4 rounded-xl border border-slate-200 space-y-2">
-                        <label className="block text-xs font-bold text-slate-600">يرجى تحميل ترخيص منصة كوادر المعتمد: *</label>
-                        {!personalInfo.kawaderLicenseFileName ? (
-                          <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group ${
-                            errors.kawaderLicense ? 'border-red-500 bg-red-50/10 animate-pulse' : 'border-slate-200 hover:border-orange-500'
-                          }`}>
-                            <input
-                              type="file"
-                              accept=".pdf,image/*"
-                              onChange={(e) => {
-                                handleFileUpload(e, 'kawader');
-                                if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
-                              }}
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                              id="upload-kawader-license"
-                            />
-                            <Upload className="w-6 h-6 text-slate-400 group-hover:text-orange-500 mx-auto mb-2 transition-colors" />
-                            <p className="text-xs font-bold text-slate-700 group-hover:text-orange-600 transition-colors">اسحب وأفلت ترخيص كوادر أو انقر هنا للرفع</p>
-                            <p className="text-[10px] text-slate-400 mt-1">المدعوم: PDF أو صور (بحد أقصى 10 ميجابايت)</p>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between p-3 border border-emerald-200 bg-emerald-50 rounded-xl">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="bg-emerald-500 p-1.5 rounded-lg text-white shrink-0">
-                                <CheckCircle className="w-4 h-4" />
-                              </div>
-                              <div className="text-right min-w-0">
-                                <p className="text-xs font-bold text-slate-800 truncate max-w-[200px] sm:max-w-xs">{personalInfo.kawaderLicenseFileName}</p>
-                                <p className="text-[10px] text-emerald-600 font-medium">تم التحميل بنجاح</p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeUploadedFile('kawader')}
-                              className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all shrink-0"
-                              title="حذف الملف"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-                        {errors.kawaderLicense && <p className="text-red-500 text-xs font-bold mt-1">{errors.kawaderLicense}</p>}
+                  {/* Kawader Platform License Question (Safety Inspector only) */}
+                  {jobRole !== 'marketing' && (
+                    <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 md:col-span-2 space-y-3">
+                      <label className="block text-sm font-bold text-slate-700">هل لديك ترخيص من منصة كوادر؟ *</label>
+                      <div className="flex gap-6 mt-1">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="hasKawaderLicense"
+                            value="yes"
+                            checked={personalInfo.hasKawaderLicense === 'yes'}
+                            onChange={() => {
+                              setPersonalInfo(prev => ({ ...prev, hasKawaderLicense: 'yes' }));
+                              if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
+                            }}
+                            className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                          />
+                          <span className="text-xs font-semibold text-slate-800">نعم (لدي ترخيص)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="hasKawaderLicense"
+                            value="no"
+                            checked={personalInfo.hasKawaderLicense === 'no'}
+                            onChange={() => {
+                              setPersonalInfo(prev => ({ ...prev, hasKawaderLicense: 'no', kawaderLicenseFileName: '', kawaderLicenseBase64: '' }));
+                              if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
+                            }}
+                            className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                          />
+                          <span className="text-xs font-semibold text-slate-800">لا (لا يوجد ترخيص)</span>
+                        </label>
                       </div>
-                    )}
 
-                  </div>
+                      {personalInfo.hasKawaderLicense === 'yes' && (
+                        <div className="mt-3 bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+                          <label className="block text-xs font-bold text-slate-600">يرجى تحميل ترخيص منصة كوادر المعتمد: *</label>
+                          {!personalInfo.kawaderLicenseFileName ? (
+                            <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group ${
+                              errors.kawaderLicense ? 'border-red-500 bg-red-50/10 animate-pulse' : 'border-slate-200 hover:border-orange-500'
+                            }`}>
+                              <input
+                                type="file"
+                                accept=".pdf,image/*"
+                                onChange={(e) => {
+                                  handleFileUpload(e, 'kawader');
+                                  if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                id="upload-kawader-license"
+                              />
+                              <Upload className="w-6 h-6 text-slate-400 group-hover:text-orange-500 mx-auto mb-2 transition-colors" />
+                              <p className="text-xs font-bold text-slate-700 group-hover:text-orange-600 transition-colors">اسحب وأفلت ترخيص كوادر أو انقر هنا للرفع</p>
+                              <p className="text-[10px] text-slate-400 mt-1">المدعوم: PDF أو صور (بحد أقصى 10 ميجابايت)</p>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between p-3 border border-emerald-200 bg-emerald-50 rounded-xl">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="bg-emerald-500 p-1.5 rounded-lg text-white shrink-0">
+                                  <CheckCircle className="w-4 h-4" />
+                                </div>
+                                <div className="text-right min-w-0">
+                                  <p className="text-xs font-bold text-slate-800 truncate max-w-[200px] sm:max-w-xs">{personalInfo.kawaderLicenseFileName}</p>
+                                  <p className="text-[10px] text-emerald-600 font-medium">تم التحميل بنجاح</p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeUploadedFile('kawader')}
+                                className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all shrink-0"
+                                title="حذف الملف"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                          {errors.kawaderLicense && <p className="text-red-500 text-xs font-bold mt-1">{errors.kawaderLicense}</p>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
               </div>
             </div>
@@ -1116,12 +1298,14 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 {/* CV File Input */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-baseline flex-wrap gap-1">
-                    <label className="block text-sm font-bold text-slate-700">السيرة الذاتية (ملف PDF حديث) *</label>
-                    <span className="text-[11px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md">يفضل السيرة الذاتية باللغة العربية 🇸🇦</span>
+                    <label className="block text-sm font-bold text-slate-700">
+                      السيرة الذاتية (ملف PDF حديث) {jobRole === 'marketing' ? ' [اختياري]' : ' *'}
+                    </label>
+                    <span className={`text-[11px] font-bold ${jobRole === 'marketing' ? 'text-blue-600 bg-blue-50' : 'text-orange-600 bg-orange-50'} px-2 py-0.5 rounded-md`}>يفضل السيرة الذاتية باللغة العربية 🇸🇦</span>
                   </div>
                   {!personalInfo.cvFileName ? (
                     <div className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group ${
-                      errors.cv ? 'border-red-500 bg-red-50/10 animate-pulse' : 'border-slate-200 hover:border-orange-500'
+                      errors.cv ? 'border-red-500 bg-red-50/10 animate-pulse' : `border-slate-200 hover:border-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'}`
                     }`}>
                       <input
                         type="file"
@@ -1133,8 +1317,8 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         id="upload-cv-file"
                       />
-                      <Upload className="w-10 h-10 text-slate-400 group-hover:text-orange-500 mx-auto mb-3 transition-colors" />
-                      <p className="text-sm font-bold text-slate-700 group-hover:text-orange-600 transition-colors">اسحب وأفلت السيرة الذاتية أو انقر هنا للرفع</p>
+                      <Upload className={`w-10 h-10 text-slate-400 group-hover:text-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} mx-auto mb-3 transition-colors`} />
+                      <p className={`text-sm font-bold text-slate-700 group-hover:text-${jobRole === 'marketing' ? 'blue-600' : 'orange-500'} transition-colors`}>اسحب وأفلت السيرة الذاتية أو انقر هنا للرفع</p>
                       <p className="text-xs text-slate-400 mt-1">المستند المدعوم: PDF فقط (بحد أقصى 10 ميجابايت)</p>
                     </div>
                   ) : (
@@ -1789,7 +1973,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                     {item.id === 'q10_safety_project' && jobRole === 'marketing' && (
                       <div className="mt-4 border-t border-slate-100 pt-4">
                         <label className="block text-xs font-bold text-slate-600 mb-2">
-                          رفع ملف عينة الأعمال أو الملف التعريفي (PDF أو صور - بحد أقصى 10 ميغابايت) *
+                          رفع ملف عينة الأعمال أو الملف التعريفي (PDF أو صور - بحد أقصى 10 ميغابايت) [اختياري]
                         </label>
                         <div className="flex items-center gap-3">
                           <label className="cursor-pointer flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all">
