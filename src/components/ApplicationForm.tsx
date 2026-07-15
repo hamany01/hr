@@ -54,7 +54,9 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
     additionalDocuments: [],
     jobRole: jobRole,
     isJeddahResident: '',
-    hasCarAndLicense: ''
+    hasCarAndLicense: '',
+    interviewPreference: '',
+    interviewPreferenceReason: ''
   });
 
   // --- Step 2: Experience & Certifications ---
@@ -572,22 +574,20 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
   const validateStep3 = () => {
     const newErrors: Record<string, string> = {};
     
-    // Answering questions is only mandatory for HSE role
-    if (jobRole !== 'marketing') {
-      const questions = [
-        'q1_paint_risks', 'q2_hazard_vs_risk', 'q3_incident_investigation',
-        'q4_risk_assessment', 'q5_ppe_chemical', 'q6_sds_msds',
-        'q7_flammable_spill', 'q8_ppe_refusal', 'q9_daily_inspection',
-        'q10_safety_project'
-      ];
-      
-      questions.forEach((q) => {
-        const ans = examAnswers[q as keyof ExamAnswers] || '';
-        if (ans.trim().length < 15) {
-          newErrors[q] = `الإجابة مطلوبة ويجب ألا تقل عن 15 حرفاً لضمان دقة التقييم الذكي`;
-        }
-      });
-    }
+    // Answering questions is mandatory for all roles
+    const questions = [
+      'q1_paint_risks', 'q2_hazard_vs_risk', 'q3_incident_investigation',
+      'q4_risk_assessment', 'q5_ppe_chemical', 'q6_sds_msds',
+      'q7_flammable_spill', 'q8_ppe_refusal', 'q9_daily_inspection',
+      'q10_safety_project'
+    ];
+    
+    questions.forEach((q) => {
+      const ans = examAnswers[q as keyof ExamAnswers] || '';
+      if (ans.trim().length < 15) {
+        newErrors[q] = `الإجابة مطلوبة ويجب ألا تقل عن 15 حرفاً لضمان دقة التقييم الذكي`;
+      }
+    });
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -621,6 +621,24 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
   // --- Final Form Submission ---
   const handleFinalSubmit = async () => {
+    let hasErrors = false;
+    const newErrors: Record<string, string> = {};
+
+    if (!personalInfo.interviewPreference) {
+      newErrors.interviewPreference = 'يرجى اختيار طريقة المقابلة المفضلة.';
+      hasErrors = true;
+    }
+    if (personalInfo.interviewPreference && !personalInfo.interviewPreferenceReason?.trim()) {
+      newErrors.interviewPreferenceReason = 'يرجى ذكر سبب تفضيلك لهذه الطريقة.';
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
+      setErrors(newErrors);
+      setSubmitError('يرجى استكمال تفضيلات المقابلة الشخصية قبل إرسال الطلب.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -2445,6 +2463,61 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <p className="text-xs text-slate-400">
                   عند النقر على "تأكيد وإرسال الطلب" سيقوم محرك الذكاء الاصطناعي الخاص بشركة مصنع جدة للدهانات والمعاجين بتحليل الإجابات مباشرة واستخراج نقاط قوتك وضعفك واقتراح أسئلة مخصصة للمقابلة معك. قد يستغرق الأمر ثواني معدودة.
                 </p>
+              </div>
+            </div>
+
+            {/* Interview Preference */}
+            <div className="border border-slate-150 rounded-2xl p-6">
+              <h4 className="font-extrabold text-slate-900 flex items-center gap-2 text-base border-b border-slate-100 pb-3 mb-4">
+                <User className="text-orange-500 w-5 h-5" />
+                تفضيلات المقابلة الشخصية
+              </h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    هل تفضل إجراء المقابلة الشخصية عن بعد أم حضورياً؟ <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="interviewPreference" 
+                        value="remote"
+                        checked={personalInfo.interviewPreference === 'remote'}
+                        onChange={(e) => setPersonalInfo({ ...personalInfo, interviewPreference: e.target.value })}
+                        className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700">عن بعد (Online)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="interviewPreference" 
+                        value="in-person"
+                        checked={personalInfo.interviewPreference === 'in-person'}
+                        onChange={(e) => setPersonalInfo({ ...personalInfo, interviewPreference: e.target.value })}
+                        className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700">حضورياً (In-person)</span>
+                    </label>
+                  </div>
+                  {errors.interviewPreference && <p className="text-red-500 text-xs mt-1">{errors.interviewPreference}</p>}
+                </div>
+                
+                {personalInfo.interviewPreference && (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      يرجى ذكر السبب لتفضيلك هذه الطريقة <span className="text-red-500">*</span>
+                    </label>
+                    <textarea 
+                      value={personalInfo.interviewPreferenceReason || ''}
+                      onChange={(e) => setPersonalInfo({ ...personalInfo, interviewPreferenceReason: e.target.value })}
+                      className={`w-full p-3 bg-slate-50 border ${errors.interviewPreferenceReason ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 focus:bg-white transition-all resize-none h-24`}
+                      placeholder="اذكر سبب تفضيلك لإجراء المقابلة بهذه الطريقة..."
+                    ></textarea>
+                    {errors.interviewPreferenceReason && <p className="text-red-500 text-xs mt-1">{errors.interviewPreferenceReason}</p>}
+                  </div>
+                )}
               </div>
             </div>
 

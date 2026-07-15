@@ -8,7 +8,7 @@ import {
   ListFilter, FileSpreadsheet, FileDown, Loader2, Briefcase, FileQuestion,
   Upload, ShieldCheck, Copy, Check, Share2, MessageSquare, Settings, Video
 } from 'lucide-react';
-import {  Applicant, DashboardStats, HrEvaluation, ApplicationStatus } from '../types';
+import { Applicant, DashboardStats, HrEvaluation, ApplicationStatus, AuditLog } from '../types';
 import CompanyLogo from './CompanyLogo';
 import {  googleSignIn, initAuth, createGoogleMeetSpace, logout as googleLogout } from '../lib/googleAuth';
 import {  User } from 'firebase/auth';
@@ -72,6 +72,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [scheduleName, setScheduleName] = useState('');
   const [scheduleType, setScheduleType] = useState('remote');
   const [scheduleMeetingLink, setScheduleMeetingLink] = useState('');
+  const [scheduleNotes, setScheduleNotes] = useState('');
 
   const [defaultMeetingLink, setDefaultMeetingLink] = useState(() => {
     try {
@@ -127,6 +128,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
     currentName: string;
     logs: string[];
   } | null>(null);
+  const [autoSchedulePreferences, setAutoSchedulePreferences] = useState<string[]>(['remote', 'in-person', 'unspecified']);
 
   const [selectedSchedules, setSelectedSchedules] = useState<string[]>([]);
   const [isBulkCancelling, setIsBulkCancelling] = useState(false);
@@ -225,12 +227,13 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
 نفيدكم من إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين، بأنه يسعدنا تحديد موعد المقابلة الشخصية معكم للوظيفة التالية:
 المسمى الوظيفي: {JOB}
 رقم الطلب: {ID}
-
 اليوم والتاريخ: {DATE}
 الوقت المحدد: في تمام الساعة {TIME}
-رابط المقابلة: {LINK}
 
-نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.
+مقابلة {TYPE}
+{LINK}
+{INSTRUCTIONS}
+{NOTES}
 
 نسأل الله لكم التوفيق والنجاح.
 إدارة الموارد البشرية
@@ -296,6 +299,14 @@ https://wa.me/966537375580
 
   // Refresh settings when job role changes
   useEffect(() => {
+    // Migration: clear old templates if they don't have the new {NOTES} variable
+    (['marketing', 'hse'] as const).forEach(role => {
+      const template = safeStorage.getItem(getStorageKey('interviewTemplate', role));
+      if (template && !template.includes('{NOTES}')) {
+        safeStorage.removeItem(getStorageKey('interviewTemplate', role));
+      }
+    });
+
     setAnnouncementTitle(safeStorage.getItem(getStorageKey('announcementTitle', settingsJobRole)) || (settingsJobRole === 'hse' ? 'أخصائي صحة وسلامة وبيئة (HSE)' : 'أخصائي تسويق (Marketing)'));
     setAnnouncementId(safeStorage.getItem(getStorageKey('announcementId', settingsJobRole)) || (settingsJobRole === 'hse' ? '20260706023116938' : 'MKT-2026-0010'));
     setAnnouncementDate(safeStorage.getItem(getStorageKey('announcementDate', settingsJobRole)) || '21/01/1448 هـ');
@@ -308,12 +319,13 @@ https://wa.me/966537375580
 نفيدكم من إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين، بأنه يسعدنا تحديد موعد المقابلة الشخصية معكم للوظيفة التالية:
 المسمى الوظيفي: {JOB}
 رقم الطلب: {ID}
-
 اليوم والتاريخ: {DATE}
 الوقت المحدد: في تمام الساعة {TIME}
-رابط المقابلة: {LINK}
 
-نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.
+مقابلة {TYPE}
+{LINK}
+{INSTRUCTIONS}
+{NOTES}
 
 نسأل الله لكم التوفيق والنجاح.
 إدارة الموارد البشرية
@@ -924,9 +936,14 @@ https://wa.me/966537375580
 
   // Automatic Scheduling logic
   const handleAutoSchedule = async () => {
-    const unsched = applicants.filter(a => !a.interviewSchedule);
+    const unsched = applicants.filter(a => {
+      if (a.interviewSchedule) return false;
+      const pref = a.personalInfo?.interviewPreference || 'unspecified';
+      return autoSchedulePreferences.includes(pref);
+    });
+
     if (unsched.length === 0) {
-      alert("لا يوجد مرشحون بانتظار ترتيب مواعيدهم حالياً.");
+      alert("لا يوجد مرشحون بانتظار ترتيب مواعيدهم حالياً يتوافقون مع التفضيلات المحددة.");
       return;
     }
 
@@ -1152,7 +1169,7 @@ https://wa.me/966537375580
   };
 
   // Generate hybrid WhatsApp link and open it in a new window
-  const handleSendWhatsApp = (applicant: Applicant, name: string, date: string, time: string, type: string, customMeetingLink?: string) => {
+  const handleSendWhatsApp = (applicant: Applicant, name: string, date: string, time: string, type: string, customMeetingLink?: string, customNotes?: string) => {
     const roleKey = applicant.id?.startsWith('MKT') ? 'marketing' : 'hse';
     const roleInterviewTemplate = safeStorage.getItem(getStorageKey('interviewTemplate', roleKey)) || interviewTemplate;
     const roleAnnouncementTitle = safeStorage.getItem(getStorageKey('announcementTitle', roleKey)) || (roleKey === 'marketing' ? 'أخصائي تسويق (Marketing)' : 'أخصائي صحة وسلامة وبيئة (HSE)');
@@ -1173,13 +1190,26 @@ https://wa.me/966537375580
       : '';
     text = text.replace(/{DATE}/g, formattedDate);
     text = text.replace(/{TIME}/g, time || '');
-    text = text.replace(/{TYPE}/g, type === 'remote' ? 'عن بعد' : 'حضوري بمقر الشركة');
     
-    const meetingLinkToUse = customMeetingLink || applicant.interviewSchedule?.meetingLink || safeStorage.getItem(getStorageKey('defaultMeetingLink', roleKey)) || defaultMeetingLink;
-    const roleAppUrl = safeStorage.getItem(getStorageKey('announcementAppUrl', roleKey)) || announcementAppUrl;
-    text = text.replace(/{LINK}/g, meetingLinkToUse || roleAppUrl || window.location.origin);
+    const isRemote = type === 'remote';
+    text = text.replace(/{TYPE}/g, isRemote ? 'عن بعد 💻' : 'حضورية 📍');
+    
+    const meetingLinkToUse = customMeetingLink || applicant.interviewSchedule?.meetingLink || (isRemote ? (safeStorage.getItem(getStorageKey('defaultMeetingLink', roleKey)) || defaultMeetingLink) : (safeStorage.getItem(getStorageKey('announcementLocation', roleKey)) || (roleKey === 'marketing' ? 'جدة المدينة الصناعية - https://maps.app.goo.gl/XuLsfxrUidjELkBD7' : 'المنطقة الصناعية، جدة')));
+    text = text.replace(/{LINK}/g, meetingLinkToUse);
 
-    const encodedMessage = encodeURIComponent(text);
+    const instructionsText = isRemote 
+      ? 'نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.' 
+      : '';
+    text = text.replace(/{INSTRUCTIONS}/g, instructionsText);
+
+    const notesText = customNotes?.trim() ? `ملاحظات: ${customNotes}` : '';
+    text = text.replace(/{NOTES}/g, notesText);
+
+    // Clean up empty lines that might have been left by empty instructions or notes
+    text = text.split('\n').filter(line => line.trim() !== '' || line === '').join('\n');
+    text = text.replace(/\n\s*\n\s*\n/g, '\n\n');
+
+    const encodedMessage = encodeURIComponent(text.trim());
     const cleanPhone = applicant.personalInfo.phone.replace(/[\s\-\+\(\)]/g, '');
     let formattedPhone = cleanPhone;
     if (formattedPhone.startsWith('0')) {
@@ -1997,6 +2027,19 @@ https://wa.me/966537375580
                       {selectedApplicant.personalInfo.hasKawaderLicense === 'yes' ? 'نعم (لديه ترخيص)' : 'لا'}
                     </span>
                   </div>
+                  {selectedApplicant.personalInfo.interviewPreference && (
+                    <div>
+                      <span className="text-slate-400 block">تفضيل المقابلة الشخصية:</span>
+                      <span className="font-bold text-slate-800">
+                        {selectedApplicant.personalInfo.interviewPreference === 'remote' ? 'عن بعد (Online)' : 'حضورياً (In-person)'}
+                      </span>
+                      {selectedApplicant.personalInfo.interviewPreferenceReason && (
+                        <p className="text-slate-500 mt-1 italic">
+                          السبب: {selectedApplicant.personalInfo.interviewPreferenceReason}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {selectedApplicant.personalInfo.linkedinUrl && (
                     <div>
                       <span className="text-slate-400 block">حساب LinkedIn:</span>
@@ -2523,12 +2566,23 @@ https://wa.me/966537375580
               {/* Technical test answers detail card */}
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
                 <h4 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-1.5 text-base">
-                  <FileQuestion className="text-orange-500 w-5 h-5" />
-                  أجوبة اختبار الجدارة الفنية (HSE) بالتفصيل
+                  <FileQuestion className={selectedApplicant.personalInfo?.jobRole === 'marketing' ? 'text-blue-500 w-5 h-5' : 'text-orange-500 w-5 h-5'} />
+                  أجوبة اختبار الجدارة {selectedApplicant.personalInfo?.jobRole === 'marketing' ? 'التسويقية' : 'الفنية (HSE)'} بالتفصيل
                 </h4>
 
                 <div className="space-y-6 text-right">
-                  {[
+                  {(selectedApplicant.personalInfo?.jobRole === 'marketing' ? [
+                    { id: 'q1_paint_risks', q: '1- ما هي أبرز الحملات التسويقية التي قمت بتخطيطها وإدارتها سابقاً؟' },
+                    { id: 'q2_hazard_vs_risk', q: '2- كيف تدير الهوية الرقمية للعلامة التجارية وتصنع المحتوى الإبداعي؟' },
+                    { id: 'q3_incident_investigation', q: '3- كيف تحلل المنافسين في السوق وتحدد الميزة التنافسية (USP) لعلامتك؟' },
+                    { id: 'q4_risk_assessment', q: '4- كيف توظف أدوات تحليل البيانات ومؤشرات الأداء (KPIs) لتطوير خطتك التسويقية؟' },
+                    { id: 'q5_ppe_chemical', q: '5- اذكر بالتفصيل "أعمالاً ومشاريع تسويقية تم تنفيذها" ودورك الدقيق والإبداعي فيها.' },
+                    { id: 'q6_sds_msds', q: '6- يرجى تزويدنا بروابط أعمالك السابقة أو معرض أعمالك الرقمي (Portfolio) - [أعمال تم تنفيذها].' },
+                    { id: 'q7_flammable_spill', q: '7- ما هي الأدوات والمنصات الإعلانية وتطبيقات التصميم ومونتاج الفيديو التي تتقن العمل عليها باحترافية؟' },
+                    { id: 'q8_ppe_refusal', q: '8- كيف تتعامل مع ميزانيات التسويق المحدودة لتحقيق أقصى فاعلية وأعلى معدل تحويل للعملاء؟' },
+                    { id: 'q9_daily_inspection', q: '9- كيف تصمم وتنفذ استراتيجية تسويق لمنتجات مصانع الدهانات والمعاجين (قطاع صناعي B2B و B2C)؟' },
+                    { id: 'q10_safety_project', q: '10- يرجى تزويدنا بوصف وملخص لملف "عينة من أعمالك السابقة" التي ستقوم برفعها كملف مرفق أدناه.' }
+                  ] : [
                     { id: 'q1_paint_risks', q: '1- ما أهم المخاطر داخل مصانع الدهانات؟' },
                     { id: 'q2_hazard_vs_risk', q: '2- ما الفرق بين الخطر والمخاطرة؟' },
                     { id: 'q3_incident_investigation', q: '3- كيف تحقق في حادث عمل؟' },
@@ -2539,7 +2593,7 @@ https://wa.me/966537375580
                     { id: 'q8_ppe_refusal', q: '8- كيف تتعامل مع موظف يرفض ارتداء معدات الوقاية الشخصية؟' },
                     { id: 'q9_daily_inspection', q: '9- ما أهم النقاط التي يجب فحصها أثناء الجولة التفتيشية اليومية؟' },
                     { id: 'q10_safety_project', q: '10- اذكر مشروعًا أو تحسينًا في السلامة سبق أن شاركت فيه.' }
-                  ].map((item, idx) => {
+                  ]).map((item, idx) => {
                     const ans = (selectedApplicant.examAnswers as any)[item.id] || '';
                     return (
                       <div key={item.id} className="border-b border-slate-100 pb-5 last:border-none last:pb-0">
@@ -3173,31 +3227,82 @@ https://wa.me/966537375580
                 </div>
 
                 {/* Trigger and Status */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-slate-800">
-                  <div className="text-right text-xs text-slate-400">
-                    <span>عدد المرشحين بانتظار الترتيب تلقائياً: </span>
-                    <span className="text-orange-400 font-black font-mono">
-                      {applicants.filter(a => !a.interviewSchedule).length} مرشحاً
-                    </span>
-                  </div>
+                <div className="flex flex-col gap-4 pt-4 border-t border-slate-800">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="text-right text-xs text-slate-400 space-y-2">
+                      <div>
+                        <span>عدد المرشحين بانتظار الترتيب تلقائياً: </span>
+                        <span className="text-orange-400 font-black font-mono">
+                          {applicants.filter(a => {
+                            if (a.interviewSchedule) return false;
+                            const pref = a.personalInfo?.interviewPreference || 'unspecified';
+                            return autoSchedulePreferences.includes(pref);
+                          }).length} مرشحاً (مطابق للفلتر)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-slate-300">
+                        <span className="font-bold">استهداف المرشحين بناءً على تفضيل المقابلة:</span>
+                        <label className="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={autoSchedulePreferences.includes('remote')}
+                            onChange={(e) => {
+                              if (e.target.checked) setAutoSchedulePreferences(prev => [...prev, 'remote']);
+                              else setAutoSchedulePreferences(prev => prev.filter(p => p !== 'remote'));
+                            }}
+                            className="w-3.5 h-3.5 accent-emerald-500 bg-slate-800 border-slate-700 rounded"
+                          />
+                          عن بعد
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={autoSchedulePreferences.includes('in-person')}
+                            onChange={(e) => {
+                              if (e.target.checked) setAutoSchedulePreferences(prev => [...prev, 'in-person']);
+                              else setAutoSchedulePreferences(prev => prev.filter(p => p !== 'in-person'));
+                            }}
+                            className="w-3.5 h-3.5 accent-emerald-500 bg-slate-800 border-slate-700 rounded"
+                          />
+                          حضورياً
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={autoSchedulePreferences.includes('unspecified')}
+                            onChange={(e) => {
+                              if (e.target.checked) setAutoSchedulePreferences(prev => [...prev, 'unspecified']);
+                              else setAutoSchedulePreferences(prev => prev.filter(p => p !== 'unspecified'));
+                            }}
+                            className="w-3.5 h-3.5 accent-emerald-500 bg-slate-800 border-slate-700 rounded"
+                          />
+                          غير محدد
+                        </label>
+                      </div>
+                    </div>
 
-                  <button
-                    onClick={handleAutoSchedule}
-                    disabled={isSchedulingAuto || applicants.filter(a => !a.interviewSchedule).length === 0}
-                    className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-xs px-6 py-3.5 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/20 self-end cursor-pointer"
-                  >
-                    {isSchedulingAuto ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>جاري ترتيب الجدولة وتوليد الغرف تلقائياً...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Settings className="w-4 h-4" />
-                        <span>تشغيل المحرك والجدولة التلقائية الآن 🚀</span>
-                      </>
-                    )}
-                  </button>
+                    <button
+                      onClick={handleAutoSchedule}
+                      disabled={isSchedulingAuto || applicants.filter(a => {
+                        if (a.interviewSchedule) return false;
+                        const pref = a.personalInfo?.interviewPreference || 'unspecified';
+                        return autoSchedulePreferences.includes(pref);
+                      }).length === 0}
+                      className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-xs px-6 py-3.5 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/20 cursor-pointer"
+                    >
+                      {isSchedulingAuto ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>جاري ترتيب الجدولة وتوليد الغرف...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Settings className="w-4 h-4" />
+                          <span>تشغيل المحرك والجدولة التلقائية الآن 🚀</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Results Log Display */}
@@ -3334,9 +3439,11 @@ https://wa.me/966537375580
                                 const newType = e.target.value;
                                 setScheduleType(newType);
                                 if (newType === 'in_person') {
-                                  setScheduleMeetingLink('مقر الشركة بجدة');
+                                  const roleKey = schedulingApplicant?.id?.startsWith('MKT') ? 'marketing' : 'hse';
+                                  setScheduleMeetingLink(safeStorage.getItem(getStorageKey('announcementLocation', roleKey)) || (roleKey === 'marketing' ? 'جدة المدينة الصناعية - https://maps.app.goo.gl/XuLsfxrUidjELkBD7' : 'المنطقة الصناعية، جدة'));
                                 } else {
-                                  setScheduleMeetingLink(schedulingApplicant?.interviewSchedule?.meetingLink || defaultMeetingLink);
+                                  const roleKey = schedulingApplicant?.id?.startsWith('MKT') ? 'marketing' : 'hse';
+                                  setScheduleMeetingLink(schedulingApplicant?.interviewSchedule?.meetingLink || safeStorage.getItem(getStorageKey('defaultMeetingLink', roleKey)) || defaultMeetingLink);
                                 }
                               }}
                               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none text-xs bg-white font-semibold"
@@ -3407,6 +3514,19 @@ https://wa.me/966537375580
                             </>
                           )}
                         </div>
+
+                        {/* Notes Input */}
+                        <div className="space-y-1 text-right mt-4">
+                          <label className="text-slate-700 text-xs font-bold block flex items-center gap-1.5 justify-end">
+                            <span>ملاحظات إضافية للمرشح (تظهر في الرسالة):</span>
+                          </label>
+                          <textarea
+                            value={scheduleNotes}
+                            onChange={(e) => setScheduleNotes(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none text-xs font-semibold text-right bg-slate-50 focus:bg-white focus:border-orange-500 transition-all resize-none h-20"
+                            placeholder="مثال: يرجى إحضار الهوية الوطنية وجهاز الحاسب الآلي الشخصي..."
+                          />
+                        </div>
                       </div>
                     )}
 
@@ -3420,6 +3540,7 @@ https://wa.me/966537375580
                             setScheduleDate('');
                             setScheduleTime('');
                             setScheduleMeetingLink('');
+                            setScheduleNotes('');
                           }}
                           className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 text-xs rounded-xl transition-all"
                         >
@@ -3438,7 +3559,7 @@ https://wa.me/966537375580
 
                         <button
                           type="button"
-                          onClick={() => handleSendWhatsApp(schedulingApplicant, scheduleName, scheduleDate, scheduleTime, scheduleType, scheduleMeetingLink)}
+                          onClick={() => handleSendWhatsApp(schedulingApplicant, scheduleName, scheduleDate, scheduleTime, scheduleType, scheduleMeetingLink, scheduleNotes)}
                           disabled={!scheduleDate || !scheduleTime || !scheduleName}
                           className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-5 py-2.5 text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-600/10"
                         >
@@ -4326,12 +4447,13 @@ https://wa.me/966537375580
 نفيدكم من إدارة الموارد البشرية بشركة مصنع جدة للدهانات والمعاجين، بأنه يسعدنا تحديد موعد المقابلة الشخصية معكم للوظيفة التالية:
 المسمى الوظيفي: {JOB}
 رقم الطلب: {ID}
-
 اليوم والتاريخ: {DATE}
 الوقت المحدد: في تمام الساعة {TIME}
-رابط المقابلة: {LINK}
 
-نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.
+مقابلة {TYPE}
+{LINK}
+{INSTRUCTIONS}
+{NOTES}
 
 نسأل الله لكم التوفيق والنجاح.
 إدارة الموارد البشرية
@@ -4457,8 +4579,13 @@ https://wa.me/966537375580
                               const formattedDate = new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                               text = text.replace(/{DATE}/g, formattedDate);
                               text = text.replace(/{TIME}/g, '10:30 ص');
-                              text = text.replace(/{TYPE}/g, 'عن بعد (عبر منصة Zoom)');
+                              text = text.replace(/{TYPE}/g, 'عن بعد 💻');
                               text = text.replace(/{LINK}/g, announcementAppUrl || window.location.origin);
+                              text = text.replace(/{INSTRUCTIONS}/g, 'نرجو التكرم بالتواجد قبل موعد المقابلة بـ 15 دقيقة للتأكد من استقرار الاتصال والشبكة.');
+                              text = text.replace(/{NOTES}/g, 'ملاحظات: يرجى تجهيز العرض التقديمي.');
+                              text = text.replace(/{TITLE}/g, 'أستاذ');
+                              text = text.split('\n').filter(line => line.trim() !== '' || line === '').join('\n');
+                              text = text.replace(/\n\s*\n\s*\n/g, '\n\n');
                               return text;
                             })()}
                           </div>

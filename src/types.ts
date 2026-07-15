@@ -36,6 +36,8 @@ export interface PersonalInfo {
   adminDocuments?: AdminDocument[];
   additionalDocuments?: AdminDocument[];
   jobRole?: JobRole;
+  interviewPreference?: string;
+  interviewPreferenceReason?: string;
   isJeddahResident?: string; // 'yes' | 'no'
   hasCarAndLicense?: string; // 'yes' | 'no'
 }
@@ -156,6 +158,15 @@ export interface DashboardStats {
   databaseType?: "Supabase" | "Local";
   isSupabaseConnected?: boolean;
   supabaseUrl?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  action: string;
+  details: string;
+  applicantId?: string;
+  adminEmail?: string;
 }
 
 export interface Admin {

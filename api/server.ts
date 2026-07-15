@@ -12,17 +12,12 @@ function safeWriteFile(path: string, data: any, options?: any) {
 }
 
 import crypto from "crypto";
-import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import { Applicant, AiEvaluation, HrEvaluation } from "../src/types.js";
 import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
-
-// Resolve paths for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
@@ -429,37 +424,31 @@ async function syncDatabase() {
   }
 }
 
-let syncPromise: Promise<void> | null = null;
+let lastSupabaseFetch = 0;
 
 async function ensureDbSynced(req: express.Request, res: express.Response, next: express.NextFunction) {
   initSupabase();
   const isFreshRequired = req.path.startsWith("/api/admin") || req.path === "/api/submit";
   
   if (useSupabase && supabase && isFreshRequired) {
-    try {
-      const { data: supabaseApplicants, error: applicantsErr } = await supabase
+    const now = Date.now();
+    if (now - lastSupabaseFetch > 30000) {
+      lastSupabaseFetch = now;
+      supabase
         .from("applicants")
-        .select("*");
-      if (!applicantsErr && supabaseApplicants) {
-        cachedApplicants = supabaseApplicants
-          .filter((row: any) => row.id && !row.id.startsWith("SYSTEM_SETTING_"))
-          .map(mapSupabaseToApplicant);
-      }
-    } catch (err) {
-      console.error("Failed to refresh applicants from Supabase during request:", err);
+        .select("*")
+        .then(({ data: supabaseApplicants, error: applicantsErr }: any) => {
+          if (!applicantsErr && supabaseApplicants) {
+            cachedApplicants = supabaseApplicants
+              .filter((row: any) => row.id && !row.id.startsWith("SYSTEM_SETTING_"))
+              .map(mapSupabaseToApplicant);
+          }
+        })
+        .catch((err: any) => console.error("Failed to refresh applicants", err));
     }
   }
 
-  if (!syncPromise) {
-    syncPromise = syncDatabase();
-  }
-  try {
-    await syncPromise;
-    next();
-  } catch (err) {
-    console.error("Database synchronization failed during request processing:", err);
-    next();
-  }
+  next();
 }
 
 // Register the database sync gate middleware
@@ -871,6 +860,9 @@ async function evaluateApplicantWithAi(applicant: Applicant): Promise<AiEvaluati
 // REST APIs
 // 1. Submit Application
 app.post("/api/submit", async (req, res) => {
+  if (cachedSettings.maintenanceMode) {
+    return res.status(503).json({ error: "عذراً، لا يمكن تقديم طلبات حالياً. الموقع في وضع الصيانة." });
+  }
   try {
     const { personalInfo, industryExperience, certificates, examAnswers } = req.body;
     
@@ -1438,7 +1430,7 @@ app.patch("/api/admin/applicants/:id/review", requireAdmin, async (req, res) => 
     console.error("Error writing fallback local database:", err);
   }
   await syncApplicantToSupabase(applicants[index]);
-  writeLog("حجز موعد", `قام المرشح بحجز/تعديل موعد المقابلة إلى ${date} ${time}`, req.params.id);
+  writeLog("تعديل حالة", `تم تعديل وتحديث حالة الطلب للمرشح`, req.params.id, (req as any).adminEmail);
   res.json({ success: true, applicant: applicants[index] });
 });
 
