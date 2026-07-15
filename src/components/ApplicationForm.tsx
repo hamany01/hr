@@ -38,11 +38,11 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
     expectedSalary: '',
     noticePeriod: 'شهر واحد',
     linkedinUrl: '',
-    ownsCar: 'yes',
-    hasHealthIssues: 'no',
+    ownsCar: '',
+    hasHealthIssues: '',
     healthIssuesDetails: '',
-    hasLocationIssue: 'no',
-    hasKawaderLicense: 'no',
+    hasLocationIssue: '',
+    hasKawaderLicense: '',
     kawaderLicenseFileName: '',
     kawaderLicenseBase64: '',
     cvFileName: '',
@@ -53,8 +53,8 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
     portfolioBase64: '',
     additionalDocuments: [],
     jobRole: jobRole,
-    isJeddahResident: 'no',
-    hasCarAndLicense: 'no'
+    isJeddahResident: '',
+    hasCarAndLicense: ''
   });
 
   // --- Step 2: Experience & Certifications ---
@@ -134,8 +134,13 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
         kawaderLicenseFileName: '',
         kawaderLicenseBase64: '',
         jobRole: roleKey,
-        isJeddahResident: 'no',
-        hasCarAndLicense: 'no'
+        isJeddahResident: '',
+        hasCarAndLicense: '',
+        ownsCar: '',
+        hasHealthIssues: '',
+        healthIssuesDetails: '',
+        hasLocationIssue: '',
+        hasKawaderLicense: ''
       }));
     }
     
@@ -451,6 +456,22 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
         newErrors.cv = 'ملف السيرة الذاتية (CV) بصيغة PDF مطلوب للتقديم';
       }
 
+      if (!personalInfo.ownsCar) {
+        newErrors.ownsCar = 'يرجى الإجابة على هذا السؤال';
+      }
+      if (!personalInfo.hasLocationIssue) {
+        newErrors.hasLocationIssue = 'يرجى الإجابة على هذا السؤال';
+      }
+      if (!personalInfo.hasHealthIssues) {
+        newErrors.hasHealthIssues = 'يرجى الإجابة على هذا السؤال';
+      }
+      if (personalInfo.hasHealthIssues === 'yes' && !personalInfo.healthIssuesDetails?.trim()) {
+        newErrors.healthIssuesDetails = 'يرجى توضيح المشاكل الصحية';
+      }
+      if (!personalInfo.hasKawaderLicense) {
+        newErrors.hasKawaderLicense = 'يرجى الإجابة على هذا السؤال';
+      }
+
       if (personalInfo.hasKawaderLicense === 'yes' && !personalInfo.kawaderLicenseBase64) {
         newErrors.kawaderLicense = 'يرجى تحميل ترخيص منصة كوادر لتأكيد إجابتك';
       }
@@ -464,6 +485,23 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
       }
       if (personalInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email.trim())) {
         newErrors.email = 'البريد الإلكتروني المدخل غير صحيح';
+      }
+      
+      // But these radio questions are mandatory for marketing too
+      if (!personalInfo.isJeddahResident) {
+        newErrors.isJeddahResident = 'يرجى الإجابة على هذا السؤال';
+      }
+      if (personalInfo.isJeddahResident === 'yes' && !personalInfo.hasCarAndLicense) {
+        newErrors.hasCarAndLicense = 'يرجى الإجابة على هذا السؤال';
+      }
+      if (!personalInfo.hasLocationIssue) {
+        newErrors.hasLocationIssue = 'يرجى الإجابة على هذا السؤال';
+      }
+      if (!personalInfo.hasHealthIssues) {
+        newErrors.hasHealthIssues = 'يرجى الإجابة على هذا السؤال';
+      }
+      if (personalInfo.hasHealthIssues === 'yes' && !personalInfo.healthIssuesDetails?.trim()) {
+        newErrors.healthIssuesDetails = 'يرجى توضيح المشاكل الصحية';
       }
     }
 
@@ -710,6 +748,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   الاسم الكامل (ثلاثي أو رباعي) {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
                 </label>
+                            
                 <input
                   type="text"
                   required={jobRole !== 'marketing'}
@@ -735,6 +774,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   الجنسية {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
                 </label>
+                            
                 <input
                   type="text"
                   required={jobRole !== 'marketing'}
@@ -758,6 +798,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               {/* Gender */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">الجنس *</label>
+                            
                 <select
                   value={personalInfo.gender}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, gender: e.target.value }))}
@@ -773,6 +814,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   تاريخ الميلاد {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
                 </label>
+                            
                 <input
                   type="date"
                   required={jobRole !== 'marketing'}
@@ -797,6 +839,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   مدينة الإقامة الحالية {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
                 </label>
+                            
                 <input
                   type="text"
                   required={jobRole !== 'marketing'}
@@ -822,6 +865,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   عنوان السكن التفصيلي {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
                 </label>
+                            
                 <input
                   type="text"
                   required={jobRole !== 'marketing'}
@@ -847,6 +891,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   رقم الجوال النشط {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
                 </label>
+                            
                 <input
                   type="tel"
                   required={jobRole !== 'marketing'}
@@ -872,6 +917,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   البريد الإلكتروني {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
                 </label>
+                            
                 <input
                   type="email"
                   required={jobRole !== 'marketing'}
@@ -895,6 +941,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               {/* Qualification */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">المؤهل العلمي *</label>
+                            
                 <select
                   value={personalInfo.qualification}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, qualification: e.target.value }))}
@@ -912,6 +959,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   التخصص الدراسي الدقيق {jobRole === 'marketing' ? ' (اختياري)' : ' *'}
                 </label>
+                            
                 <input
                   type="text"
                   required={jobRole !== 'marketing'}
@@ -937,6 +985,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   {jobRole === 'marketing' ? 'سنوات الخبرة في مجال التسويق *' : 'سنوات الخبرة في مجال السلامة (HSE) *'}
                 </label>
+                            
                 <input
                   type="number"
                   min={0}
@@ -951,6 +1000,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               {/* Current Company */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">جهة العمل الحالية (أو السابقة)</label>
+                            
                 <input
                   type="text"
                   value={personalInfo.currentCompany}
@@ -963,6 +1013,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               {/* Current Role */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">المسمى الوظيفي الحالي (أو السابق)</label>
+                            
                 <input
                   type="text"
                   value={personalInfo.currentRole}
@@ -975,6 +1026,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               {/* Current Salary */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">الراتب الاجمالي الحالي</label>
+                            
                 <input
                   type="text"
                   value={personalInfo.currentSalary}
@@ -987,6 +1039,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               {/* Expected Salary */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">الراتب المتوقع *</label>
+                            
                 <input
                   type="text"
                   required
@@ -1010,6 +1063,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
               {/* Notice Period */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">فترة الإشعار للبدء بالعمل *</label>
+                            
                 <select
                   value={personalInfo.noticePeriod}
                   onChange={(e) => setPersonalInfo(prev => ({ ...prev, noticePeriod: e.target.value }))}
@@ -1028,6 +1082,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                   <LinkIcon className="w-4 h-4 text-slate-400" />
                   رابط حساب LinkedIn (اختياري)
                 </label>
+                            
                 <input
                   type="url"
                   value={personalInfo.linkedinUrl}
@@ -1050,7 +1105,11 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       {/* Is Jeddah Resident */}
                       <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 space-y-3">
                         <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-2">هل أنت من سكان مدينة جدة؟ *</label>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">
+                            هل أنت من سكان مدينة جدة؟ *
+                            {errors.isJeddahResident && <span className="text-red-500 text-[10px] mr-2">{errors.isJeddahResident}</span>}
+                          </label>
+                            
                           <div className="flex gap-6 mt-1">
                             <label className="flex items-center gap-2 cursor-pointer">
                               <input
@@ -1063,6 +1122,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                               />
                               <span className="text-xs font-semibold text-slate-800">نعم</span>
                             </label>
+                            
                             <label className="flex items-center gap-2 cursor-pointer">
                               <input
                                 type="radio"
@@ -1074,12 +1134,17 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                               />
                               <span className="text-xs font-semibold text-slate-800">لا</span>
                             </label>
+                            
                           </div>
                         </div>
 
                         {personalInfo.isJeddahResident === 'yes' && (
                           <div className="border-t border-slate-200/60 pt-3 mt-2">
-                            <label className="block text-sm font-bold text-slate-700 mb-2">هل عندك سيارة ورخصة قيادة؟ *</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">
+                              هل عندك سيارة ورخصة قيادة؟ *
+                              {errors.hasCarAndLicense && <span className="text-red-500 text-[10px] mr-2">{errors.hasCarAndLicense}</span>}
+                            </label>
+                            
                             <div className="flex gap-6 mt-1">
                               <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -1092,6 +1157,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                                 />
                                 <span className="text-xs font-semibold text-slate-800">نعم (عندي رخصة وسيارة للتنقل)</span>
                               </label>
+                            
                               <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                   type="radio"
@@ -1103,6 +1169,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                                 />
                                 <span className="text-xs font-semibold text-slate-800">لا</span>
                               </label>
+                            
                             </div>
                           </div>
                         )}
@@ -1112,6 +1179,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
                         <label className="block text-sm font-bold text-slate-700 mb-2">
                           هل لديك أي مشكلة في العمل بموقع الإدارة هذا؟ *
+                          {errors.hasLocationIssue && <span className="text-red-500 text-[10px] mr-2">{errors.hasLocationIssue}</span>}
                           <a
                             href="https://maps.app.goo.gl/vwvTg73b6S1b26Si9"
                             target="_blank"
@@ -1121,6 +1189,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                             (موقع الإدارة على الخريطة 🗺️)
                           </a>
                         </label>
+                            
                         <div className="flex gap-6 mt-1">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -1133,6 +1202,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                             />
                             <span className="text-xs font-semibold text-slate-800">نعم (لدي مشكلة)</span>
                           </label>
+                            
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="radio"
@@ -1144,6 +1214,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                             />
                             <span className="text-xs font-semibold text-slate-800">لا (لا توجد مشكلة)</span>
                           </label>
+                            
                         </div>
                       </div>
                     </>
@@ -1151,7 +1222,11 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                     <>
                       {/* Owns Car */}
                       <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
-                        <label className="block text-sm font-bold text-slate-700 mb-2">هل تملك سيارة خاصة؟ *</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">
+                          هل تملك سيارة خاصة؟ *
+                          {errors.ownsCar && <span className="text-red-500 text-[10px] mr-2">{errors.ownsCar}</span>}
+                        </label>
+                            
                         <div className="flex gap-6 mt-1">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -1164,6 +1239,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                             />
                             <span className="text-xs font-semibold text-slate-800">نعم</span>
                           </label>
+                            
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="radio"
@@ -1175,6 +1251,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                             />
                             <span className="text-xs font-semibold text-slate-800">لا</span>
                           </label>
+                            
                         </div>
                       </div>
 
@@ -1182,6 +1259,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
                         <label className="block text-sm font-bold text-slate-700 mb-2">
                           هل لديك أي مشكلة في العمل بموقع المصنع هذا؟ *
+                          {errors.hasLocationIssue && <span className="text-red-500 text-[10px] mr-2">{errors.hasLocationIssue}</span>}
                           <a
                             href="https://maps.app.goo.gl/XuLsfxrUidjELkBD7"
                             target="_blank"
@@ -1191,6 +1269,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                             (موقع المصنع على الخريطة 🗺️)
                           </a>
                         </label>
+                            
                         <div className="flex gap-6 mt-1">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -1203,6 +1282,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                             />
                             <span className="text-xs font-semibold text-slate-800">نعم (لدي مشكلة)</span>
                           </label>
+                            
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="radio"
@@ -1214,6 +1294,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                             />
                             <span className="text-xs font-semibold text-slate-800">لا (لا توجد مشكلة)</span>
                           </label>
+                            
                         </div>
                       </div>
                     </>
@@ -1221,7 +1302,11 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
 
                   {/* Health Issues */}
                   <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 md:col-span-2">
-                    <label className="block text-sm font-bold text-slate-700 mb-2">هل تعاني من أي مشاكل صحية؟ *</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      هل تعاني من أي مشاكل صحية؟ *
+                      {errors.hasHealthIssues && <span className="text-red-500 text-[10px] mr-2">{errors.hasHealthIssues}</span>}
+                    </label>
+                            
                     <div className="flex gap-6 mt-1 mb-3">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -1234,6 +1319,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         />
                         <span className="text-xs font-semibold text-slate-800">نعم (أعاني من مشاكل صحية)</span>
                       </label>
+                            
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
@@ -1245,11 +1331,13 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         />
                         <span className="text-xs font-semibold text-slate-800">لا (سليم والحمد لله)</span>
                       </label>
+                            
                     </div>
 
                     {personalInfo.hasHealthIssues === 'yes' && (
                       <div className="mt-2">
                         <label className="block text-xs font-bold text-slate-500 mb-1">يرجى كتابة وتفصيل المشكلة الصحية بالتفصيل: *</label>
+                            
                         <input
                           type="text"
                           required
@@ -1269,7 +1357,11 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                   {/* Kawader Platform License Question (Safety Inspector only) */}
                   {jobRole !== 'marketing' && (
                     <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 md:col-span-2 space-y-3">
-                      <label className="block text-sm font-bold text-slate-700">هل لديك ترخيص من منصة كوادر؟ *</label>
+                      <label className="block text-sm font-bold text-slate-700">
+                        هل لديك ترخيص من منصة كوادر؟ *
+                        {errors.hasKawaderLicense && <span className="text-red-500 text-[10px] mr-2">{errors.hasKawaderLicense}</span>}
+                      </label>
+                            
                       <div className="flex gap-6 mt-1">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -1285,6 +1377,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           />
                           <span className="text-xs font-semibold text-slate-800">نعم (لدي ترخيص)</span>
                         </label>
+                            
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
@@ -1299,11 +1392,13 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                           />
                           <span className="text-xs font-semibold text-slate-800">لا (لا يوجد ترخيص)</span>
                         </label>
+                            
                       </div>
 
                       {personalInfo.hasKawaderLicense === 'yes' && (
                         <div className="mt-3 bg-white p-4 rounded-xl border border-slate-200 space-y-2">
                           <label className="block text-xs font-bold text-slate-600">يرجى تحميل ترخيص منصة كوادر المعتمد: *</label>
+                            
                           {!personalInfo.kawaderLicenseFileName ? (
                             <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group ${
                               errors.kawaderLicense ? 'border-red-500 bg-red-50/10 animate-pulse' : 'border-slate-200 hover:border-orange-500'
@@ -1364,6 +1459,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                     <label className="block text-sm font-bold text-slate-700">
                       السيرة الذاتية (ملف PDF حديث) {jobRole === 'marketing' ? ' [اختياري]' : ' *'}
                     </label>
+                            
                     <span className={`text-[11px] font-bold ${jobRole === 'marketing' ? 'text-blue-600 bg-blue-50' : 'text-orange-600 bg-orange-50'} px-2 py-0.5 rounded-md`}>يفضل السيرة الذاتية باللغة العربية 🇸🇦</span>
                   </div>
                   {!personalInfo.cvFileName ? (
@@ -1410,6 +1506,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                 {/* Certificates Upload */}
                 <div className="space-y-3">
                   <label className="block text-sm font-bold text-slate-700">الشهادات المهنية المعتمدة والمرفقات الأخرى</label>
+                            
                   {!personalInfo.certsFileName ? (
                     <div className="border-2 border-dashed border-slate-200 hover:border-orange-500 rounded-2xl p-6 text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all relative group">
                       <input
@@ -1576,6 +1673,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </p>
                     </div>
                   </label>
+                            
 
                   {industryExperience.workedInPaint && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-200/60 pt-4 mt-2">
@@ -1583,6 +1681,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'اسم شركة الدهانات / المنشأة الصناعية *' : 'اسم شركة الدهانات *'}
                         </label>
+                            
                         <input
                           type="text"
                           required
@@ -1594,6 +1693,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">عدد سنوات الخبرة بها *</label>
+                            
                         <input
                           type="number"
                           min={0}
@@ -1606,6 +1706,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'المسمى الوظيفي التسويقي لديك *' : 'المسمى الوظيفي لديك *'}
                         </label>
+                            
                         <input
                           type="text"
                           required
@@ -1619,6 +1720,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'أبرز مسؤولياتك وإنجازاتك التسويقية هناك' : 'أبرز مسؤولياتك وإنجازاتك في المصنع'}
                         </label>
+                            
                         <textarea
                           rows={2}
                           value={industryExperience.paintTasks || ''}
@@ -1656,6 +1758,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </p>
                     </div>
                   </label>
+                            
 
                   {industryExperience.workedInChemical && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-200/60 pt-4 mt-2">
@@ -1663,6 +1766,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'اسم الجهة / الشركة التي عملت لصالحها *' : 'اسم المصنع الكيماوي *'}
                         </label>
+                            
                         <input
                           type="text"
                           required
@@ -1674,6 +1778,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">عدد سنوات الخبرة بها *</label>
+                            
                         <input
                           type="number"
                           min={0}
@@ -1686,6 +1791,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'المسمى الوظيفي التسويقي لديك *' : 'المسمى الوظيفي لديك *'}
                         </label>
+                            
                         <input
                           type="text"
                           required
@@ -1699,6 +1805,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'أبرز مسؤولياتك وإنجازاتك التسويقية هناك' : 'أبرز مسؤولياتك وإنجازاتك هناك'}
                         </label>
+                            
                         <textarea
                           rows={2}
                           value={industryExperience.chemicalTasks || ''}
@@ -1736,6 +1843,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </p>
                     </div>
                   </label>
+                            
 
                   {industryExperience.workedInIndustrial && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-200/60 pt-4 mt-2">
@@ -1743,6 +1851,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'اسم الجهة / الشركة التي عملت لصالحها *' : 'اسم المنشأة الصناعية *'}
                         </label>
+                            
                         <input
                           type="text"
                           required
@@ -1754,6 +1863,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">عدد سنوات الخبرة بها *</label>
+                            
                         <input
                           type="number"
                           min={0}
@@ -1766,6 +1876,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'المسمى الوظيفي التسويقي لديك *' : 'المسمى الوظيفي لديك *'}
                         </label>
+                            
                         <input
                           type="text"
                           required
@@ -1779,6 +1890,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-1">
                           {jobRole === 'marketing' ? 'أبرز مسؤولياتك وإنجازاتك التسويقية هناك' : 'أبرز مسؤولياتك وإنجازاتك هناك'}
                         </label>
+                            
                         <textarea
                           rows={2}
                           value={industryExperience.industrialTasks || ''}
@@ -1831,6 +1943,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                       </div>
                       <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900">{cert.label}</span>
                     </label>
+                            
                   ))}
                 </div>
               </div>
@@ -2038,6 +2151,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                         <label className="block text-xs font-bold text-slate-600 mb-2">
                           رفع ملف عينة الأعمال أو الملف التعريفي (PDF أو صور - بحد أقصى 10 ميغابايت) [اختياري]
                         </label>
+                            
                         <div className="flex items-center gap-3">
                           <label className="cursor-pointer flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all">
                             <Upload className="w-4 h-4" />
@@ -2049,6 +2163,7 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
                               className="hidden"
                             />
                           </label>
+                            
                           {personalInfo.portfolioFileName && (
                             <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700">
                               <span className="truncate max-w-[200px]">{personalInfo.portfolioFileName}</span>

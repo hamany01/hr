@@ -467,11 +467,25 @@ function readDB(): Applicant[] {
 async function generateApplicationId(jobRole?: string): Promise<string> {
   const prefix = jobRole === 'marketing' ? 'MKT' : 'HSE';
   const year = new Date().getFullYear();
-  // Filter out any setting entries and filter by role prefix to keep sequence separate
+  // Filter out any setting entries and filter by role prefix
   const roleApplicants = cachedApplicants.filter(a => !a.id.startsWith("SYSTEM_SETTING_") && a.id.startsWith(prefix));
-  const index = roleApplicants.length + 1;
-  const seq = String(index).padStart(4, "0");
-  return `${prefix}-${year}-${seq}`;
+  
+  let maxSeq = 19; // Start base at 19 so next will be at least 20
+  
+  for (const app of roleApplicants) {
+    const parts = app.id.split('-'); // e.g. HSE-2026-0020
+    if (parts.length >= 3) {
+      const seqStr = parts[parts.length - 1]; // Get the last part, e.g., 0020
+      const seq = parseInt(seqStr, 10);
+      if (!isNaN(seq) && seq > maxSeq) {
+        maxSeq = seq;
+      }
+    }
+  }
+  
+  const index = maxSeq + 1;
+  const seqStr = String(index).padStart(4, "0");
+  return `${prefix}-${year}-${seqStr}`;
 }
 
 // 3. Sync Single Applicant to Supabase

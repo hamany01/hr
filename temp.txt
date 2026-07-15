@@ -1,0 +1,261 @@
+                <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <ShieldCheck className={`${jobRole === 'marketing' ? 'text-blue-600' : 'text-orange-500'} w-4 h-4`} />
+                  {jobRole === 'marketing' ? 'معلومات إضافية هامة للعمل بالإدارة' : 'معلومات إضافية هامة للعمل بالمصنع'}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {jobRole === 'marketing' ? (
+                    <>
+                      {/* Is Jeddah Resident */}
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 space-y-3">
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">هل أنت من سكان مدينة جدة؟ *</label>
+                          <div className="flex gap-6 mt-1">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="isJeddahResident"
+                                value="yes"
+                                checked={personalInfo.isJeddahResident === 'yes'}
+                                onChange={() => setPersonalInfo(prev => ({ ...prev, isJeddahResident: 'yes' }))}
+                                className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                              />
+                              <span className="text-xs font-semibold text-slate-800">نعم</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="isJeddahResident"
+                                value="no"
+                                checked={personalInfo.isJeddahResident === 'no'}
+                                onChange={() => setPersonalInfo(prev => ({ ...prev, isJeddahResident: 'no', hasCarAndLicense: 'no' }))}
+                                className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                              />
+                              <span className="text-xs font-semibold text-slate-800">لا</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {personalInfo.isJeddahResident === 'yes' && (
+                          <div className="border-t border-slate-200/60 pt-3 mt-2">
+                            <label className="block text-sm font-bold text-slate-700 mb-2">هل عندك سيارة ورخصة قيادة؟ *</label>
+                            <div className="flex gap-6 mt-1">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="hasCarAndLicense"
+                                  value="yes"
+                                  checked={personalInfo.hasCarAndLicense === 'yes'}
+                                  onChange={() => setPersonalInfo(prev => ({ ...prev, hasCarAndLicense: 'yes' }))}
+                                  className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                                />
+                                <span className="text-xs font-semibold text-slate-800">نعم (عندي رخصة وسيارة للتنقل)</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="hasCarAndLicense"
+                                  value="no"
+                                  checked={personalInfo.hasCarAndLicense === 'no'}
+                                  onChange={() => setPersonalInfo(prev => ({ ...prev, hasCarAndLicense: 'no' }))}
+                                  className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                                />
+                                <span className="text-xs font-semibold text-slate-800">لا</span>
+                              </label>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Location Issue (Admin Office map link for marketing) */}
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
+                        <label className="block text-sm font-bold text-slate-700 mb-2">
+                          هل لديك أي مشكلة في العمل بموقع الإدارة هذا؟ *
+                          <a
+                            href="https://maps.app.goo.gl/vwvTg73b6S1b26Si9"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-xs mr-2 font-bold inline-block"
+                          >
+                            (موقع الإدارة على الخريطة 🗺️)
+                          </a>
+                        </label>
+                        <div className="flex gap-6 mt-1">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="hasLocationIssue"
+                              value="yes"
+                              checked={personalInfo.hasLocationIssue === 'yes'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'yes' }))}
+                              className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">نعم (لدي مشكلة)</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="hasLocationIssue"
+                              value="no"
+                              checked={personalInfo.hasLocationIssue === 'no'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'no' }))}
+                              className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">لا (لا توجد مشكلة)</span>
+                          </label>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Owns Car */}
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
+                        <label className="block text-sm font-bold text-slate-700 mb-2">هل تملك سيارة خاصة؟ *</label>
+                        <div className="flex gap-6 mt-1">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="ownsCar"
+                              value="yes"
+                              checked={personalInfo.ownsCar === 'yes'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, ownsCar: 'yes' }))}
+                              className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">نعم</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="ownsCar"
+                              value="no"
+                              checked={personalInfo.ownsCar === 'no'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, ownsCar: 'no' }))}
+                              className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">لا</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Location Issue */}
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150">
+                        <label className="block text-sm font-bold text-slate-700 mb-2">
+                          هل لديك أي مشكلة في العمل بموقع المصنع هذا؟ *
+                          <a
+                            href="https://maps.app.goo.gl/XuLsfxrUidjELkBD7"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-orange-500 hover:underline text-xs mr-2 font-bold inline-block"
+                          >
+                            (موقع المصنع على الخريطة 🗺️)
+                          </a>
+                        </label>
+                        <div className="flex gap-6 mt-1">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="hasLocationIssue"
+                              value="yes"
+                              checked={personalInfo.hasLocationIssue === 'yes'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'yes' }))}
+                              className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">نعم (لدي مشكلة)</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="hasLocationIssue"
+                              value="no"
+                              checked={personalInfo.hasLocationIssue === 'no'}
+                              onChange={() => setPersonalInfo(prev => ({ ...prev, hasLocationIssue: 'no' }))}
+                              className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                            />
+                            <span className="text-xs font-semibold text-slate-800">لا (لا توجد مشكلة)</span>
+                          </label>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Health Issues */}
+                  <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 md:col-span-2">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">هل تعاني من أي مشاكل صحية؟ *</label>
+                    <div className="flex gap-6 mt-1 mb-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="hasHealthIssues"
+                          value="yes"
+                          checked={personalInfo.hasHealthIssues === 'yes'}
+                          onChange={() => setPersonalInfo(prev => ({ ...prev, hasHealthIssues: 'yes' }))}
+                          className={`w-4 h-4 ${jobRole === 'marketing' ? 'text-blue-600 focus:ring-blue-500' : 'text-orange-500 focus:ring-orange-500'} border-slate-300`}
+                        />
+                        <span className="text-xs font-semibold text-slate-800">نعم (أعاني من مشاكل صحية)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="hasHealthIssues"
+                          value="no"
+                          checked={personalInfo.hasHealthIssues === 'no'}
+                          onChange={() => setPersonalInfo(prev => ({ ...prev, hasHealthIssues: 'no' }))}
+                          className={`w-4 h-4 ${jobRole === 'marketing' ? 'text-blue-600 focus:ring-blue-500' : 'text-orange-500 focus:ring-orange-500'} border-slate-300`}
+                        />
+                        <span className="text-xs font-semibold text-slate-800">لا (سليم والحمد لله)</span>
+                      </label>
+                    </div>
+
+                    {personalInfo.hasHealthIssues === 'yes' && (
+                      <div className="mt-2">
+                        <label className="block text-xs font-bold text-slate-500 mb-1">يرجى كتابة وتفصيل المشكلة الصحية بالتفصيل: *</label>
+                        <input
+                          type="text"
+                          required
+                          value={personalInfo.healthIssuesDetails || ''}
+                          onChange={(e) => setPersonalInfo(prev => ({ ...prev, healthIssuesDetails: e.target.value }))}
+                          className={`w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 outline-none transition-all font-sans text-xs ${
+                            jobRole === 'marketing' 
+                              ? 'focus:border-blue-600 focus:ring-blue-600/20' 
+                              : 'focus:border-orange-500 focus:ring-orange-500/20'
+                          }`}
+                          placeholder="مثال: حساسية شديدة من المركبات العضوية المتطايرة، ضيق تنفس..."
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Kawader Platform License Question (Safety Inspector only) */}
+                  {jobRole !== 'marketing' && (
+                    <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 md:col-span-2 space-y-3">
+                      <label className="block text-sm font-bold text-slate-700">هل لديك ترخيص من منصة كوادر؟ *</label>
+                      <div className="flex gap-6 mt-1">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="hasKawaderLicense"
+                            value="yes"
+                            checked={personalInfo.hasKawaderLicense === 'yes'}
+                            onChange={() => {
+                              setPersonalInfo(prev => ({ ...prev, hasKawaderLicense: 'yes' }));
+                              if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
+                            }}
+                            className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                          />
+                          <span className="text-xs font-semibold text-slate-800">نعم (لدي ترخيص)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="hasKawaderLicense"
+                            value="no"
+                            checked={personalInfo.hasKawaderLicense === 'no'}
+                            onChange={() => {
+                              setPersonalInfo(prev => ({ ...prev, hasKawaderLicense: 'no', kawaderLicenseFileName: '', kawaderLicenseBase64: '' }));
+                              if (errors.kawaderLicense) setErrors(prev => { const n = { ...prev }; delete n.kawaderLicense; return n; });
+                            }}
+                            className="w-4 h-4 text-orange-500 border-slate-300 focus:ring-orange-500"
+                          />
+                          <span className="text-xs font-semibold text-slate-800">لا (لا يوجد ترخيص)</span>
+                        </label>
+                      </div>
