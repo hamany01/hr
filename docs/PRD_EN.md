@@ -42,9 +42,9 @@ To save on AI API costs within the platform, a hybrid job creation mechanism is 
 ## 4. AI Capabilities & Integration
 
 ### 1. CV Parsing (Local AI Worker) - Zero Token Cost
-* To prevent massive cloud token consumption, a decoupled **Python Script (Local Agent)** will be developed to run on the company's local machines or a low-cost VPS.
-* The script fetches uploaded CVs from the platform's storage, parses them using a local open-source LLM (e.g., Ollama).
-* It returns the structured data via a secure webhook/API in `JSON` format directly to the platform's database.
+* To prevent massive cloud token consumption, a decoupled **Local AI Python Worker** will be developed to run on the company's local machines or a low-cost VPS.
+* The worker implements a database-backed job queue for high reliability and a single source of truth.
+* For full technical specifications, database structures, and schemas, refer to the independent design document: [`PYTHON_WORKER_ARCH_EN.md`](./PYTHON_WORKER_ARCH_EN.md).
 
 ### 2. Automated Smart Evaluation & Fallback Strategy (AI Routing)
 * **Smart API Key Management:** The database contains a secure table storing an array of free or paid Cloud AI API Keys.
