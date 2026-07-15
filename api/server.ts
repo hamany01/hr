@@ -29,6 +29,46 @@ const LOGS_FILE = path.join(DB_DIR, "audit_logs.json");
 
 let supabase: any = null;
 let useSupabase = false;
+
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  action: string;
+  details: string;
+  applicantId?: string;
+  adminEmail?: string;
+}
+
+let cachedLogs: AuditLog[] = [];
+
+if (fs.existsSync(LOGS_FILE)) {
+  try {
+    cachedLogs = JSON.parse(fs.readFileSync(LOGS_FILE, "utf8"));
+  } catch (e) {
+    cachedLogs = [];
+  }
+} else {
+  fs.writeFileSync(LOGS_FILE, JSON.stringify([]));
+}
+
+function writeLog(action: string, details: string, applicantId?: string, adminEmail?: string) {
+  const log = {
+    id: Date.now().toString() + Math.random().toString(36).substring(7),
+    timestamp: new Date().toISOString(),
+    action,
+    details,
+    applicantId,
+    adminEmail
+  };
+  cachedLogs.push(log);
+  if (cachedLogs.length > 5000) cachedLogs = cachedLogs.slice(-5000); // Keep last 5000
+  try {
+    fs.writeFileSync(LOGS_FILE, JSON.stringify(cachedLogs, null, 2), "utf8");
+  } catch (e) {
+    console.error("Failed to write log", e);
+  }
+}
+
 let cachedApplicants: Applicant[] = [];
 let cachedAdmins: any[] = [];
 
