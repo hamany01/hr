@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Clock, Wrench } from 'lucide-react';
 // GitHub Sync: Minor update to trigger re-push
 import Home from './components/Home';
 import TermsModal from './components/TermsModal';
@@ -14,6 +15,42 @@ export default function App() {
   const [view, setView] = useState<ViewState>('home');
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'hse' | 'marketing'>('hse');
+
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => setSiteSettings(data))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!siteSettings?.maintenanceMode || !siteSettings?.maintenanceEndTime) return;
+    
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const end = new Date(siteSettings.maintenanceEndTime).getTime();
+      const distance = end - now;
+
+      if (distance < 0) {
+        setTimeRemaining('اقترب الانتهاء...');
+        return;
+      }
+
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeRemaining(`${hours} ساعة و ${minutes} دقيقة و ${seconds} ثانية`);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [siteSettings]);
+
   
   // Success states
   const [submittedId, setSubmittedId] = useState('');
@@ -86,7 +123,6 @@ export default function App() {
                 الصفحة الرئيسية
               </button>
             )}
-
             {view === 'home' && (
               <button
                 onClick={handleStartApply}
@@ -97,39 +133,60 @@ export default function App() {
               </button>
             )}
           </div>
-
         </div>
       </header>
 
       {/* Main content viewport */}
       <main className="transition-all duration-300 min-h-[calc(100vh-64px)] flex flex-col justify-between">
-        
         <div className="flex-1">
-          {view === 'home' && (
-            <Home onStartApply={handleStartApply} onGoToAdmin={handleGoAdmin} />
+          {siteSettings?.maintenanceMode && view !== 'admin' ? (
+            <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+              <div className="bg-orange-100 p-6 rounded-full mb-6 text-orange-600">
+                <Wrench className="w-16 h-16" />
+              </div>
+              <h2 className="text-3xl font-bold text-slate-800 mb-4">الموقع في وضع الصيانة والتحديث</h2>
+              <p className="text-slate-600 max-w-md mx-auto mb-8 leading-relaxed">
+                نقوم حالياً بإجراء بعض التحسينات والتحديثات على النظام لتقديم خدمة أفضل. نعتذر عن أي إزعاج ونشكركم على صبركم.
+              </p>
+              {siteSettings.maintenanceEndTime && timeRemaining && (
+                <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm inline-block">
+                  <div className="flex items-center justify-center gap-3 text-slate-500 mb-3">
+                    <Clock className="w-5 h-5" />
+                    <span className="font-bold text-sm">الوقت المتبقي المتوقع</span>
+                  </div>
+                  <div className="text-2xl font-mono font-bold text-blue-700" dir="ltr">
+                    {timeRemaining}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {view === 'home' && (
+                <Home onStartApply={handleStartApply} onGoToAdmin={handleGoAdmin} />
+              )}
+              {view === 'apply' && (
+                <ApplicationForm 
+                  jobRole={selectedRole}
+                  onCancel={handleGoHome} 
+                  onSubmitSuccess={handleSubmissionSuccess} 
+                />
+              )}
+              {view === 'success' && (
+                <SuccessScreen
+                  applicationId={submittedId}
+                  status={submittedStatus}
+                  aiEvaluation={submittedAiEval}
+                  applicantName={submittedApplicantName}
+                  onGoHome={handleGoHome}
+                />
+              )}
+              {view === 'admin' && (
+                <AdminPortal onGoHome={handleGoHome} />
+              )}
+            </>
           )}
 
-          {view === 'apply' && (
-            <ApplicationForm 
-              jobRole={selectedRole}
-              onCancel={handleGoHome} 
-              onSubmitSuccess={handleSubmissionSuccess} 
-            />
-          )}
-
-          {view === 'success' && (
-            <SuccessScreen
-              applicationId={submittedId}
-              status={submittedStatus}
-              aiEvaluation={submittedAiEval}
-              applicantName={submittedApplicantName}
-              onGoHome={handleGoHome}
-            />
-          )}
-
-          {view === 'admin' && (
-            <AdminPortal onGoHome={handleGoHome} />
-          )}
         </div>
 
         {/* Universal Footer */}
