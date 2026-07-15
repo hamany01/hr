@@ -11,7 +11,7 @@ interface HomeProps {
 }
 
 export default function Home({ onStartApply, onGoToAdmin }: HomeProps) {
-  const [activeTab, setActiveTab] = useState<'hse' | 'marketing'>('hse');
+  const [activeTab, setActiveTab] = useState<'hse' | 'marketing' | null>(null);
 
   return (
     <div className="w-full bg-slate-50" id="home-view">
@@ -31,10 +31,27 @@ export default function Home({ onStartApply, onGoToAdmin }: HomeProps) {
             <div className="w-24 h-1 bg-gradient-to-r from-orange-500 to-blue-600 mx-auto rounded-full"></div>
           </div>
 
+          {activeTab === null && (
+            <div className="w-full max-w-lg mx-auto bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl text-center shadow-lg backdrop-blur-sm mb-8">
+              <div className="w-12 h-12 bg-orange-500/10 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-orange-500/20 animate-bounce">
+                <span className="text-xl">👇</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">يرجى اختيار الوظيفة المناسبة</h3>
+              <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto font-light">
+                يرجى النقر على إحدى بطاقات الوظائف في الأسفل لعرض الشروط والمهام والمميزات، ثم البدء في تعبئة نموذج التقديم وجدولة المقابلة.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-12 mb-12 max-w-4xl mx-auto">
             {/* HSE Job Option */}
             <button
-              onClick={() => setActiveTab('hse')}
+              onClick={() => {
+                setActiveTab('hse');
+                setTimeout(() => {
+                  document.getElementById('job-details')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
               className={`group relative flex flex-col items-center sm:items-start text-right p-6 rounded-2xl border-3 transition-all duration-300 cursor-pointer ${
                 activeTab === 'hse'
                   ? 'bg-gradient-to-br from-slate-900 to-orange-950/80 border-orange-500 shadow-2xl shadow-orange-500/30 scale-[1.04] ring-4 ring-orange-500/30 text-white'
@@ -74,7 +91,12 @@ export default function Home({ onStartApply, onGoToAdmin }: HomeProps) {
 
             {/* Marketing Job Option */}
             <button
-              onClick={() => setActiveTab('marketing')}
+              onClick={() => {
+                setActiveTab('marketing');
+                setTimeout(() => {
+                  document.getElementById('job-details')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
               className={`group relative flex flex-col items-center sm:items-start text-right p-6 rounded-2xl border-3 transition-all duration-300 cursor-pointer ${
                 activeTab === 'marketing'
                   ? 'bg-gradient-to-br from-slate-900 to-blue-950/80 border-blue-500 shadow-2xl shadow-blue-500/30 scale-[1.04] ring-4 ring-blue-500/30 text-white'
@@ -113,7 +135,7 @@ export default function Home({ onStartApply, onGoToAdmin }: HomeProps) {
             </button>
           </div>
 
-          {activeTab === 'hse' ? (
+          {activeTab === null ? null : activeTab === 'hse' ? (
             <div className="flex flex-col lg:flex-row items-center gap-10">
               <div className="flex-1 text-center lg:text-right">
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-orange-500/15 text-orange-400 mb-6 border border-orange-500/20 shadow-sm">
@@ -249,8 +271,9 @@ export default function Home({ onStartApply, onGoToAdmin }: HomeProps) {
         </div>
       </section>
 
-      {/* Main Content Layout */}
-      <main className="max-w-6xl mx-auto py-12 px-4 md:px-6" id="job-details">
+      {/* Main Content Layout - Hidden until a job is explicitly selected */}
+      {activeTab !== null && (
+        <main className="max-w-6xl mx-auto py-12 px-4 md:px-6" id="job-details">
         
         {/* Company Brief Card & Objective */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
@@ -553,6 +576,7 @@ export default function Home({ onStartApply, onGoToAdmin }: HomeProps) {
           )}
         </div>
       </main>
+      )}
 
       {/* Corporate Footer */}
       <footer className="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 text-center text-[10px]">
