@@ -25,6 +25,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const DB_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DB_DIR, "applicants.json");
 const ADMINS_FILE = path.join(DB_DIR, "admins.json");
+const LOGS_FILE = path.join(DB_DIR, "audit_logs.json");
 
 let supabase: any = null;
 let useSupabase = false;
@@ -831,6 +832,7 @@ app.post("/api/submit", async (req, res) => {
       console.error("Error writing fallback local database:", err);
     }
     await syncApplicantToSupabase(newApplicant);
+    writeLog("تقديم طلب", `تقديم طلب توظيف جديد للمرشح: ${finalPersonalInfo.fullName}`, newId);
 
     res.status(201).json({
       success: true,
@@ -1343,6 +1345,7 @@ app.patch("/api/admin/applicants/:id/review", requireAdmin, async (req, res) => 
     console.error("Error writing fallback local database:", err);
   }
   await syncApplicantToSupabase(applicants[index]);
+  writeLog("حجز موعد", `قام المرشح بحجز/تعديل موعد المقابلة إلى ${date} ${time}`, req.params.id);
   res.json({ success: true, applicant: applicants[index] });
 });
 
@@ -1363,7 +1366,7 @@ app.delete("/api/admin/applicants/:id", requireAdmin, async (req, res) => {
     console.error("Error writing fallback local database:", err);
   }
   await deleteApplicantFromSupabase(req.params.id);
-
+  writeLog("حذف طلب", `تم حذف طلب التوظيف نهائياً`, req.params.id, (req as any).adminEmail);
   res.json({ success: true, message: "تم حذف طلب المتقدم بنجاح." });
 });
 

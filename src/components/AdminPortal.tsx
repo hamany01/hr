@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { safeStorage } from '../lib/safeStorage';
+import {  safeStorage } from '../lib/safeStorage';
 // GitHub Sync: Minor update to trigger re-push
-import { 
-  Lock, Shield, Users, FileText, CheckCircle, XCircle, Clock, Calendar, MapPin,
+import {  
+  Activity, Lock, Shield, Users, FileText, CheckCircle, XCircle, Clock, Calendar, MapPin,
   Search, Filter, Eye, EyeOff, Edit3, Download, Printer, Trash2, ArrowLeft,
   ChevronDown, AlertCircle, Award, Star, ThumbsUp, Save, BarChart2,
   ListFilter, FileSpreadsheet, FileDown, Loader2, Briefcase, FileQuestion,
   Upload, ShieldCheck, Copy, Check, Share2, MessageSquare, Settings, Video
 } from 'lucide-react';
-import { Applicant, DashboardStats, HrEvaluation, ApplicationStatus } from '../types';
+import {  Applicant, DashboardStats, HrEvaluation, ApplicationStatus } from '../types';
 import CompanyLogo from './CompanyLogo';
-import { googleSignIn, initAuth, createGoogleMeetSpace, logout as googleLogout } from '../lib/googleAuth';
-import { User } from 'firebase/auth';
+import {  googleSignIn, initAuth, createGoogleMeetSpace, logout as googleLogout } from '../lib/googleAuth';
+import {  User } from 'firebase/auth';
 
 interface AdminPortalProps {
   onGoHome: () => void;
@@ -47,6 +47,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
 
   // Data states
   const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
@@ -64,7 +65,7 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [archivedDeptNote, setArchivedDeptNote] = useState<string>('');
 
   // Hybrid WhatsApp Interview Scheduling states
-  const [activeSubTab, setActiveSubTab] = useState<'applicants' | 'schedules' | 'announcements' | 'templates'>('applicants');
+  const [activeSubTab, setActiveSubTab] = useState<'applicants' | 'schedules' | 'announcements' | 'templates' | 'logs'>('applicants');
   const [schedulingApplicant, setSchedulingApplicant] = useState<Applicant | null>(null);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
@@ -2754,7 +2755,59 @@ https://wa.me/966537375580
               <Settings className="w-4 h-4 text-slate-500" />
               <span>قوالب الرسائل الجاهزة 💬</span>
             </button>
+            <button
+              onClick={() => setActiveSubTab('logs')}
+              className={`pb-4 text-xs sm:text-sm font-extrabold transition-all border-b-2 flex items-center gap-2 ${
+                activeSubTab === 'logs'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              <span>سجل العمليات 📜</span>
+            </button>
+  
           </div>
+
+          
+          {activeSubTab === 'logs' && (
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <h3 className="font-bold text-slate-800 text-sm">سجل النظام والعمليات (Audit Logs)</h3>
+                <span className="text-xs text-slate-500 font-semibold">{logs.length} عملية مسجلة</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-right text-xs">
+                  <thead className="bg-slate-50/50 text-slate-500 border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-3 font-bold">التاريخ والوقت</th>
+                      <th className="px-4 py-3 font-bold">الإجراء</th>
+                      <th className="px-4 py-3 font-bold">التفاصيل</th>
+                      <th className="px-4 py-3 font-bold">رقم المرشح</th>
+                      <th className="px-4 py-3 font-bold">حساب المسؤول</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {logs.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-8 text-center text-slate-500">لا توجد عمليات مسجلة حتى الآن</td>
+                      </tr>
+                    ) : (
+                      logs.map(log => (
+                        <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-4 py-3 text-slate-600" dir="ltr">{new Date(log.timestamp).toLocaleString('ar-SA')}</td>
+                          <td className="px-4 py-3 font-bold text-blue-600">{log.action}</td>
+                          <td className="px-4 py-3 text-slate-700">{log.details}</td>
+                          <td className="px-4 py-3 font-mono text-slate-500">{log.applicantId || '-'}</td>
+                          <td className="px-4 py-3 text-slate-500">{log.adminEmail || 'النظام (تلقائي)'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {activeSubTab === 'applicants' && (
             <>
