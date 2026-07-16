@@ -553,7 +553,7 @@ async function generateApplicationId(jobRole?: string): Promise<string> {
   // Filter out any setting entries and filter by role prefix
   const roleApplicants = cachedApplicants.filter(a => !a.id.startsWith("SYSTEM_SETTING_") && a.id.startsWith(prefix));
   
-  let maxSeq = 19; // Start base at 19 so next will be at least 20
+  let maxSeq = 39; // Start base at 39 so next will be at least 40
   
   for (const app of roleApplicants) {
     const parts = app.id.split('-'); // e.g. HSE-2026-0020

@@ -59,10 +59,20 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [experienceFilter, setExperienceFilter] = useState<string>('all');
   const [hrScoreFilter, setHrScoreFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('hr_score');
+  const [sortBy, setSortBy] = useState<string>('date');
   const [sortOrder, setSortOrder] = useState<string>('desc');
   const [manualEvalFilter, setManualEvalFilter] = useState<string>('all');
   const [archivedDeptNote, setArchivedDeptNote] = useState<string>('');
+
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setExperienceFilter('all');
+    setHrScoreFilter('all');
+    setManualEvalFilter('all');
+    setSortBy('date');
+    setSortOrder('desc');
+  };
 
   // Hybrid WhatsApp Interview Scheduling states
   const [activeSubTab, setActiveSubTab] = useState<'applicants' | 'schedules' | 'announcements' | 'templates' | 'logs' | 'site_settings'>('applicants');
@@ -2890,14 +2900,26 @@ https://wa.me/966537375580
                 <ListFilter className="text-orange-500 w-5 h-5" />
                 خيارات البحث، الفرز، وتصدير البيانات
               </h3>
-              <button
-                onClick={handleExportCSV}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shadow-emerald-600/10 self-start md:self-auto"
-                id="export-csv-btn"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                تصدير البيانات لملف Excel (CSV)
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                {(searchTerm || statusFilter !== 'all' || experienceFilter !== 'all' || hrScoreFilter !== 'all' || manualEvalFilter !== 'all' || sortBy !== 'date' || sortOrder !== 'desc') && (
+                  <button
+                    onClick={handleResetFilters}
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shadow-orange-500/10"
+                    id="clear-filters-btn"
+                  >
+                    <XCircle className="w-4 h-4 text-white" />
+                    <span>إلغاء التصفية والفرز 🔄</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleExportCSV}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shadow-emerald-600/10 self-start md:self-auto"
+                  id="export-csv-btn"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  تصدير البيانات لملف Excel (CSV)
+                </button>
+              </div>
             </div>
 
             {/* Grid of inputs */}
@@ -2991,9 +3013,16 @@ https://wa.me/966537375580
                 <span className="text-slate-500 text-sm font-semibold">جاري جلب وفهرسة الطلبات وقرارات المراجعة...</span>
               </div>
             ) : applicants.length === 0 ? (
-              <div className="p-20 text-center flex flex-col items-center justify-center gap-3 text-slate-400">
+              <div className="p-20 text-center flex flex-col items-center justify-center gap-4 text-slate-400">
                 <AlertCircle className="w-12 h-12 text-slate-300" />
                 <span className="text-sm font-bold">لا يوجد أي طلبات متقدمين تطابق معايير البحث والتصفية المحددة حالياً.</span>
+                <button
+                  onClick={handleResetFilters}
+                  className="mt-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-2.5 text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shadow-orange-500/10 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4 text-white" />
+                  <span>إلغاء جميع الفلاتر والتصفية والفرز واستعادة كافة الطلبات 🔄</span>
+                </button>
               </div>
             ) : (
               <div className="overflow-x-auto">
