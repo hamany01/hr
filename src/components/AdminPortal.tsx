@@ -107,6 +107,98 @@ export default function AdminPortal({ onGoHome }: AdminPortalProps) {
     }
   }, [selectedApplicant, defaultMeetingLink]);
 
+  // States for editing candidate's personal and education info
+  const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
+  const [editFullName, setEditFullName] = useState('');
+  const [editNationality, setEditNationality] = useState('');
+  const [editGender, setEditGender] = useState('male');
+  const [editBirthDate, setEditBirthDate] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [editResidenceAddress, setEditResidenceAddress] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editQualification, setEditQualification] = useState('');
+  const [editMajor, setEditMajor] = useState('');
+  const [editCurrentSalary, setEditCurrentSalary] = useState('');
+  const [editExpectedSalary, setEditExpectedSalary] = useState('');
+  const [editNoticePeriod, setEditNoticePeriod] = useState('');
+  const [editOwnsCar, setEditOwnsCar] = useState('no');
+  const [editHasHealthIssues, setEditHasHealthIssues] = useState('no');
+  const [editHealthIssuesDetails, setEditHealthIssuesDetails] = useState('');
+  const [editHasLocationIssue, setEditHasLocationIssue] = useState('no');
+  const [editHasKawaderLicense, setEditHasKawaderLicense] = useState('no');
+  const [editInterviewPreference, setEditInterviewPreference] = useState('remote');
+  const [editInterviewPreferenceReason, setEditInterviewPreferenceReason] = useState('');
+  const [editLinkedinUrl, setEditLinkedinUrl] = useState('');
+  const [editExperienceYears, setEditExperienceYears] = useState<number>(0);
+  const [isSavingPersonalInfo, setIsSavingPersonalInfo] = useState(false);
+
+  const handleSavePersonalInfo = async () => {
+    if (!selectedApplicant) return;
+    if (!editFullName.trim()) {
+      alert("الرجاء إدخال الاسم الكامل للمرشح");
+      return;
+    }
+    
+    setIsSavingPersonalInfo(true);
+    try {
+      const updatedInfo = {
+        fullName: editFullName,
+        nationality: editNationality,
+        gender: editGender,
+        birthDate: editBirthDate,
+        city: editCity,
+        residenceAddress: editResidenceAddress,
+        phone: editPhone,
+        email: editEmail,
+        qualification: editQualification,
+        major: editMajor,
+        currentSalary: editCurrentSalary,
+        expectedSalary: editExpectedSalary,
+        noticePeriod: editNoticePeriod,
+        ownsCar: editOwnsCar,
+        hasHealthIssues: editHasHealthIssues,
+        healthIssuesDetails: editHasHealthIssues === 'yes' ? editHealthIssuesDetails : '',
+        hasLocationIssue: editHasLocationIssue,
+        hasKawaderLicense: editHasKawaderLicense,
+        interviewPreference: editInterviewPreference,
+        interviewPreferenceReason: editInterviewPreferenceReason,
+        linkedinUrl: editLinkedinUrl,
+        experienceYears: Number(editExperienceYears) || 0,
+      };
+
+      const adminToken = safeStorage.getItem('adminToken');
+      const res = await fetch(`/api/admin/applicants/${selectedApplicant.id}/review`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken || ''}`
+        },
+        body: JSON.stringify({
+          personalInfo: updatedInfo
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'فشلت عملية تحديث البيانات.');
+      }
+
+      const data = await res.json();
+      if (data.success && data.applicant) {
+        setSelectedApplicant(data.applicant);
+        setApplicants(prev => prev.map(a => a.id === data.applicant.id ? data.applicant : a));
+        setIsEditingPersonalInfo(false);
+        alert("تم تحديث البيانات الشخصية والتعليم للمرشح بنجاح! 🎉");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'حدث خطأ أثناء حفظ البيانات.');
+    } finally {
+      setIsSavingPersonalInfo(false);
+    }
+  };
+
   // Google Meet and Automatic Scheduling states
   const [googleUser, setGoogleUser] = useState<User | null>(null);
   const [googleToken, setGoogleToken] = useState<string | null>(null);
@@ -1966,10 +2058,43 @@ https://wa.me/966537375580
 
               {/* Personal Details list card */}
               <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-                <h4 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 mb-2 flex items-center gap-1.5 text-sm">
-                  <Users className="text-orange-500 w-4 h-4" />
-                  المعلومات الشخصية والتعليم
-                </h4>
+                <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-2 gap-2">
+                  <h4 className="font-extrabold text-slate-900 flex items-center gap-1.5 text-sm">
+                    <Users className="text-orange-500 w-4 h-4" />
+                    المعلومات الشخصية والتعليم
+                  </h4>
+                  <button
+                    onClick={() => {
+                      setEditFullName(selectedApplicant.personalInfo.fullName || '');
+                      setEditNationality(selectedApplicant.personalInfo.nationality || '');
+                      setEditGender(selectedApplicant.personalInfo.gender || 'male');
+                      setEditBirthDate(selectedApplicant.personalInfo.birthDate || '');
+                      setEditCity(selectedApplicant.personalInfo.city || '');
+                      setEditResidenceAddress(selectedApplicant.personalInfo.residenceAddress || '');
+                      setEditPhone(selectedApplicant.personalInfo.phone || '');
+                      setEditEmail(selectedApplicant.personalInfo.email || '');
+                      setEditQualification(selectedApplicant.personalInfo.qualification || '');
+                      setEditMajor(selectedApplicant.personalInfo.major || '');
+                      setEditCurrentSalary(selectedApplicant.personalInfo.currentSalary || '');
+                      setEditExpectedSalary(selectedApplicant.personalInfo.expectedSalary || '');
+                      setEditNoticePeriod(selectedApplicant.personalInfo.noticePeriod || '');
+                      setEditOwnsCar(selectedApplicant.personalInfo.ownsCar || 'no');
+                      setEditHasHealthIssues(selectedApplicant.personalInfo.hasHealthIssues || 'no');
+                      setEditHealthIssuesDetails(selectedApplicant.personalInfo.healthIssuesDetails || '');
+                      setEditHasLocationIssue(selectedApplicant.personalInfo.hasLocationIssue || 'no');
+                      setEditHasKawaderLicense(selectedApplicant.personalInfo.hasKawaderLicense || 'no');
+                      setEditInterviewPreference(selectedApplicant.personalInfo.interviewPreference || 'remote');
+                      setEditInterviewPreferenceReason(selectedApplicant.personalInfo.interviewPreferenceReason || '');
+                      setEditLinkedinUrl(selectedApplicant.personalInfo.linkedinUrl || '');
+                      setEditExperienceYears(selectedApplicant.personalInfo.experienceYears || 0);
+                      setIsEditingPersonalInfo(true);
+                    }}
+                    className="py-1 px-2.5 bg-orange-50 hover:bg-orange-100/80 text-orange-600 hover:text-orange-700 border border-orange-200/60 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-orange-500/5 print:hidden"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-orange-500" />
+                    <span>تعديل البيانات ✏️</span>
+                  </button>
+                </div>
                 
                 <div className="space-y-3.5 text-xs leading-relaxed text-right">
                   <div>
@@ -5119,6 +5244,351 @@ https://wa.me/966537375580
                 }`}
               >
                 {isSchedulingAuto ? 'جاري العمل... ⏳' : 'إغلاق ومتابعة النتائج 📥'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Modal for editing candidate's personal and educational data */}
+      {isEditingPersonalInfo && selectedApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto text-slate-800" id="edit-candidate-modal">
+          <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl border border-slate-200 overflow-hidden my-8 flex flex-col max-h-[90vh]">
+            
+            {/* Header */}
+            <div className="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+              <button
+                onClick={() => setIsEditingPersonalInfo(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 hover:bg-slate-100 rounded-full cursor-pointer"
+                title="إغلاق"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2.5 text-right">
+                <div className="text-right">
+                  <h3 className="font-extrabold text-slate-800 text-base">تعديل بيانات المرشح ✏️</h3>
+                  <p className="text-slate-500 text-xs mt-0.5">تحديث المعلومات الشخصية والتخصص والمؤهلات التعليمية للمرشح: {selectedApplicant.personalInfo.fullName}</p>
+                </div>
+                <div className="bg-orange-500/10 text-orange-600 p-2.5 rounded-2xl">
+                  <Users className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Form Fields Body (Scrollable) */}
+            <div className="p-6 overflow-y-auto space-y-6 text-right">
+              
+              {/* القسم الأول: معلومات الهوية والاتصال */}
+              <div>
+                <h4 className="font-extrabold text-xs text-orange-600 mb-3 border-r-2 border-orange-500 pr-2">معلومات الهوية والاتصال</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">الاسم الكامل للمرشح <span className="text-red-500">*</span></label>
+                    <input 
+                      type="text"
+                      value={editFullName}
+                      onChange={(e) => setEditFullName(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="أدخل الاسم الكامل"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">الجنسية</label>
+                    <input 
+                      type="text"
+                      value={editNationality}
+                      onChange={(e) => setEditNationality(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: سعودي"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">الجنس</label>
+                    <select
+                      value={editGender}
+                      onChange={(e) => setEditGender(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                    >
+                      <option value="male">ذكر</option>
+                      <option value="female">أنثى</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">رقم الجوال</label>
+                    <input 
+                      type="text"
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right ltr"
+                      placeholder="05xxxxxxxx"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">البريد الإلكتروني</label>
+                    <input 
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="name@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">تاريخ الميلاد</label>
+                    <input 
+                      type="date"
+                      value={editBirthDate}
+                      onChange={(e) => setEditBirthDate(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                    />
+                  </div>
+
+                </div>
+              </div>
+
+              {/* القسم الثاني: التعليم والتخصص والدراسة والخبرة */}
+              <div>
+                <h4 className="font-extrabold text-xs text-orange-600 mb-3 border-r-2 border-orange-500 pr-2">التعليم والتخصص والخبرة</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">المؤهل العلمي</label>
+                    <input 
+                      type="text"
+                      value={editQualification}
+                      onChange={(e) => setEditQualification(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: بكالوريوس، دبلوم، ثانوية"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">التخصص الدقيق</label>
+                    <input 
+                      type="text"
+                      value={editMajor}
+                      onChange={(e) => setEditMajor(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: هندسة برمجيات، إدارة أعمال"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">عدد سنوات الخبرة</label>
+                    <input 
+                      type="number"
+                      min="0"
+                      value={editExperienceYears}
+                      onChange={(e) => setEditExperienceYears(Number(e.target.value) || 0)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="0"
+                    />
+                  </div>
+
+                </div>
+              </div>
+
+              {/* القسم الثالث: الرواتب وتفضيلات العمل والسكن */}
+              <div>
+                <h4 className="font-extrabold text-xs text-orange-600 mb-3 border-r-2 border-orange-500 pr-2">الرواتب واللوجستيات والسكن</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">المدينة</label>
+                    <input 
+                      type="text"
+                      value={editCity}
+                      onChange={(e) => setEditCity(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: جدة"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">عنوان السكن بالتفصيل</label>
+                    <input 
+                      type="text"
+                      value={editResidenceAddress}
+                      onChange={(e) => setEditResidenceAddress(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: حي الشاطئ، شارع الأمير نايف"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">الراتب الحالي</label>
+                    <input 
+                      type="text"
+                      value={editCurrentSalary}
+                      onChange={(e) => setEditCurrentSalary(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: 4000 ريال"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">الراتب المتوقع</label>
+                    <input 
+                      type="text"
+                      value={editExpectedSalary}
+                      onChange={(e) => setEditExpectedSalary(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: 6000 ريال"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">فترة الإشعار للبدء بالعمل</label>
+                    <input 
+                      type="text"
+                      value={editNoticePeriod}
+                      onChange={(e) => setEditNoticePeriod(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: فوراً أو شهر"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">هل يمتلك سيارة خاصة ورخصة؟</label>
+                    <select
+                      value={editOwnsCar}
+                      onChange={(e) => setEditOwnsCar(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                    >
+                      <option value="yes">نعم، يمتلك سيارة</option>
+                      <option value="no">لا يمتلك</option>
+                    </select>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* القسم الرابع: الرخص والمحددات والمقابلات */}
+              <div>
+                <h4 className="font-extrabold text-xs text-orange-600 mb-3 border-r-2 border-orange-500 pr-2">الرخص والمحددات والمقابلات</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">هل لديه ترخيص منصة كوادر؟</label>
+                    <select
+                      value={editHasKawaderLicense}
+                      onChange={(e) => setEditHasKawaderLicense(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                    >
+                      <option value="yes">نعم (لديه ترخيص مالي أو مهني فعال)</option>
+                      <option value="no">لا</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">هل لديه أي مشكلة في العمل بالمنطقة الصناعية بجدة؟</label>
+                    <select
+                      value={editHasLocationIssue}
+                      onChange={(e) => setEditHasLocationIssue(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                    >
+                      <option value="no">لا (موافق على العمل في الموقع الحالي)</option>
+                      <option value="yes">نعم (لديه تحفظ أو مشكلة بالوصول)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">تفضيل المقابلة الشخصية</label>
+                    <select
+                      value={editInterviewPreference}
+                      onChange={(e) => setEditInterviewPreference(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                    >
+                      <option value="remote">عن بعد (Online)</option>
+                      <option value="in_person">حضورياً بمقر الشركة (In-person)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">سبب تفضيل نوع المقابلة المحدد</label>
+                    <input 
+                      type="text"
+                      value={editInterviewPreferenceReason}
+                      onChange={(e) => setEditInterviewPreferenceReason(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                      placeholder="مثال: بعد المسافة، ظروف خاصة..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">هل يعاني من مشاكل صحية أو طبية؟</label>
+                    <select
+                      value={editHasHealthIssues}
+                      onChange={(e) => setEditHasHealthIssues(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                    >
+                      <option value="no">لا توجد أي مشاكل صحية (سليم)</option>
+                      <option value="yes">نعم (يعاني من مشكلة صحية محددة)</option>
+                    </select>
+                  </div>
+
+                  {editHasHealthIssues === 'yes' && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">تفاصيل الوضع الصحي / الطبي</label>
+                      <input 
+                        type="text"
+                        value={editHealthIssuesDetails}
+                        onChange={(e) => setEditHealthIssuesDetails(e.target.value)}
+                        className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right"
+                        placeholder="الرجاء توضيح نوع المشكلة الصحية..."
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">رابط الملف الشخصي LinkedIn</label>
+                    <input 
+                      type="text"
+                      value={editLinkedinUrl}
+                      onChange={(e) => setEditLinkedinUrl(e.target.value)}
+                      className="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none text-right ltr"
+                      placeholder="https://linkedin.com/in/username"
+                    />
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="border-t border-slate-100 bg-slate-50 p-4 flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => setIsEditingPersonalInfo(false)}
+                className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                إلغاء وتراجع ✕
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePersonalInfo}
+                disabled={isSavingPersonalInfo}
+                className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/10 flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                {isSavingPersonalInfo ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                    <span>جاري حفظ التعديلات...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5 text-white" />
+                    <span>حفظ وتحديث البيانات 💾</span>
+                  </>
+                )}
               </button>
             </div>
 

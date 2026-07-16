@@ -584,15 +584,15 @@ export default function ApplicationForm({ onCancel, onSubmitSuccess, jobRole = '
     
     questions.forEach((q) => {
       const ans = examAnswers[q as keyof ExamAnswers] || '';
-      if (ans.trim().length < 15) {
-        newErrors[q] = `الإجابة مطلوبة ويجب ألا تقل عن 15 حرفاً لضمان دقة التقييم الذكي`;
+      if (ans.trim().length < 1) {
+        newErrors[q] = `الإجابة مطلوبة (أو اكتب 0 لتخطي السؤال)`;
       }
     });
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       setTimeout(() => {
-        alert("يرجى الإجابة على جميع أسئلة الاختبار الفني بوضوح وبما لا يقل عن 15 حرفاً لكل سؤال لتفعيل التقييم الذكي التلقائي.");
+        alert("يرجى الإجابة على جميع أسئلة الاختبار الفني. يمكنك كتابة الرقم 0 لتخطي أي سؤال.");
       }, 100);
       return false;
     }
